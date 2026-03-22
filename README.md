@@ -8,6 +8,7 @@
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 [![Go](https://img.shields.io/badge/Go-1.26+-00ADD8.svg)](https://go.dev)
+[![Taskschmiede MCP server](https://glama.ai/mcp/servers/QuestFinTech/taskschmiede/badges/card.svg)](https://glama.ai/mcp/servers/QuestFinTech/taskschmiede)
 
 ---
 
