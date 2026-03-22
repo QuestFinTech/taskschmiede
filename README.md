@@ -169,7 +169,9 @@ Requires [Hugo](https://gohugo.io) (extended edition).
 
 ## Contributing
 
-Contributions welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines and DCO sign-off requirements.
+External contributions are welcome via fork and pull request.
+
+Direct push access to this repository is limited to maintainers. Please see [CONTRIBUTING.md](./CONTRIBUTING.md) for details.
 
 ---
 
