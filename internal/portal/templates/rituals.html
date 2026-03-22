@@ -1,0 +1,156 @@
+{{template "base" .}}
+{{define "content"}}
+{{template "nav" .}}
+
+<div class="main-content">
+    <div class="container">
+        <div class="page-header">
+            <h1>{{t .Lang "portal.rituals.title"}}</h1>
+        </div>
+
+        {{if .Error}}
+        <div class="alert alert-error">{{.Error}}</div>
+        {{end}}
+
+        {{if .Success}}
+        <div class="alert alert-success">{{.Success}}</div>
+        {{end}}
+
+        {{if .Data}}
+        {{$tab := index .Data "Tab"}}
+
+        <!-- Tab navigation -->
+        <div class="tab-nav">
+            <a href="/rituals" class="tab-link {{if ne $tab "templates"}}tab-link-active{{end}}">{{t .Lang "portal.rituals.tab_my_rituals"}}</a>
+            <a href="/rituals?tab=templates" class="tab-link {{if eq $tab "templates"}}tab-link-active{{end}}">{{t .Lang "portal.rituals.tab_templates"}}</a>
+        </div>
+
+        {{if ne $tab "templates"}}
+        <!-- My Rituals -->
+        <div class="card">
+            <div class="card-header">
+                <h2 class="mb-0">{{t .Lang "portal.rituals.section_my_rituals"}} <span class="meta-text">({{index .Data "Total"}})</span></h2>
+            </div>
+
+            {{$rituals := index .Data "Rituals"}}
+            {{$edvNames := index .Data "EdvNames"}}
+            {{if $rituals}}
+            <table>
+                <thead>
+                    <tr>
+                        <th>{{t .Lang "common.label.name"}}</th>
+                        <th>{{t .Lang "portal.rituals.col_endeavour"}}</th>
+                        <th>{{t .Lang "portal.rituals.col_enabled"}}</th>
+                        <th>{{t .Lang "portal.rituals.col_schedule"}}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{range $rituals}}
+                    <tr>
+                        <td><a href="/rituals/{{.ID}}"><strong>{{.Name}}</strong></a></td>
+                        <td>
+                            {{if .EndeavourID}}
+                                <a href="/endeavours/{{.EndeavourID}}" class="fs-13">{{if index $edvNames .EndeavourID}}{{index $edvNames .EndeavourID}}{{else}}{{.EndeavourID}}{{end}}</a>
+                            {{else}}
+                                <span class="text-muted">--</span>
+                            {{end}}
+                        </td>
+                        <td>
+                            <form method="POST" action="/rituals/{{.ID}}" class="d-inline">
+                                <input type="hidden" name="csrf_token" value="{{$.CSRFToken}}">
+                                <input type="hidden" name="action" value="toggle_enabled">
+                                {{if .IsEnabled}}
+                                <button type="submit" class="btn btn-sm fs-12-p-2-10" title="Click to disable">{{t $.Lang "portal.rituals.enabled"}}</button>
+                                {{else}}
+                                <button type="submit" class="btn btn-sm fs-12-p-2-10-op-50" title="Click to enable">{{t $.Lang "portal.rituals.disabled"}}</button>
+                                {{end}}
+                            </form>
+                        </td>
+                        <td class="fs-13">
+                            {{if .Schedule}}{{fmtSchedule .Schedule}}{{else}}--{{end}}
+                        </td>
+                    </tr>
+                    {{end}}
+                </tbody>
+            </table>
+            {{else}}
+            <div class="empty-state">
+                <p>{{t .Lang "portal.rituals.no_rituals"}}</p>
+                <p class="fs-13-c-secondary">{{t .Lang "portal.rituals.no_rituals_hint"}}</p>
+            </div>
+            {{end}}
+        </div>
+        {{end}}
+
+        {{if eq $tab "templates"}}
+        <!-- Template Filters -->
+        <div class="card mb-24-p-16-24">
+            <form method="GET" action="/rituals" class="flex-gap-12-ai-end-wrap">
+                <input type="hidden" name="tab" value="templates">
+                <div class="form-group mb-0-minw-200">
+                    <label for="filter_search">{{t .Lang "portal.admin_rituals.label_search"}}</label>
+                    <input type="text" id="filter_search" name="search" placeholder="{{t .Lang "common.placeholder.search"}}" value="{{index .Data "Search"}}">
+                </div>
+                <div class="form-group mb-0-minw-100">
+                    <label for="filter_lang">{{t .Lang "common.label.language"}}</label>
+                    <select id="filter_lang" name="lang">
+                        {{$filterLang := index .Data "FilterLang"}}
+                        <option value="">{{t .Lang "common.all"}}</option>
+                        <option value="en" {{if eq $filterLang "en"}}selected{{end}}>EN</option>
+                        <option value="de" {{if eq $filterLang "de"}}selected{{end}}>DE</option>
+                        <option value="fr" {{if eq $filterLang "fr"}}selected{{end}}>FR</option>
+                        <option value="es" {{if eq $filterLang "es"}}selected{{end}}>ES</option>
+                        <option value="it" {{if eq $filterLang "it"}}selected{{end}}>IT</option>
+                        <option value="ru" {{if eq $filterLang "ru"}}selected{{end}}>RU</option>
+                        <option value="zh" {{if eq $filterLang "zh"}}selected{{end}}>ZH</option>
+                        <option value="el" {{if eq $filterLang "el"}}selected{{end}}>EL</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn h-40">{{t .Lang "common.filter"}}</button>
+            </form>
+        </div>
+
+        <!-- Available Templates -->
+        <div class="card mb-24">
+            <div class="card-header">
+                <h2 class="mb-0">{{t .Lang "portal.rituals.section_templates"}} <span class="meta-text">({{index .Data "TemplateTotal"}})</span></h2>
+            </div>
+
+            {{$templates := index .Data "Templates"}}
+            {{if $templates}}
+            <table>
+                <thead>
+                    <tr>
+                        <th>{{t .Lang "common.label.name"}}</th>
+                        <th>{{t .Lang "portal.rituals.col_description"}}</th>
+                        <th>{{t .Lang "portal.rituals.col_schedule"}}</th>
+                        <th>{{t .Lang "portal.rituals.col_actions"}}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{range $templates}}
+                    <tr>
+                        <td><a href="/rituals/{{.ID}}"><strong>{{.Name}}</strong></a></td>
+                        <td class="fs-14-c-secondary-truncate-350">{{.Description}}</td>
+                        <td class="fs-13">
+                            {{if .Schedule}}{{fmtSchedule .Schedule}}{{else}}--{{end}}
+                        </td>
+                        <td>
+                            <a href="/rituals/{{.ID}}" class="btn btn-sm">{{t $.Lang "portal.rituals.action_view"}}</a>
+                        </td>
+                    </tr>
+                    {{end}}
+                </tbody>
+            </table>
+            {{else}}
+            <div class="empty-state">
+                <p>{{t .Lang "portal.rituals.no_templates"}}</p>
+            </div>
+            {{end}}
+        </div>
+        {{end}}
+
+        {{end}}
+    </div>
+</div>
+{{end}}

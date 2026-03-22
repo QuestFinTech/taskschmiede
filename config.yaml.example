@@ -1,0 +1,230 @@
+# Taskschmiede Community Edition -- Configuration
+# Copy to config.yaml and customize as needed.
+# Environment variables can be used with ${VAR} syntax.
+# Store secrets in .env and reference them here.
+
+database:
+  path: ./taskschmiede.db
+
+server:
+  mcp-port: 9000            # MCP + REST API (/mcp and /api/v1/*)
+  # MCP session inactivity timeout (sliding window).
+  # Each tool call resets the timer. Default: 2h.
+  session-timeout: 2h
+  # Max lifetime for agent invitation tokens. Default: 30m.
+  agent-token-ttl: 30m
+
+# Portal (taskschmiede-portal)
+portal:
+  listen: ":9090"
+  api-url: "http://localhost:9000"
+  secure: false                    # Set true behind HTTPS (Secure cookie flag)
+  show-about: true                 # Show About page with service health and config
+
+# MCP development proxy (taskschmiede-proxy)
+proxy:
+  listen: ":9001"
+  upstream: "http://localhost:9000"
+  log-traffic: false
+  # traffic-log-file: /var/log/taskschmiede/mcp-traffic.log
+  #
+  # WARNING: If you enable log-traffic, you MUST set traffic-log-file to a
+  # writable path. Under systemd with ProtectSystem=strict the working directory
+  # is read-only and the proxy will fail to start without an explicit path.
+
+# Maintenance mode (production use -- disabled by default)
+# When enabled, the proxy monitors upstream health, provides structured
+# maintenance responses to clients, and exposes a management API.
+maintenance:
+  enabled: false
+  management-listen: "127.0.0.1:9010"  # localhost-only management API
+  management-api-key: "${PROXY_MANAGEMENT_KEY}"
+  auto-detect: true              # auto-detect upstream failures
+  auto-detect-grace: 10s         # grace period before entering error state
+  health-check-interval: 5s      # upstream health poll frequency
+  upstream-timeout: 30s           # timeout for non-SSE upstream requests
+  upstream-timeout-sse: 300s      # timeout for SSE streaming requests
+  # State change notifications (webhook + SMTP)
+  notifications:
+    webhook:
+      url: ""                     # e.g. https://hooks.slack.com/services/...
+      # headers:                  # optional custom headers
+      #   Authorization: "Bearer xxx"
+    smtp:
+      host: ${OUTGOING_MAIL_SERVER}
+      port: 465
+      use-ssl: true
+      username: ${EMAIL_SUPPORT_USER}
+      password: ${EMAIL_SUPPORT_PASSWORD}
+      from: ${EMAIL_SUPPORT_ADDRESS}
+      from-name: "Taskschmiede Proxy"
+      to:
+        - "admin@example.com"
+
+# MCP-level security (production use -- disabled by default)
+# Protocol-aware measures that NGINX cannot express.
+mcp-security:
+  enabled: false
+  validation: true                 # validate JSON-RPC structure and methods
+  # Per-tool rate limits (tool name or glob pattern)
+  tool-rate-limits:
+    "ts.msg.send": { requests: 10, window: 1m }
+    "ts.auth.login": { requests: 5, window: 1m }
+    "ts.auth.register": { requests: 3, window: 1m }
+    "ts.onboard.*": { requests: 20, window: 1m }
+  # API version management
+  api-versions:
+    current: "v1"
+    supported: ["v1"]
+    deprecated: []
+
+log:
+  file: ./taskschmiede.log
+  level: INFO
+
+# Ticker: periodic task runner (cleanup, KPI snapshots, backups, purge)
+# Always-on handlers (no config toggle):
+#   db-backup   -- daily VACUUM INTO for main + message DB, rotates old backups
+#                  Backups stored in <db-dir>/db-backups/, keeps 7 per DB
+#   data-purge  -- daily deletion of old audit_log and entity_change records
+#                  Retention configured via policy table (changeable at runtime):
+#                    purge.audit_log_days     (default: 90)
+#                    purge.entity_change_days (default: 180)
+ticker:
+  interval: 1s        # How often to check if handlers are due
+  kpi:
+    enabled: true     # Collect KPI snapshots
+    interval: 1m      # Snapshot frequency
+    output-dir: ""    # JSON file output (default: <db-dir>/kpi/)
+
+email:
+  # Shared mail server settings
+  smtp-host: ${OUTGOING_MAIL_SERVER}
+  smtp-port: ${OUTGOING_MAIL_PORT}
+  smtp-use-tls: ${OUTGOING_MAIL_USE_TLS}
+  smtp-use-ssl: ${OUTGOING_MAIL_USE_SSL}
+  imap-host: ${INCOMING_MAIL_SERVER}
+  imap-port: ${INCOMING_MAIL_PORT}
+  imap-use-tls: ${INCOMING_MAIL_USE_TLS}
+  imap-use-ssl: ${INCOMING_MAIL_USE_SSL}
+
+  # Support: transactional emails (verification, password reset)
+  support:
+    name: ${EMAIL_SUPPORT_NAME}
+    address: ${EMAIL_SUPPORT_ADDRESS}
+    username: ${EMAIL_SUPPORT_USER}
+    password: ${EMAIL_SUPPORT_PASSWORD}
+
+  # Intercom: email bridge for internal messaging
+  # Sends message notifications and accepts inbound replies via IMAP.
+  intercom:
+    name: ${EMAIL_INTERCOM_NAME}
+    address: ${EMAIL_INTERCOM_ADDRESS}
+    username: ${EMAIL_INTERCOM_USER}
+    password: ${EMAIL_INTERCOM_PASSWORD}
+
+  # Verification code timeout
+  verification-timeout: 15m
+
+  # Portal URL for verification/reset links in emails
+  portal-url: "${PORTAL_URL}"
+
+# Messaging: push-based communication between resources
+messaging:
+  database-path: ""            # Default: alongside main DB as <name>_messages.db
+  intercom:
+    enabled: false             # Enable email bridge (requires email config above)
+    reply-ttl: 720h            # 30 days -- how long inbound replies are accepted
+    sweep-interval: 1m         # IMAP inbox check frequency
+    send-interval: 30s         # Outbound email send frequency
+    max-retries: 3             # Email delivery retries before marking failed
+    max-inbound-per-hour: 20   # Anti-bombing: max inbound emails per sender per hour
+    dedup-window: 1h           # Reject duplicate content from same sender within window
+
+# Tier definitions (seeded on first run only; manage via admin portal afterwards)
+# Convention: -1 = unlimited, 0 = not allowed, >0 = hard limit
+# Community Edition uses a single unlimited tier.
+tiers:
+  default-tier: 1
+  definitions:
+    - id: 1
+      name: unlimited
+      max-users: -1
+      max-orgs: -1
+      max-agents-per-org: -1
+      max-endeavours-per-org: -1
+      max-active-endeavours: -1
+      max-teams-per-org: -1
+      max-creations-per-hour: -1
+
+# Registration settings
+registration:
+  # require-kyc controls whether users must provide their address and accept
+  # legal terms after email verification (the "Complete Your Profile" step).
+  # When false (recommended for self-hosted): users go straight to the dashboard
+  # after email verification. No address collection, no consent gate.
+  require-kyc: false
+
+# Security settings
+security:
+  # Deployment mode controls which account creation paths are available
+  # and which verification gates are enforced.
+  #
+  # "open" (default): Public-facing deployment. All verification gates enforced.
+  #   - Self-registration requires email verification.
+  #   - Organization-scoped invitation tokens are disabled.
+  #   - Organization-token user registration is disabled.
+  #   - Agent email verification and onboarding interview are always required.
+  #   - Agent token creation restricted to org/master admins.
+  #
+  # "trusted": Trusted-network deployment. Verification gates are configurable.
+  #   - All registration paths available.
+  #   - Agent email verification and interview can be disabled.
+  #   - Suitable for corporate intranets and development environments.
+  deployment-mode: open
+
+  # Whether self-registration at /register is available.
+  # When false, all accounts must be created by admins or via invitation tokens.
+  allow-self-registration: true
+
+  # Agent onboarding gates. In "open" mode, both are always enforced regardless
+  # of these settings. In "trusted" mode, these control whether the gates apply.
+  agent-onboarding:
+    require-email-verification: true
+    require-interview: true
+
+  rate-limit:
+    global-per-ip:
+      requests: 120
+      window: 1m
+      enabled: true
+    per-session:
+      requests: 60
+      window: 1m
+      enabled: true
+    auth-endpoint:
+      requests: 5
+      window: 1m
+      enabled: true
+    cleanup-interval: 5m
+
+  conn-limit:
+    max-global: 1000   # Max concurrent connections (0 = unlimited)
+    max-per-ip: 50     # Max concurrent connections per IP (0 = unlimited)
+
+  headers:
+    hsts-enabled: false
+    hsts-max-age: 31536000
+    csp-policy: "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'"
+    frame-options: DENY
+    referrer-policy: strict-origin-when-cross-origin
+
+  body-limit:
+    max-body-size: 1048576  # 1 MB
+
+  # CORS allowed origins (empty = same-origin only)
+  # cors-origins:
+  #   - "https://portal.example.com"
+
+  audit:
+    buffer-size: 1024

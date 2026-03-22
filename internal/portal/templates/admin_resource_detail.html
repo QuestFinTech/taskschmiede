@@ -1,0 +1,94 @@
+{{template "base" .}}
+{{define "content"}}
+{{template "nav" .}}
+
+<div class="main-content">
+    <div class="container">
+        <div class="page-header">
+            <div>
+                <div class="mb-4">
+                    <a href="/admin/resources" class="fs-13-c-secondary-no-underline">&larr; {{t .Lang "portal.admin_resource_detail.back_to_resources"}}</a>
+                </div>
+                <h1>{{if .Data}}{{index .Data "ResourceName"}}{{end}}</h1>
+            </div>
+        </div>
+
+        {{if .Error}}
+        <div class="alert alert-error">{{.Error}}</div>
+        {{end}}
+
+        {{if .Success}}
+        <div class="alert alert-success">{{.Success}}</div>
+        {{end}}
+
+        {{if .Data}}
+        {{$res := index .Data "Resource"}}
+        {{if $res}}
+
+        <div class="card">
+            <div class="card-header">
+                <h2 class="mb-0">{{t .Lang "portal.admin_resource_detail.section_details"}}</h2>
+                <div class="flex-gap-8">
+                    {{if eq $res.Type "human"}}
+                        <span class="badge badge-active">human</span>
+                    {{else if eq $res.Type "agent"}}
+                        <span class="badge badge-info">agent</span>
+                    {{else if eq $res.Type "service"}}
+                        <span class="badge badge-pending">service</span>
+                    {{else if eq $res.Type "budget"}}
+                        <span class="badge badge-inactive">budget</span>
+                    {{else if eq $res.Type "team"}}
+                        <span class="badge badge-info">team</span>
+                    {{else}}
+                        <span class="badge badge-pending">{{$res.Type}}</span>
+                    {{end}}
+                    {{if eq $res.Status "active"}}
+                        <span class="badge badge-active">{{t .Lang "status.active"}}</span>
+                    {{else}}
+                        <span class="badge badge-inactive">{{t .Lang "status.inactive"}}</span>
+                    {{end}}
+                </div>
+            </div>
+            <div class="grid-auto-1fr-gap-8-16-fs-14">
+                <span class="text-secondary">ID</span>
+                <span class="ff-mono-fs-13">{{$res.ID}}</span>
+                <span class="text-secondary">{{t .Lang "common.label.name"}}</span>
+                <span><strong>{{$res.Name}}</strong></span>
+                <span class="text-secondary">{{t .Lang "common.label.type"}}</span>
+                <span>{{$res.Type}}</span>
+                <span class="text-secondary">{{t .Lang "portal.admin_resource_detail.label_capacity_model"}}</span>
+                <span>{{if $res.CapacityModel}}{{$res.CapacityModel}}{{else}}-{{end}}</span>
+                <span class="text-secondary">{{t .Lang "portal.admin_resource_detail.label_capacity_value"}}</span>
+                <span>{{if $res.CapacityValue}}{{printf "%.0f" $res.CapacityValue}}{{else}}-{{end}}</span>
+                <span class="text-secondary">{{t .Lang "portal.admin_resource_detail.label_skills"}}</span>
+                <span>{{if $res.Skills}}{{range $i, $s := $res.Skills}}{{if $i}}, {{end}}{{$s}}{{end}}{{else}}-{{end}}</span>
+                {{if $res.Metadata}}
+                <span class="text-secondary">{{t .Lang "portal.admin_resource_detail.label_metadata"}}</span>
+                <pre class="code-block-compact">{{$res.Metadata}}</pre>
+                {{end}}
+                <span class="text-secondary">{{t .Lang "common.label.created"}}</span>
+                <span>{{fmtDateTime $res.CreatedAt $.Timezone}}</span>
+                <span class="text-secondary">{{t .Lang "common.label.updated"}}</span>
+                <span>{{fmtDateTime $res.UpdatedAt $.Timezone}}</span>
+            </div>
+
+            {{if or (eq $res.Status "active") (eq $res.Status "inactive")}}
+            <div class="section-divider">
+                <form method="POST" action="/admin/resources/{{$res.ID}}">
+                    <input type="hidden" name="csrf_token" value="{{$.CSRFToken}}">
+                    <input type="hidden" name="action" value="toggle_status">
+                    {{if eq $res.Status "active"}}
+                    <button type="submit" class="btn btn-sm btn-danger">{{t .Lang "portal.admin_resource_detail.action_deactivate"}}</button>
+                    {{else}}
+                    <button type="submit" class="btn btn-sm btn-primary">{{t .Lang "portal.admin_resource_detail.action_activate"}}</button>
+                    {{end}}
+                </form>
+            </div>
+            {{end}}
+        </div>
+
+        {{end}}
+        {{end}}
+    </div>
+</div>
+{{end}}

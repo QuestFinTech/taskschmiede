@@ -1,0 +1,213 @@
+{{template "base" .}}
+{{define "content"}}
+{{template "nav" .}}
+
+<div class="main-content">
+    <div class="container">
+        <div class="page-header">
+            <div>
+                <div class="mb-4">
+                    <a href="/teams" class="fs-13-c-secondary-no-underline">&larr; {{t .Lang "portal.team_detail.back_to_teams"}}</a>
+                </div>
+                <h1>{{if .Data}}{{index .Data "TeamName"}}{{end}}</h1>
+            </div>
+        </div>
+
+        {{if .Error}}
+        <div class="alert alert-error">{{.Error}}</div>
+        {{end}}
+
+        {{if .Success}}
+        <div class="alert alert-success">{{.Success}}</div>
+        {{end}}
+
+        {{if .Data}}
+        {{$team := index .Data "TeamData"}}
+        {{if $team}}
+
+        <!-- Team Details -->
+        <div class="card mb-24">
+            <div class="card-header">
+                <h2 class="mb-0">{{t .Lang "portal.team_detail.section_details"}}</h2>
+                <div class="flex-gap-8">
+                    {{if eq $team.Status "active"}}
+                        <span class="badge badge-active">{{t .Lang "status.active"}}</span>
+                    {{else}}
+                        <span class="badge badge-inactive">{{t .Lang "status.inactive"}}</span>
+                    {{end}}
+                </div>
+            </div>
+            <div class="grid-auto-1fr-gap-8-16-fs-14">
+                <span class="text-secondary">ID</span>
+                <span class="ff-mono-fs-13">{{$team.ID}}</span>
+                <span class="text-secondary">{{t .Lang "common.label.name"}}</span>
+                <span><strong>{{$team.Name}}</strong></span>
+                <span class="text-secondary">{{t .Lang "portal.team_detail.label_endeavour"}}</span>
+                <span>
+                    {{$edv := index .Data "TeamEndeavour"}}
+                    {{if $edv}}
+                        <a href="/endeavours/{{$edv.ID}}">{{$edv.Name}}</a>
+                    {{else}}
+                        <span class="text-muted">--</span>
+                    {{end}}
+                </span>
+            </div>
+            {{$canManage := index .Data "CanManageTeam"}}
+            {{if $canManage}}
+            <div class="section-divider-sm-flex-wrap">
+                <form method="POST" action="/teams/{{$team.ID}}" class="d-inline">
+                    <input type="hidden" name="csrf_token" value="{{$.CSRFToken}}">
+                    <input type="hidden" name="action" value="toggle_status">
+                    {{if eq $team.Status "active"}}
+                    <button type="submit" class="btn btn-sm btn-danger">{{t .Lang "portal.team_detail.action_deactivate"}}</button>
+                    {{else}}
+                    <button type="submit" class="btn btn-sm btn-primary">{{t .Lang "portal.team_detail.action_activate"}}</button>
+                    {{end}}
+                </form>
+                <form method="POST" action="/teams/{{$team.ID}}" class="d-inline" data-confirm="{{t .Lang "portal.team_detail.confirm_delete"}}">
+                    <input type="hidden" name="csrf_token" value="{{$.CSRFToken}}">
+                    <input type="hidden" name="action" value="delete">
+                    <button type="submit" class="btn btn-sm btn-danger">{{t .Lang "portal.team_detail.action_delete"}}</button>
+                </form>
+                <form method="POST" action="/teams/{{$team.ID}}" class="inline-flex-gap-8-ai-center">
+                    <input type="hidden" name="csrf_token" value="{{$.CSRFToken}}">
+                    <input type="hidden" name="action" value="link_endeavour">
+                    <select name="endeavour_id" class="select-sm-180">
+                        <option value="">-- {{t .Lang "portal.team_detail.label_endeavour"}} --</option>
+                        {{$endeavours := index .Data "Endeavours"}}
+                        {{if $endeavours}}
+                            {{range $endeavours}}
+                            <option value="{{.ID}}" {{if $edv}}{{if eq .ID $edv.ID}}selected{{end}}{{end}}>{{.Name}}</option>
+                            {{end}}
+                        {{end}}
+                    </select>
+                    <button type="submit" class="btn btn-sm">{{t .Lang "portal.team_detail.action_link"}}</button>
+                </form>
+                {{if $edv}}
+                <form method="POST" action="/teams/{{$team.ID}}" class="d-inline">
+                    <input type="hidden" name="csrf_token" value="{{$.CSRFToken}}">
+                    <input type="hidden" name="action" value="unlink_endeavour">
+                    <button type="submit" class="btn btn-sm">{{t .Lang "portal.team_detail.action_unlink"}}</button>
+                </form>
+                {{end}}
+            </div>
+            {{end}}
+        </div>
+
+        <!-- Members -->
+        <div class="card mb-24">
+            <div class="card-header">
+                <h2 class="mb-0">{{t .Lang "portal.team_detail.section_members"}}</h2>
+            </div>
+
+            {{$members := index .Data "Members"}}
+            {{if $members}}
+            <div class="ofx-auto">
+            <table>
+                <thead>
+                    <tr>
+                        <th>{{t .Lang "portal.team_detail.col.name"}}</th>
+                        <th>{{t .Lang "portal.team_detail.col.type"}}</th>
+                        <th>{{t .Lang "portal.team_detail.col.role"}}</th>
+                        {{if $canManage}}<th></th>{{end}}
+                    </tr>
+                </thead>
+                <tbody>
+                    {{range $members}}
+                    <tr>
+                        <td><strong>{{.ResourceName}}</strong></td>
+                        <td>{{.ResourceType}}</td>
+                        <td>{{.Role}}</td>
+                        {{if $canManage}}
+                        <td class="ta-right">
+                            <form method="POST" action="/teams/{{$team.ID}}" class="d-inline">
+                                <input type="hidden" name="csrf_token" value="{{$.CSRFToken}}">
+                                <input type="hidden" name="action" value="remove_member">
+                                <input type="hidden" name="relation_id" value="{{.RelationID}}">
+                                <button type="submit" class="btn btn-sm btn-danger">{{t $.Lang "common.remove"}}</button>
+                            </form>
+                        </td>
+                        {{end}}
+                    </tr>
+                    {{end}}
+                </tbody>
+            </table>
+            </div>
+            {{else}}
+            <div class="empty-state p-24">
+                <p class="text-muted">{{t .Lang "portal.team_detail.no_members"}}</p>
+            </div>
+            {{end}}
+
+            {{if $canManage}}
+            <!-- Add Member -->
+            <div class="section-divider-sm">
+                <form method="POST" action="/teams/{{$team.ID}}">
+                    <input type="hidden" name="csrf_token" value="{{$.CSRFToken}}">
+                    <input type="hidden" name="action" value="add_member">
+                    <div class="flex-gap-12-ai-end-wrap">
+                        <div class="form-group mb-0-flex-1-minw-200">
+                            <label for="member_resource">{{t .Lang "portal.team_detail.add_member"}}</label>
+                            <select id="member_resource" name="resource_id" required>
+                                <option value="">-</option>
+                                {{$resources := index $.Data "Resources"}}
+                                {{if $resources}}
+                                    {{range $resources}}
+                                    <option value="{{.ID}}">{{.Name}} ({{.Type}})</option>
+                                    {{end}}
+                                {{end}}
+                            </select>
+                        </div>
+                        <div class="form-group mb-0-minw-140">
+                            <label for="member_role">{{t .Lang "portal.team_detail.label_role"}}</label>
+                            <select id="member_role" name="role">
+                                {{$roles := index $.Data "Roles"}}
+                                {{if $roles}}
+                                    {{range $roles}}
+                                    <option value="{{.}}">{{.}}</option>
+                                    {{end}}
+                                {{end}}
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary h-42">{{t .Lang "common.add"}}</button>
+                    </div>
+                </form>
+            </div>
+            {{end}}
+        </div>
+
+        {{if $canManage}}
+        <!-- Quorum Configuration -->
+        <div class="card">
+            <div class="card-header">
+                <h2 class="mb-0">{{t .Lang "portal.team_detail.section_quorum"}}</h2>
+            </div>
+            {{$quorum := index .Data "Quorum"}}
+            <form method="POST" action="/teams/{{$team.ID}}">
+                <input type="hidden" name="csrf_token" value="{{$.CSRFToken}}">
+                <input type="hidden" name="action" value="update_quorum">
+                <div class="grid-3col-gap-12">
+                    <div class="form-group">
+                        <label for="quorum_default">{{t .Lang "portal.team_detail.quorum_default"}}</label>
+                        <input type="number" id="quorum_default" name="quorum_default" min="1" max="20" value="{{index $quorum "default"}}">
+                    </div>
+                    <div class="form-group">
+                        <label for="quorum_cancel">{{t .Lang "portal.team_detail.quorum_cancel"}}</label>
+                        <input type="number" id="quorum_cancel" name="quorum_cancel" min="0" max="20" value="{{index $quorum "cancel"}}">
+                    </div>
+                    <div class="form-group">
+                        <label for="quorum_fulfill">{{t .Lang "portal.team_detail.quorum_fulfill"}}</label>
+                        <input type="number" id="quorum_fulfill" name="quorum_fulfill" min="0" max="20" value="{{index $quorum "fulfill"}}">
+                    </div>
+                </div>
+                <p class="text-muted m-0-0-12-fs-13">{{t .Lang "portal.team_detail.quorum_help"}}</p>
+                <button type="submit" class="btn btn-primary">{{t .Lang "common.save_changes"}}</button>
+            </form>
+        </div>
+        {{end}}
+
+        {{end}}
+        {{end}}
+    </div>
+</div>
+{{end}}

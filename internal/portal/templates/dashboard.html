@@ -1,0 +1,412 @@
+{{template "base" .}}
+{{define "content"}}
+{{template "nav" .}}
+
+<div class="main-content">
+    <div class="container">
+        <div class="page-header">
+            <div>
+                <h1>{{t .Lang "portal.dashboard.title"}}</h1>
+                <p class="text-secondary mb-0">
+                    {{if .User}}{{if le (index .User "login_count") 1.0}}{{t .Lang "portal.dashboard.welcome" (index .User "name")}}{{else}}{{t .Lang "portal.dashboard.welcome_back" (index .User "name")}}{{end}}{{end}}
+                </p>
+            </div>
+        </div>
+
+        {{if .Error}}
+        <div class="alert alert-error">{{.Error}}</div>
+        {{end}}
+
+        {{if .User}}
+        {{if .Data}}
+        {{$indicators := index .Data "Indicators"}}
+        {{if $indicators}}
+        <div class="con-wrapper">
+            <!-- Ablecon -->
+            <div class="card mb-0">
+                <div class="card-header">
+                    <h2 class="mb-0">{{t .Lang "portal.indicators.ablecon_title"}}</h2>
+                </div>
+                <div class="flex-gap-16-ai-start">
+                    <div class="con-meter">
+                        <div class="con-level con-level-1{{if eq $indicators.Ablecon.Level 1}} active{{end}}"></div>
+                        <div class="con-level con-level-2{{if eq $indicators.Ablecon.Level 2}} active{{end}}"></div>
+                        <div class="con-level con-level-3{{if eq $indicators.Ablecon.Level 3}} active{{end}}"></div>
+                        <div class="con-level con-level-4{{if eq $indicators.Ablecon.Level 4}} active{{end}}"></div>
+                    </div>
+                    <div>
+                        <div class="con-status">
+                            {{if eq $indicators.Ablecon.Level 1}}{{t .Lang "portal.indicators.level_1_name"}}{{end}}
+                            {{if eq $indicators.Ablecon.Level 2}}{{t .Lang "portal.indicators.level_2_name"}}{{end}}
+                            {{if eq $indicators.Ablecon.Level 3}}{{t .Lang "portal.indicators.level_3_name"}}{{end}}
+                            {{if eq $indicators.Ablecon.Level 4}}{{t .Lang "portal.indicators.level_4_name"}}{{end}}
+                        </div>
+                        <div class="con-desc">
+                            {{if eq $indicators.Ablecon.Level 1}}{{t .Lang "portal.indicators.ablecon_1_desc"}}{{end}}
+                            {{if eq $indicators.Ablecon.Level 2}}{{t .Lang "portal.indicators.ablecon_2_desc"}}{{end}}
+                            {{if eq $indicators.Ablecon.Level 3}}{{t .Lang "portal.indicators.ablecon_3_desc"}}{{end}}
+                            {{if eq $indicators.Ablecon.Level 4}}{{t .Lang "portal.indicators.ablecon_4_desc"}}{{end}}
+                        </div>
+                        <div class="con-stages">
+                            <span class="con-stage"><span class="con-dot con-dot-1"></span> {{t .Lang "portal.indicators.level_1_name"}} - {{t .Lang "portal.indicators.ablecon_1_short"}}</span>
+                            <span class="con-stage"><span class="con-dot con-dot-2"></span> {{t .Lang "portal.indicators.level_2_name"}} - {{t .Lang "portal.indicators.ablecon_2_short"}}</span>
+                            <span class="con-stage"><span class="con-dot con-dot-3"></span> {{t .Lang "portal.indicators.level_3_name"}} - {{t .Lang "portal.indicators.ablecon_3_short"}}</span>
+                            <span class="con-stage"><span class="con-dot con-dot-4"></span> {{t .Lang "portal.indicators.level_4_name"}} - {{t .Lang "portal.indicators.ablecon_4_short"}}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Harmcon -->
+            <div class="card mb-0">
+                <div class="card-header">
+                    <h2 class="mb-0">{{t .Lang "portal.indicators.harmcon_title"}}</h2>
+                </div>
+                <div class="flex-gap-16-ai-start">
+                    <div class="con-meter">
+                        <div class="con-level con-level-1{{if eq $indicators.Harmcon.Level 1}} active{{end}}"></div>
+                        <div class="con-level con-level-2{{if eq $indicators.Harmcon.Level 2}} active{{end}}"></div>
+                        <div class="con-level con-level-3{{if eq $indicators.Harmcon.Level 3}} active{{end}}"></div>
+                        <div class="con-level con-level-4{{if eq $indicators.Harmcon.Level 4}} active{{end}}"></div>
+                    </div>
+                    <div>
+                        <div class="con-status">
+                            {{if eq $indicators.Harmcon.Level 1}}{{t .Lang "portal.indicators.level_1_name"}}{{end}}
+                            {{if eq $indicators.Harmcon.Level 2}}{{t .Lang "portal.indicators.level_2_name"}}{{end}}
+                            {{if eq $indicators.Harmcon.Level 3}}{{t .Lang "portal.indicators.level_3_name"}}{{end}}
+                            {{if eq $indicators.Harmcon.Level 4}}{{t .Lang "portal.indicators.level_4_name"}}{{end}}
+                        </div>
+                        <div class="con-desc">
+                            {{if eq $indicators.Harmcon.Level 1}}{{t .Lang "portal.indicators.harmcon_1_desc"}}{{end}}
+                            {{if eq $indicators.Harmcon.Level 2}}{{t .Lang "portal.indicators.harmcon_2_desc"}}{{end}}
+                            {{if eq $indicators.Harmcon.Level 3}}{{t .Lang "portal.indicators.harmcon_3_desc"}}{{end}}
+                            {{if eq $indicators.Harmcon.Level 4}}{{t .Lang "portal.indicators.harmcon_4_desc"}}{{end}}
+                        </div>
+                        <div class="con-stages">
+                            <span class="con-stage"><span class="con-dot con-dot-1"></span> {{t .Lang "portal.indicators.level_1_name"}} - {{t .Lang "portal.indicators.harmcon_1_short"}}</span>
+                            <span class="con-stage"><span class="con-dot con-dot-2"></span> {{t .Lang "portal.indicators.level_2_name"}} - {{t .Lang "portal.indicators.harmcon_2_short"}}</span>
+                            <span class="con-stage"><span class="con-dot con-dot-3"></span> {{t .Lang "portal.indicators.level_3_name"}} - {{t .Lang "portal.indicators.harmcon_3_short"}}</span>
+                            <span class="con-stage"><span class="con-dot con-dot-4"></span> {{t .Lang "portal.indicators.level_4_name"}} - {{t .Lang "portal.indicators.harmcon_4_short"}}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Tier -->
+            {{if index .User "tier_name"}}
+            <div class="card mb-0">
+                <div class="card-header">
+                    <h2 class="mb-0">{{t .Lang "portal.dashboard.stat_tier"}}</h2>
+                </div>
+                <div class="fs-13-c-secondary-mb-12">{{index .User "tier_name"}}</div>
+                {{$limits := index .User "tier_limits"}}{{$usage := index .User "tier_usage"}}
+                {{if $limits}}
+                <style nonce="{{.Nonce}}">.tb-orgs{width:{{tierPct (index $usage "orgs") (index $limits "max_orgs")}}%;{{if gt (tierPct (index $usage "orgs") (index $limits "max_orgs")) 0}}min-width:2px{{end}}}.tb-edv{width:{{tierPct (index $usage "endeavours_per_org") (index $limits "max_endeavours_per_org")}}%;{{if gt (tierPct (index $usage "endeavours_per_org") (index $limits "max_endeavours_per_org")) 0}}min-width:2px{{end}}}.tb-agt{width:{{tierPct (index $usage "agents_per_org") (index $limits "max_agents_per_org")}}%;{{if gt (tierPct (index $usage "agents_per_org") (index $limits "max_agents_per_org")) 0}}min-width:2px{{end}}}.tb-tm{width:{{tierPct (index $usage "teams_per_org") (index $limits "max_teams_per_org")}}%;{{if gt (tierPct (index $usage "teams_per_org") (index $limits "max_teams_per_org")) 0}}min-width:2px{{end}}}</style>
+                <div class="flex-col-gap-8">
+                    <div class="flex-ai-center-gap-8-fs-12">
+                        <span class="icon-col-36">{{t .Lang "portal.dashboard.tier_orgs_short"}}</span>
+                        <div class="tier-bar">
+                            <div class="tier-bar-fill tb-orgs"></div>
+                        </div>
+                        <span class="fshrink-0-c-secondary">{{index $usage "orgs"}}/{{fmtLimit (index $limits "max_orgs")}}</span>
+                    </div>
+                    <div class="flex-ai-center-gap-8-fs-12">
+                        <span class="icon-col-36">{{t .Lang "portal.dashboard.tier_edv_short"}}</span>
+                        <div class="tier-bar">
+                            <div class="tier-bar-fill tb-edv"></div>
+                        </div>
+                        <span class="fshrink-0-c-secondary">{{index $usage "endeavours_per_org"}}/{{fmtLimit (index $limits "max_endeavours_per_org")}}</span>
+                    </div>
+                    <div class="flex-ai-center-gap-8-fs-12">
+                        <span class="icon-col-36">{{t .Lang "portal.dashboard.tier_agt_short"}}</span>
+                        <div class="tier-bar">
+                            <div class="tier-bar-fill tb-agt"></div>
+                        </div>
+                        <span class="fshrink-0-c-secondary">{{index $usage "agents_per_org"}}/{{fmtLimit (index $limits "max_agents_per_org")}}</span>
+                    </div>
+                    <div class="flex-ai-center-gap-8-fs-12">
+                        <span class="icon-col-36">{{t .Lang "portal.dashboard.tier_tm_short"}}</span>
+                        <div class="tier-bar">
+                            <div class="tier-bar-fill tb-tm"></div>
+                        </div>
+                        <span class="fshrink-0-c-secondary">{{index $usage "teams_per_org"}}/{{fmtLimit (index $limits "max_teams_per_org")}}</span>
+                    </div>
+                </div>
+                {{end}}
+            </div>
+            {{end}}
+        </div>
+        {{end}}
+        {{end}}
+        {{end}}
+
+        <div class="two-col">
+            <!-- Endeavours -->
+            {{if .Data}}
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="mb-0">{{t .Lang "portal.dashboard.section_endeavours"}} {{$endeavours := index .Data "Endeavours"}}{{if $endeavours}}<span class="meta-text">({{len $endeavours}})</span>{{end}}</h2>
+                    <a href="/endeavours" class="btn btn-sm">{{t .Lang "common.view_all"}}</a>
+                </div>
+                {{if $endeavours}}
+                <div class="flex-col-gap-4">
+                    {{range $endeavours}}
+                    <div class="flex-between-row">
+                        <a href="/endeavours/{{.ID}}" class="fw-500">{{.Name}}</a>
+                        <div>
+                            {{if eq .Status "active"}}
+                                <span class="badge badge-active">{{t $.Lang "status.active"}}</span>
+                            {{else if eq .Status "completed"}}
+                                <span class="badge badge-info">{{t $.Lang "status.completed"}}</span>
+                            {{else if eq .Status "archived"}}
+                                <span class="badge badge-inactive">{{t $.Lang "status.archived"}}</span>
+                            {{else}}
+                                <span class="badge badge-pending">{{.Status}}</span>
+                            {{end}}
+                        </div>
+                    </div>
+                    {{end}}
+                </div>
+                {{else}}
+                <div class="empty-state p-16">
+                    <p class="text-muted">{{t .Lang "portal.dashboard.no_endeavours"}}</p>
+                </div>
+                {{end}}
+            </div>
+            {{end}}
+
+            <!-- Recent Activity Summary (last 24h) -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="mb-0">{{t .Lang "portal.dashboard.section_recent_activity"}}</h2>
+                    <a href="/entity-changes" class="btn btn-sm">{{t .Lang "common.view_all"}}</a>
+                </div>
+                {{if .Data}}
+                    {{$summary := index .Data "ActivitySummary"}}
+                    {{if gt $summary.Total 0}}
+                    <div class="py-12">
+                        <div class="flex-jc-between-ai-center-mb-12">
+                            <span class="fs-14">{{t .Lang "portal.dashboard.activity_last_24h"}}</span>
+                            <span class="fs-13-c-secondary">{{$summary.Total}} {{t .Lang "portal.dashboard.activity_total"}} {{if gt $summary.UniqueActors 0}} &middot; {{$summary.UniqueActors}} {{t .Lang "portal.dashboard.activity_unique_actors"}}{{end}}</span>
+                        </div>
+                        <!-- Activity Sparkline (24h, one column per hour) -->
+                        {{$hourly := index .Data "ActivityHourly"}}
+                        {{$maxH := index .Data "ActivityHourlyMax"}}
+                        {{if $hourly}}
+                        <div class="spark-bars-58">
+                            {{range $hourly}}
+                            {{$total := add (add .Logins .Tasks) (add .Demands .Endeavours)}}
+                            <div class="flex-1-full-col" title="{{printf "%02d" .Hour}}:00 — {{$total}} events">
+                                <div class="spark-day-label">{{printf "%02d" .Hour}}</div>
+                                <div class="flex-1-pos-rel">
+                                    <div class="bar-bg"></div>
+                                    <div class="bar-stack dash-h{{.Hour}}">
+                                    {{if gt $total 0}}
+                                    <style nonce="{{$.Nonce}}">.dash-h{{.Hour}} .spark-seg-endeavours{height:{{sparkPct .Endeavours $maxH 46}}px}.dash-h{{.Hour}} .spark-seg-demands{height:{{sparkPct .Demands $maxH 46}}px}.dash-h{{.Hour}} .spark-seg-tasks{height:{{sparkPct .Tasks $maxH 46}}px}.dash-h{{.Hour}} .spark-seg-logins{height:{{sparkPct .Logins $maxH 46}}px}</style>
+                                    {{if gt .Endeavours 0}}<div class="spark-seg-endeavours spark-seg-top"></div>{{end}}
+                                    {{if gt .Demands 0}}<div class="spark-seg-demands"></div>{{end}}
+                                    {{if gt .Tasks 0}}<div class="spark-seg-tasks"></div>{{end}}
+                                    {{if gt .Logins 0}}<div class="spark-seg-logins spark-seg-bottom"></div>{{end}}
+                                    {{end}}
+                                    </div>
+                                </div>
+                            </div>
+                            {{end}}
+                        </div>
+                        <div class="spark-labels">
+                            <span>{{t .Lang "portal.dashboard.activity_now"}}</span><span>-6h</span><span>-12h</span><span>-18h</span><span>-24h</span>
+                        </div>
+                        {{end}}
+                        <div class="flex-center-legend">
+                            {{if gt $summary.Logins 0}}<span class="flex-ai-center-gap-4"><span class="dot-blue"></span> Logins ({{$summary.Logins}})</span>{{end}}
+                            <span class="c-text-secondary">Changes:</span>
+                            {{if gt $summary.Tasks 0}}<span class="flex-ai-center-gap-4"><span class="dot-yellow"></span> Tasks ({{$summary.Tasks}})</span>{{end}}
+                            {{if gt $summary.Demands 0}}<span class="flex-ai-center-gap-4"><span class="dot-warning"></span> Demands ({{$summary.Demands}})</span>{{end}}
+                            {{if gt $summary.Endeavours 0}}<span class="flex-ai-center-gap-4"><span class="dot-success"></span> Endeavours ({{$summary.Endeavours}})</span>{{end}}
+                            {{if gt $summary.Resources 0}}<span class="flex-ai-center-gap-4"><span class="dot-secondary"></span> Resources ({{$summary.Resources}})</span>{{end}}
+                            {{if gt $summary.Orgs 0}}<span class="flex-ai-center-gap-4"><span class="dot-secondary"></span> Organizations ({{$summary.Orgs}})</span>{{end}}
+                        </div>
+                    </div>
+                    {{else}}
+                    <div class="empty-state p-16">
+                        <p class="text-muted">{{t .Lang "portal.dashboard.no_recent_activity"}}</p>
+                    </div>
+                    {{end}}
+                {{end}}
+            </div>
+        </div>
+
+        <!-- Agents and Organizations -->
+        {{if .Data}}
+        <div class="two-col mt-24">
+            <div class="card mb-0">
+                <div class="card-header">
+                    <h2 class="mb-0">{{t .Lang "portal.dashboard.section_agents"}} {{$agents := index .Data "Agents"}}{{if $agents}}<span class="meta-text">({{len $agents}})</span>{{end}}</h2>
+                    <a href="/agents" class="btn btn-sm">{{t .Lang "common.view_all"}}</a>
+                </div>
+                {{if $agents}}
+                <div class="flex-col-gap-4">
+                    {{range $agents}}
+                    <div class="flex-between-row">
+                        <div>
+                            <a href="/agents/{{.ID}}" class="fw-500">{{.Name}}</a>
+                            <span class="text-muted mis-8">{{.Email}}</span>
+                        </div>
+                        <div>
+                            {{if eq .Status "active"}}
+                                <span class="badge badge-active">{{t $.Lang "status.active"}}</span>
+                            {{else}}
+                                <span class="badge badge-inactive">{{.Status}}</span>
+                            {{end}}
+                            {{if .HealthStatus}}
+                                {{if eq .HealthStatus "healthy"}}
+                                    <span class="badge badge-active mis-4">{{t $.Lang "status.healthy"}}</span>
+                                {{else if eq .HealthStatus "degraded"}}
+                                    <span class="badge badge-pending mis-4">{{t $.Lang "status.degraded"}}</span>
+                                {{else if eq .HealthStatus "offline"}}
+                                    <span class="badge badge-inactive mis-4">{{t $.Lang "status.offline"}}</span>
+                                {{end}}
+                            {{end}}
+                        </div>
+                    </div>
+                    {{end}}
+                </div>
+                {{else}}
+                <div class="empty-state p-16">
+                    <p class="text-muted">{{t .Lang "portal.dashboard.no_agents"}}</p>
+                    <a href="/agents" class="btn btn-primary mt-8">{{t .Lang "portal.dashboard.create_agent_token"}}</a>
+                </div>
+                {{end}}
+            </div>
+            <div class="card mb-0">
+                <div class="card-header">
+                    <h2 class="mb-0">{{t .Lang "portal.dashboard.section_organizations"}} {{$orgs := index .Data "Organizations"}}{{if $orgs}}<span class="meta-text">({{len $orgs}})</span>{{end}}</h2>
+                    <a href="/organizations" class="btn btn-sm">{{t .Lang "common.view_all"}}</a>
+                </div>
+                {{if $orgs}}
+                <div class="flex-col-gap-4">
+                    {{range $orgs}}
+                    <div class="flex-between-row">
+                        <a href="/organizations/{{.ID}}" class="fw-500">{{.Name}}</a>
+                        <div class="flex-ai-center-gap-8">
+                            <span class="text-muted fs-13">{{.MemberCount}} {{t $.Lang "portal.dashboard.members"}}</span>
+                            {{if eq .Status "active"}}
+                                <span class="badge badge-active">{{t $.Lang "status.active"}}</span>
+                            {{else}}
+                                <span class="badge badge-inactive">{{.Status}}</span>
+                            {{end}}
+                        </div>
+                    </div>
+                    {{end}}
+                </div>
+                {{else}}
+                <div class="empty-state p-16">
+                    <p class="text-muted">{{t .Lang "portal.dashboard.no_organizations"}}</p>
+                </div>
+                {{end}}
+            </div>
+        </div>
+        {{end}}
+
+        <!-- Recent Alerts -->
+        {{if .Data}}
+            {{$alerts := index .Data "RecentAlerts"}}
+            {{if $alerts}}
+            <div class="card mt-24">
+                <div class="card-header">
+                    <h2 class="mb-0">{{t .Lang "portal.dashboard.section_recent_alerts"}}</h2>
+                    <a href="/alerts" class="btn btn-sm">{{t .Lang "common.view_all"}}</a>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>{{t .Lang "portal.dashboard.col.entity"}}</th>
+                            <th>{{t .Lang "portal.dashboard.col.type"}}</th>
+                            <th>{{t .Lang "portal.dashboard.col.content"}}</th>
+                            <th>{{t .Lang "portal.dashboard.col.score"}}</th>
+                            <th>{{t .Lang "portal.dashboard.col.date"}}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {{range $alerts}}
+                        <tr>
+                            <td class="fs-13-ff-mono">{{.EntityID}}</td>
+                            <td><span class="badge badge-pending">{{.EntityType}}</span></td>
+                            <td class="fs-14-truncate-300">{{.Title}}</td>
+                            <td>
+                                {{if ge .HarmScore 70}}
+                                    <span class="badge badge-inactive">{{.HarmScore}}</span>
+                                {{else if ge .HarmScore 40}}
+                                    <span class="badge badge-pending">{{.HarmScore}}</span>
+                                {{else}}
+                                    <span class="badge badge-info">{{.HarmScore}}</span>
+                                {{end}}
+                            </td>
+                            <td class="fs-13">{{fmtDateTime .CreatedAt $.Timezone}}</td>
+                        </tr>
+                        {{end}}
+                    </tbody>
+                </table>
+            </div>
+            {{end}}
+        {{end}}
+
+        <!-- Messages -->
+        <div class="card mt-24">
+            <div class="card-header">
+                <h2 class="mb-0">{{t .Lang "portal.dashboard.section_messages"}} {{if .Data}}<span class="meta-text">({{index .Data "UnreadCount"}} {{t .Lang "portal.dashboard.unread"}})</span>{{end}}</h2>
+                <a href="/messages" class="btn btn-sm">{{t .Lang "common.view_all"}}</a>
+            </div>
+            {{if .Data}}
+                {{$recent := index .Data "RecentMessages"}}
+                {{if $recent}}
+                <table>
+                    <thead>
+                        <tr>
+                            <th>{{t .Lang "portal.messages.col.from"}}</th>
+                            <th>{{t .Lang "portal.messages.col.subject"}}</th>
+                            <th>{{t .Lang "portal.messages.col.intent"}}</th>
+                            <th>{{t .Lang "portal.messages.col.status"}}</th>
+                            <th>{{t .Lang "portal.messages.col.received"}}</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {{range $recent}}
+                        <tr{{if ne .Status "read"}} class="fw-500"{{end}}>
+                            <td class="fs-14">{{if .SenderName}}{{.SenderName}}{{else}}{{.SenderID}}{{end}}</td>
+                            <td><a href="/messages/{{.ID}}">{{.Subject}}</a></td>
+                            <td>
+                                {{if eq .Intent "alert"}}
+                                    <span class="badge badge-inactive">{{t $.Lang "intent.alert"}}</span>
+                                {{else if eq .Intent "action"}}
+                                    <span class="badge badge-info">{{t $.Lang "intent.action"}}</span>
+                                {{else if eq .Intent "question"}}
+                                    <span class="badge badge-pending">{{t $.Lang "intent.question"}}</span>
+                                {{else}}
+                                    <span class="badge badge-active">{{t $.Lang "intent.info"}}</span>
+                                {{end}}
+                            </td>
+                            <td>
+                                {{if eq .Status "read"}}
+                                    <span class="text-muted fs-13">{{t $.Lang "status.read"}}</span>
+                                {{else if eq .Status "delivered"}}
+                                    <span class="badge badge-pending">{{t $.Lang "status.new"}}</span>
+                                {{else}}
+                                    <span class="badge badge-pending">{{.Status}}</span>
+                                {{end}}
+                            </td>
+                            <td class="fs-13">{{fmtDateTime .CreatedAt $.Timezone}}</td>
+                            <td><a href="/messages/{{.ID}}" class="btn btn-sm">{{t $.Lang "common.view"}}</a></td>
+                        </tr>
+                        {{end}}
+                    </tbody>
+                </table>
+                {{else}}
+                <div class="empty-state p-16">
+                    <p class="text-muted">{{t .Lang "portal.dashboard.no_unread_messages"}}</p>
+                </div>
+                {{end}}
+            {{end}}
+        </div>
+    </div>
+</div>
+{{end}}

@@ -1,0 +1,252 @@
+{{template "base" .}}
+{{define "content"}}
+{{template "nav" .}}
+
+<div class="main-content">
+    <div class="container">
+        <div class="page-header">
+            <div>
+                <div class="mb-4">
+                    <a href="/agents" class="fs-13-c-secondary-no-underline">&larr; {{t .Lang "portal.agent_detail.back_to_agents"}}</a>
+                </div>
+                <h1>{{if .Data}}{{index .Data "AgentName"}}{{end}}</h1>
+            </div>
+        </div>
+
+        {{if .Error}}
+        <div class="alert alert-error">{{.Error}}</div>
+        {{end}}
+
+        {{if .Success}}
+        <div class="alert alert-success">{{.Success}}</div>
+        {{end}}
+
+        {{if .Data}}
+        {{$agent := index .Data "Agent"}}
+        {{if $agent}}
+
+        <!-- Agent Info + Health -->
+        <div class="two-col mb-24">
+            <div class="card mb-0">
+                <div class="card-header">
+                    <h2 class="mb-0">{{t .Lang "portal.agent_detail.section_details"}}</h2>
+                    {{if eq $agent.Status "active"}}
+                        <span class="badge badge-active">{{t .Lang "status.active"}}</span>
+                    {{else if eq $agent.Status "blocked"}}
+                        <span class="badge badge-suspended">{{t .Lang "status.blocked"}}</span>
+                    {{else if eq $agent.Status "suspended"}}
+                        <span class="badge badge-suspended">{{t .Lang "status.suspended"}}</span>
+                    {{else}}
+                        <span class="badge badge-inactive">{{$agent.Status}}</span>
+                    {{end}}
+                </div>
+                <div class="grid-auto-1fr-gap-8-16-fs-14">
+                    <span class="text-secondary">{{t .Lang "portal.agent_detail.label_email"}}</span>
+                    <span>{{$agent.Email}}</span>
+                    <span class="text-secondary">{{t .Lang "portal.agent_detail.label_tier"}}</span>
+                    <span>{{$agent.TierName}}</span>
+                    <span class="text-secondary">{{t .Lang "portal.agent_detail.label_created"}}</span>
+                    <span>{{fmtDateTime $agent.CreatedAt $.Timezone}}</span>
+                    <span class="text-secondary">{{t .Lang "portal.agent_detail.label_updated"}}</span>
+                    <span>{{fmtDateTime $agent.UpdatedAt $.Timezone}}</span>
+                </div>
+
+                {{if ne $agent.Status "suspended"}}
+                <div class="section-divider">
+                    {{if ne $agent.Status "blocked"}}
+                    <form method="POST" action="/agents/{{$agent.ID}}" class="flex-gap-12-ai-end">
+                        <input type="hidden" name="csrf_token" value="{{$.CSRFToken}}">
+                        <input type="hidden" name="action" value="update">
+                        <div class="form-group mb-0-flex-1">
+                            <label for="agent_name">{{t .Lang "portal.agent_detail.label_name"}}</label>
+                            <input type="text" id="agent_name" name="name" value="{{$agent.Name}}">
+                        </div>
+                        <div class="form-group mb-0">
+                            <label for="agent_status">{{t .Lang "portal.agent_detail.label_status"}}</label>
+                            <select id="agent_status" name="status">
+                                <option value="active" {{if eq $agent.Status "active"}}selected{{end}}>{{t .Lang "status.active"}}</option>
+                                <option value="inactive" {{if eq $agent.Status "inactive"}}selected{{end}}>{{t .Lang "status.inactive"}}</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary h-42">{{t .Lang "common.save"}}</button>
+                    </form>
+                    {{end}}
+
+                    <div class="mt-16-flex-gap-12">
+                        {{if eq $agent.Status "blocked"}}
+                        <form method="POST" action="/agents/{{$agent.ID}}">
+                            <input type="hidden" name="csrf_token" value="{{$.CSRFToken}}">
+                            <input type="hidden" name="action" value="unblock">
+                            <button type="submit" class="btn btn-primary" data-confirm="{{t .Lang "portal.agent_detail.confirm_unblock"}}">{{t .Lang "portal.agent_detail.action_unblock"}}</button>
+                        </form>
+                        {{else}}
+                        <form method="POST" action="/agents/{{$agent.ID}}">
+                            <input type="hidden" name="csrf_token" value="{{$.CSRFToken}}">
+                            <input type="hidden" name="action" value="block">
+                            <button type="submit" class="btn btn-warning" data-confirm="{{t .Lang "portal.agent_detail.confirm_block"}}">{{t .Lang "portal.agent_detail.action_block"}}</button>
+                        </form>
+                        {{end}}
+                    </div>
+                </div>
+                {{else}}
+                <div class="section-divider">
+                    <p class="text-muted fs-14">{{t .Lang "portal.agent_detail.suspended_by_admin"}}</p>
+                </div>
+                {{end}}
+            </div>
+
+            <div class="card mb-0">
+                <div class="card-header">
+                    <h2 class="mb-0">{{t .Lang "portal.agent_detail.section_health"}}</h2>
+                </div>
+
+                {{$health := $agent.Health}}
+                {{if $health}}
+                <div class="mb-16">
+                    {{$hstatus := index $health "status"}}
+                    {{if eq $hstatus "healthy"}}
+                        <span class="badge badge-active fs-14-p-4-12">{{t .Lang "status.healthy"}}</span>
+                    {{else if eq $hstatus "degraded"}}
+                        <span class="badge badge-pending fs-14-p-4-12">{{t .Lang "status.degraded"}}</span>
+                    {{else}}
+                        <span class="badge badge-inactive fs-14-p-4-12">{{$hstatus}}</span>
+                    {{end}}
+                </div>
+                <div class="grid-auto-1fr-gap-8-16-fs-14">
+                    <span class="text-secondary">{{t .Lang "portal.agent_detail.label_session_rate"}}</span>
+                    <span>{{index $health "session_rate"}}</span>
+                    <span class="text-secondary">{{t .Lang "portal.agent_detail.label_session_calls"}}</span>
+                    <span>{{index $health "session_calls"}}</span>
+                    <span class="text-secondary">{{t .Lang "portal.agent_detail.label_24h_rate"}}</span>
+                    <span>{{index $health "rolling_24h_rate"}}</span>
+                    <span class="text-secondary">{{t .Lang "portal.agent_detail.label_24h_calls"}}</span>
+                    <span>{{index $health "rolling_24h_calls"}}</span>
+                    <span class="text-secondary">{{t .Lang "portal.agent_detail.label_7d_rate"}}</span>
+                    <span>{{index $health "rolling_7d_rate"}}</span>
+                    <span class="text-secondary">{{t .Lang "portal.agent_detail.label_7d_calls"}}</span>
+                    <span>{{index $health "rolling_7d_calls"}}</span>
+                    <span class="text-secondary">{{t .Lang "portal.agent_detail.label_last_checked"}}</span>
+                    <span>{{index $health "last_checked_at"}}</span>
+                </div>
+                {{else}}
+                <div class="empty-state p-24">
+                    <p class="text-muted">{{t .Lang "portal.agent_detail.no_health_data"}}</p>
+                </div>
+                {{end}}
+            </div>
+        </div>
+
+        <!-- Onboarding -->
+        {{$onboarding := index .Data "Onboarding"}}
+        {{if $onboarding}}
+        <div class="card mb-24">
+            <div class="card-header">
+                <h2 class="mb-0">{{t .Lang "portal.agent_detail.section_onboarding"}}</h2>
+                {{if eq $onboarding.OnboardingStatus "completed"}}
+                    <span class="badge badge-active">{{t .Lang "status.completed"}}</span>
+                {{else if eq $onboarding.OnboardingStatus "pending"}}
+                    <span class="badge badge-pending">{{t .Lang "status.pending"}}</span>
+                {{else if eq $onboarding.OnboardingStatus "in_progress"}}
+                    <span class="badge badge-info">{{t .Lang "status.in_progress"}}</span>
+                {{else}}
+                    <span class="badge badge-pending">{{$onboarding.OnboardingStatus}}</span>
+                {{end}}
+            </div>
+
+            {{if $onboarding.Cooldown}}
+            <div class="alert-warning-box">
+                <span class="fw-500">{{t .Lang "portal.agent_detail.cooldown_label"}}</span>
+                {{t .Lang "portal.agent_detail.failed_attempts"}} {{index $onboarding.Cooldown "failed_attempts"}}
+                {{if index $onboarding.Cooldown "next_eligible_at"}}
+                &mdash; {{t .Lang "portal.agent_detail.next_eligible"}} {{index $onboarding.Cooldown "next_eligible_at"}}
+                {{end}}
+                {{if index $onboarding.Cooldown "locked"}}
+                &mdash; <span class="c-error-fw-500">{{t .Lang "status.locked"}}</span>
+                {{end}}
+            </div>
+            {{end}}
+
+            {{if $onboarding.Attempts}}
+            <table>
+                <thead>
+                    <tr>
+                        <th>{{t .Lang "portal.agent_detail.col.attempt"}}</th>
+                        <th>{{t .Lang "portal.agent_detail.col.version"}}</th>
+                        <th>{{t .Lang "portal.agent_detail.col.status"}}</th>
+                        <th>{{t .Lang "portal.agent_detail.col.score"}}</th>
+                        <th>{{t .Lang "portal.agent_detail.col.started"}}</th>
+                        <th>{{t .Lang "portal.agent_detail.col.completed"}}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{range $onboarding.Attempts}}
+                    <tr>
+                        <td class="ff-mono-fs-13">{{index . "id"}}</td>
+                        <td>{{index . "version"}}</td>
+                        <td>
+                            {{$s := index . "status"}}
+                            {{if eq $s "passed"}}
+                                <span class="badge badge-active">{{t $.Lang "status.passed"}}</span>
+                            {{else if eq $s "failed"}}
+                                <span class="badge badge-inactive">{{t $.Lang "status.failed"}}</span>
+                            {{else if eq $s "in_progress"}}
+                                <span class="badge badge-info">{{t $.Lang "status.in_progress"}}</span>
+                            {{else}}
+                                <span class="badge badge-pending">{{$s}}</span>
+                            {{end}}
+                        </td>
+                        <td>{{index . "total_score"}}</td>
+                        <td class="fs-13">{{index . "started_at"}}</td>
+                        <td class="fs-13">{{if index . "completed_at"}}{{index . "completed_at"}}{{else}}-{{end}}</td>
+                    </tr>
+                    {{end}}
+                </tbody>
+            </table>
+            {{else}}
+            <div class="empty-state p-24">
+                <p class="text-muted">{{t .Lang "portal.agent_detail.no_onboarding_attempts"}}</p>
+            </div>
+            {{end}}
+        </div>
+        {{end}}
+
+        <!-- Recent Activity -->
+        <div class="card">
+            <div class="card-header">
+                <h2 class="mb-0">{{t .Lang "portal.agent_detail.section_activity"}}</h2>
+            </div>
+
+            {{$activity := index .Data "Activity"}}
+            {{if $activity}}
+            <table>
+                <thead>
+                    <tr>
+                        <th>{{t .Lang "portal.agent_detail.col.action"}}</th>
+                        <th>{{t .Lang "portal.agent_detail.col.resource"}}</th>
+                        <th>{{t .Lang "portal.agent_detail.col.summary"}}</th>
+                        <th>{{t .Lang "portal.agent_detail.col.time"}}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{range $activity}}
+                    <tr>
+                        <td><span class="badge badge-info">{{.Action}}</span></td>
+                        <td class="fs-13">{{.Resource}}</td>
+                        <td class="fs-14">{{.Summary}}</td>
+                        <td class="fs-13">{{fmtDateTime .CreatedAt $.Timezone}}</td>
+                    </tr>
+                    {{end}}
+                </tbody>
+            </table>
+            {{else}}
+            <div class="empty-state p-24">
+                <p class="text-muted">{{t .Lang "portal.agent_detail.no_activity"}}</p>
+            </div>
+            {{end}}
+        </div>
+
+        {{end}}
+        {{end}}
+    </div>
+</div>
+{{end}}

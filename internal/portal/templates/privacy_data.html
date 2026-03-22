@@ -1,0 +1,68 @@
+{{template "base" .}}
+{{define "content"}}
+{{template "nav" .}}
+
+<div class="main-content">
+    <div class="container">
+        <div class="page-header">
+            <h1>{{t .Lang "portal.privacy.title"}}</h1>
+            <p class="text-secondary">{{t .Lang "portal.privacy.subtitle"}}</p>
+        </div>
+
+        {{if .Error}}
+        <div class="alert alert-error">{{.Error}}</div>
+        {{end}}
+
+        {{if .Success}}
+        <div class="alert alert-success">{{.Success}}</div>
+        {{end}}
+
+        <div class="two-col">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="mb-0">{{t .Lang "portal.privacy.export_title"}}</h2>
+                </div>
+                <p class="c-muted-mb-16">{{t .Lang "portal.privacy.export_desc"}}</p>
+                <a href="/privacy-data/export" class="btn btn-primary" download>{{t .Lang "portal.privacy.export_btn"}}</a>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="mb-0">{{t .Lang "portal.privacy.delete_title"}}</h2>
+                </div>
+
+                {{if and .Data (index .Data "DeletionPending")}}
+                <div class="alert-error-box">
+                    <p class="c-red-dark-fw-600-mb-8">{{t .Lang "portal.privacy.deletion_pending"}}</p>
+                    {{if and .Data (index .Data "DeletionScheduled")}}
+                    <p class="c-red-dark-fs-13">{{t .Lang "portal.privacy.deletion_scheduled"}} {{index .Data "DeletionScheduled"}}</p>
+                    {{end}}
+                </div>
+                <form method="POST" action="/privacy-data">
+                    <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
+                    <input type="hidden" name="action" value="cancel_deletion">
+                    <button type="submit" class="btn btn-primary">{{t .Lang "portal.privacy.cancel_deletion_btn"}}</button>
+                </form>
+
+                {{else}}
+                <p class="c-muted-mb-16">{{t .Lang "portal.privacy.delete_desc"}}</p>
+                <details class="mb-16">
+                    <summary class="cur-pointer-c-muted-fs-13">{{t .Lang "portal.privacy.delete_details"}}</summary>
+                    <ul class="indent-hint">
+                        <li>{{t .Lang "portal.privacy.delete_item_suspend"}}</li>
+                        <li>{{t .Lang "portal.privacy.delete_item_grace"}}</li>
+                        <li>{{t .Lang "portal.privacy.delete_item_cancel"}}</li>
+                        <li>{{t .Lang "portal.privacy.delete_item_permanent"}}</li>
+                    </ul>
+                </details>
+                <form method="POST" action="/privacy-data" data-confirm="{{t .Lang "portal.privacy.delete_confirm"}}">
+                    <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
+                    <input type="hidden" name="action" value="request_deletion">
+                    <button type="submit" class="btn btn-danger">{{t .Lang "portal.privacy.delete_btn"}}</button>
+                </form>
+                {{end}}
+            </div>
+        </div>
+    </div>
+</div>
+{{end}}

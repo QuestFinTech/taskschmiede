@@ -1,0 +1,84 @@
+{{template "base" .}}
+{{define "content"}}
+{{template "nav" .}}
+
+<div class="main-content">
+    <div class="container">
+        <div class="page-header">
+            <h1>{{t .Lang "portal.alerts.title"}}</h1>
+        </div>
+
+        {{if .Error}}
+        <div class="alert alert-error">{{.Error}}</div>
+        {{end}}
+
+        {{if .Data}}
+        {{$cgStats := index .Data "CGStats"}}
+        {{if $cgStats}}
+        <div class="stats-grid mb-20">
+            <div class="stat-card">
+                <div class="stat-value">{{$cgStats.TotalScanned}}</div>
+                <div class="stat-label">{{t .Lang "portal.alerts.stat_total_scanned"}}</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value text-success">{{$cgStats.Clean}}</div>
+                <div class="stat-label">{{t .Lang "portal.alerts.stat_clean"}}</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value text-error">{{$cgStats.Flagged}}</div>
+                <div class="stat-label">{{t .Lang "portal.alerts.stat_flagged"}}</div>
+            </div>
+        </div>
+        {{end}}
+        {{end}}
+
+        <div class="card">
+            <div class="card-header">
+                <h2 class="mb-0">{{t .Lang "portal.alerts.title"}} {{if .Data}}<span class="meta-text">({{index .Data "Total"}})</span>{{end}}</h2>
+            </div>
+            <div class="fs-14-c-secondary-mb-16-alt">
+                {{t .Lang "portal.alerts.description"}}
+            </div>
+            {{if .Data}}
+                {{$alerts := index .Data "Alerts"}}
+                {{if $alerts}}
+                <table>
+                    <thead>
+                        <tr>
+                            <th>{{t .Lang "portal.alerts.col.type"}}</th>
+                            <th>{{t .Lang "portal.alerts.col.entity"}}</th>
+                            <th>{{t .Lang "portal.alerts.col.title"}}</th>
+                            <th>{{t .Lang "portal.alerts.col.harm_score"}}</th>
+                            <th>{{t .Lang "portal.alerts.col.created"}}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {{range $alerts}}
+                        <tr>
+                            <td><span class="badge badge-info">{{.EntityType}}</span></td>
+                            <td class="ff-mono-fs-13">{{.EntityID}}</td>
+                            <td class="fs-14">{{.Title}}</td>
+                            <td>
+                                {{if ge .HarmScore 70}}
+                                    <span class="badge badge-inactive fs-14">{{.HarmScore}}</span>
+                                {{else if ge .HarmScore 40}}
+                                    <span class="badge badge-pending fs-14">{{.HarmScore}}</span>
+                                {{else}}
+                                    <span class="badge badge-info fs-14">{{.HarmScore}}</span>
+                                {{end}}
+                            </td>
+                            <td class="fs-13">{{fmtDateTime .CreatedAt $.Timezone}}</td>
+                        </tr>
+                        {{end}}
+                    </tbody>
+                </table>
+                {{else}}
+                <div class="empty-state">
+                    <p>{{t .Lang "portal.alerts.no_alerts"}}</p>
+                </div>
+                {{end}}
+            {{end}}
+        </div>
+    </div>
+</div>
+{{end}}

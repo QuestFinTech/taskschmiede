@@ -1,0 +1,38 @@
+{{template "base" .}}
+{{define "content"}}
+<div class="main-content center-page">
+    <div class="center-card card">
+        <div class="ta-center-mb-24">
+            <h1>{{t .Lang "portal.login.title"}}</h1>
+            <p class="text-secondary mb-0">{{t .Lang "portal.login.subtitle"}}</p>
+        </div>
+
+        {{if .Error}}
+        <div class="alert alert-error">{{.Error}}</div>
+        {{end}}
+
+        {{if .Success}}
+        <div class="alert alert-success">{{.Success}}</div>
+        {{end}}
+
+        <form method="POST" action="/login">
+            <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
+            <div class="form-group">
+                <label for="email">{{t .Lang "common.label.email"}}</label>
+                <input type="email" id="email" name="email" required autofocus placeholder="{{t .Lang "common.placeholder.email"}}">
+            </div>
+            <div class="form-group">
+                <label for="password">{{t .Lang "common.label.password"}}</label>
+                <input type="password" id="password" name="password" required placeholder="{{t .Lang "common.placeholder.enter_password"}}">
+            </div>
+            <button type="submit" class="btn btn-primary btn-block">{{t .Lang "common.sign_in"}}</button>
+        </form>
+
+        <div class="section-divider-center">
+            <a href="/forgot-password">{{t .Lang "portal.login.forgot_password"}}</a>
+            <span class="mx-8-c-muted">|</span>
+            <a href="/register">{{t .Lang "portal.login.create_account"}}</a>
+        </div>
+    </div>
+</div>
+{{end}}

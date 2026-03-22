@@ -1,0 +1,367 @@
+{{template "base" .}}
+{{define "content"}}
+{{template "nav" .}}
+
+<div class="main-content">
+    <div class="container">
+        <div class="page-header">
+            <h1>{{t .Lang "portal.profile.title"}}</h1>
+        </div>
+
+        {{if .Error}}
+        <div class="alert alert-error">{{.Error}}</div>
+        {{end}}
+
+        {{if .Success}}
+        <div class="alert alert-success">{{.Success}}</div>
+        {{end}}
+
+        {{$person := index .Data "Person"}}
+
+        {{/* Merged Profile Card */}}
+        <div class="two-col">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="mb-0">{{t .Lang "portal.profile.account_details"}}</h2>
+                </div>
+                <form method="POST" action="/profile">
+                    <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
+                    <input type="hidden" name="action" value="update_profile">
+                    <div class="flex-gap-12">
+                        <div class="form-group flex-1">
+                            <label for="first_name">{{t .Lang "portal.profile.person_first_name"}} <span class="req">*</span></label>
+                            <input type="text" id="first_name" name="first_name" required value="{{$person.FirstName}}">
+                        </div>
+                        <div class="form-group flex-1">
+                            <label for="middle_names">{{t .Lang "portal.profile.person_middle_names"}}</label>
+                            <input type="text" id="middle_names" name="middle_names" value="{{$person.MiddleNames}}">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="last_name">{{t .Lang "portal.profile.person_last_name"}} <span class="req">*</span></label>
+                        <input type="text" id="last_name" name="last_name" required value="{{$person.LastName}}">
+                    </div>
+                    <div class="form-group">
+                        <label for="phone">{{t .Lang "portal.profile.person_phone"}}</label>
+                        <input type="tel" id="phone" name="phone" value="{{$person.Phone}}" placeholder="+1 555 123 4567" autocomplete="tel">
+                    </div>
+                    {{if $.Languages}}
+                    <div class="flex-gap-12">
+                        <div class="form-group flex-1">
+                            <label for="lang">{{t .Lang "common.label.language"}}</label>
+                            <select id="lang" name="lang">
+                                {{range $.Languages}}
+                                <option value="{{.Code}}" {{if eq $.Lang .Code}}selected{{end}}>{{.NativeName}}</option>
+                                {{end}}
+                            </select>
+                        </div>
+                        <div class="form-group flex-1">
+                            <label for="timezone">{{t .Lang "common.label.timezone"}}</label>
+                            <select id="timezone" name="timezone">
+                                {{$tz := $.Timezone}}
+                                <option value="UTC" {{if eq $tz "UTC"}}selected{{end}}>UTC</option>
+                                <option value="Europe/Amsterdam" {{if eq $tz "Europe/Amsterdam"}}selected{{end}}>Europe/Amsterdam</option>
+                                <option value="Europe/Berlin" {{if eq $tz "Europe/Berlin"}}selected{{end}}>Europe/Berlin</option>
+                                <option value="Europe/London" {{if eq $tz "Europe/London"}}selected{{end}}>Europe/London</option>
+                                <option value="Europe/Luxembourg" {{if eq $tz "Europe/Luxembourg"}}selected{{end}}>Europe/Luxembourg</option>
+                                <option value="Europe/Paris" {{if eq $tz "Europe/Paris"}}selected{{end}}>Europe/Paris</option>
+                                <option value="Europe/Rome" {{if eq $tz "Europe/Rome"}}selected{{end}}>Europe/Rome</option>
+                                <option value="Europe/Madrid" {{if eq $tz "Europe/Madrid"}}selected{{end}}>Europe/Madrid</option>
+                                <option value="Europe/Athens" {{if eq $tz "Europe/Athens"}}selected{{end}}>Europe/Athens</option>
+                                <option value="Europe/Moscow" {{if eq $tz "Europe/Moscow"}}selected{{end}}>Europe/Moscow</option>
+                                <option value="America/New_York" {{if eq $tz "America/New_York"}}selected{{end}}>America/New_York</option>
+                                <option value="America/Chicago" {{if eq $tz "America/Chicago"}}selected{{end}}>America/Chicago</option>
+                                <option value="America/Denver" {{if eq $tz "America/Denver"}}selected{{end}}>America/Denver</option>
+                                <option value="America/Los_Angeles" {{if eq $tz "America/Los_Angeles"}}selected{{end}}>America/Los_Angeles</option>
+                                <option value="Asia/Tokyo" {{if eq $tz "Asia/Tokyo"}}selected{{end}}>Asia/Tokyo</option>
+                                <option value="Asia/Shanghai" {{if eq $tz "Asia/Shanghai"}}selected{{end}}>Asia/Shanghai</option>
+                                <option value="Asia/Kolkata" {{if eq $tz "Asia/Kolkata"}}selected{{end}}>Asia/Kolkata</option>
+                                <option value="Asia/Dubai" {{if eq $tz "Asia/Dubai"}}selected{{end}}>Asia/Dubai</option>
+                                <option value="Australia/Sydney" {{if eq $tz "Australia/Sydney"}}selected{{end}}>Australia/Sydney</option>
+                                <option value="Pacific/Auckland" {{if eq $tz "Pacific/Auckland"}}selected{{end}}>Pacific/Auckland</option>
+                            </select>
+                        </div>
+                    </div>
+                    {{end}}
+                    <div class="form-group">
+                        <label for="account_type">{{t .Lang "portal.profile.person_account_type"}}</label>
+                        <select id="account_type" name="account_type">
+                            <option value="private" {{if ne $person.AccountType "business"}}selected{{end}}>{{t .Lang "portal.register.account_private"}}</option>
+                            <option value="business" {{if eq $person.AccountType "business"}}selected{{end}}>{{t .Lang "portal.register.account_business"}}</option>
+                        </select>
+                    </div>
+                    <div id="business_fields_profile" class="{{if ne $person.AccountType "business"}}d-none{{end}}">
+                        <div class="form-group">
+                            <label for="company_name">{{t .Lang "portal.profile.person_company_name"}}</label>
+                            <input type="text" id="company_name" name="company_name" value="{{$person.CompanyName}}">
+                        </div>
+                        <div class="form-group">
+                            <label for="company_registration">{{t .Lang "portal.profile.person_company_reg"}}</label>
+                            <input type="text" id="company_registration" name="company_registration" value="{{$person.CompanyRegistration}}">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="country">{{t .Lang "portal.profile.person_country"}}</label>
+                        <select id="country" name="country">
+                            <option value="">--</option>
+                            {{$c := $person.Country}}
+                            <option value="AT" {{if eq $c "AT"}}selected{{end}}>Austria</option>
+                            <option value="BE" {{if eq $c "BE"}}selected{{end}}>Belgium</option>
+                            <option value="BG" {{if eq $c "BG"}}selected{{end}}>Bulgaria</option>
+                            <option value="HR" {{if eq $c "HR"}}selected{{end}}>Croatia</option>
+                            <option value="CY" {{if eq $c "CY"}}selected{{end}}>Cyprus</option>
+                            <option value="CZ" {{if eq $c "CZ"}}selected{{end}}>Czech Republic</option>
+                            <option value="DK" {{if eq $c "DK"}}selected{{end}}>Denmark</option>
+                            <option value="EE" {{if eq $c "EE"}}selected{{end}}>Estonia</option>
+                            <option value="FI" {{if eq $c "FI"}}selected{{end}}>Finland</option>
+                            <option value="FR" {{if eq $c "FR"}}selected{{end}}>France</option>
+                            <option value="DE" {{if eq $c "DE"}}selected{{end}}>Germany</option>
+                            <option value="GR" {{if eq $c "GR"}}selected{{end}}>Greece</option>
+                            <option value="HU" {{if eq $c "HU"}}selected{{end}}>Hungary</option>
+                            <option value="IE" {{if eq $c "IE"}}selected{{end}}>Ireland</option>
+                            <option value="IT" {{if eq $c "IT"}}selected{{end}}>Italy</option>
+                            <option value="LV" {{if eq $c "LV"}}selected{{end}}>Latvia</option>
+                            <option value="LT" {{if eq $c "LT"}}selected{{end}}>Lithuania</option>
+                            <option value="LU" {{if eq $c "LU"}}selected{{end}}>Luxembourg</option>
+                            <option value="MT" {{if eq $c "MT"}}selected{{end}}>Malta</option>
+                            <option value="NL" {{if eq $c "NL"}}selected{{end}}>Netherlands</option>
+                            <option value="PL" {{if eq $c "PL"}}selected{{end}}>Poland</option>
+                            <option value="PT" {{if eq $c "PT"}}selected{{end}}>Portugal</option>
+                            <option value="RO" {{if eq $c "RO"}}selected{{end}}>Romania</option>
+                            <option value="SK" {{if eq $c "SK"}}selected{{end}}>Slovakia</option>
+                            <option value="SI" {{if eq $c "SI"}}selected{{end}}>Slovenia</option>
+                            <option value="ES" {{if eq $c "ES"}}selected{{end}}>Spain</option>
+                            <option value="SE" {{if eq $c "SE"}}selected{{end}}>Sweden</option>
+                            <option value="CH" {{if eq $c "CH"}}selected{{end}}>Switzerland</option>
+                            <option value="GB" {{if eq $c "GB"}}selected{{end}}>United Kingdom</option>
+                            <option value="US" {{if eq $c "US"}}selected{{end}}>United States</option>
+                            <option value="OTHER" {{if eq $c "OTHER"}}selected{{end}}>Other</option>
+                        </select>
+                    </div>
+                    {{$addr := $person.Address}}
+                    <div class="form-group">
+                        <label for="street">{{t .Lang "portal.profile.address_street"}}</label>
+                        <input type="text" id="street" name="street" value="{{if $addr}}{{$addr.Street}}{{end}}">
+                    </div>
+                    <div class="form-group">
+                        <label for="street2">{{t .Lang "portal.profile.address_street2"}}</label>
+                        <input type="text" id="street2" name="street2" value="{{if $addr}}{{$addr.Street2}}{{end}}">
+                    </div>
+                    <div class="flex-gap-12">
+                        <div class="form-group flex-1">
+                            <label for="postal_code">{{t .Lang "portal.profile.address_postal_code"}}</label>
+                            <input type="text" id="postal_code" name="postal_code" value="{{if $addr}}{{$addr.PostalCode}}{{end}}">
+                        </div>
+                        <div class="form-group flex-2">
+                            <label for="city">{{t .Lang "portal.profile.address_city"}}</label>
+                            <input type="text" id="city" name="city" value="{{if $addr}}{{$addr.City}}{{end}}">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="state">{{t .Lang "portal.profile.address_state"}}</label>
+                        <input type="text" id="state" name="state" value="{{if $addr}}{{$addr.State}}{{end}}">
+                    </div>
+                    <div class="form-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" name="email_copy" {{if .EmailCopy}}checked{{end}}>
+                            {{t .Lang "portal.profile.email_copy"}}
+                        </label>
+                        <p class="form-hint">{{t .Lang "portal.profile.email_copy_hint"}}</p>
+                    </div>
+                    <button type="submit" class="btn btn-primary">{{t .Lang "common.save_changes"}}</button>
+                </form>
+            </div>
+
+            {{/* Right column: Change Email + Change Password + Consent History */}}
+            <div>
+                {{/* Change Email */}}
+                <div class="card mb-24">
+                    <div class="card-header">
+                        <h2 class="mb-0">{{t .Lang "portal.profile.change_email"}}</h2>
+                    </div>
+                    <p class="c-muted-mb-16">{{t .Lang "portal.profile.change_email_desc"}}</p>
+                    {{if and .Data (index .Data "EmailChangePending")}}
+                    <div class="alert alert-info mb-16">
+                        {{t .Lang "portal.profile.email_verify_prompt" (index .Data "EmailChangePending")}}
+                    </div>
+                    <div class="flex-gap-12-ai-end">
+                        <form method="POST" action="/profile" class="flex-gap-12-ai-end flex-1">
+                            <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
+                            <input type="hidden" name="action" value="verify_email">
+                            <div class="form-group mb-0 flex-1">
+                                <label for="email_code">{{t .Lang "portal.profile.email_verify_code"}}</label>
+                                <input type="text" id="email_code" name="email_code" required placeholder="xxx-xxx-xxx" autocomplete="off">
+                            </div>
+                            <button type="submit" class="btn btn-primary h-42">{{t .Lang "portal.profile.email_verify_btn"}}</button>
+                        </form>
+                        <form method="POST" action="/profile">
+                            <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
+                            <input type="hidden" name="action" value="cancel_email_change">
+                            <button type="submit" class="btn h-42">{{t .Lang "common.cancel"}}</button>
+                        </form>
+                    </div>
+                    {{else}}
+                    <form method="POST" action="/profile">
+                        <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
+                        <input type="hidden" name="action" value="update_email">
+                        <div class="form-group">
+                            <label for="email">{{t .Lang "common.label.email"}}</label>
+                            <input type="email" id="email" name="email" required value="{{if .User}}{{index .User "email"}}{{end}}">
+                        </div>
+                        <button type="submit" class="btn btn-primary">{{t .Lang "portal.profile.update_email_btn"}}</button>
+                    </form>
+                    {{end}}
+                </div>
+
+                {{/* Change Password */}}
+                <div class="card mb-24">
+                    <div class="card-header">
+                        <h2 class="mb-0">{{t .Lang "portal.profile.change_password"}}</h2>
+                    </div>
+                    <form method="POST" action="/profile">
+                        <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
+                        <input type="hidden" name="action" value="change_password">
+                        <div class="form-group">
+                            <label for="current_password">{{t .Lang "common.label.current_password"}}</label>
+                            <input type="password" id="current_password" name="current_password" required autocomplete="current-password">
+                        </div>
+                        <div class="form-group">
+                            <label for="new_password">{{t .Lang "common.label.new_password"}} <span class="label-hint">({{t .Lang "common.password_hint"}})</span></label>
+                            <input type="password" id="new_password" name="new_password" required autocomplete="new-password">
+                        </div>
+                        <div class="form-group">
+                            <label for="confirm_password">{{t .Lang "common.label.confirm_new_password"}}</label>
+                            <input type="password" id="confirm_password" name="confirm_password" required autocomplete="new-password">
+                        </div>
+                        <button type="submit" class="btn btn-primary">{{t .Lang "portal.profile.update_password"}}</button>
+                    </form>
+                </div>
+
+                {{/* Two-Factor Authentication */}}
+                <div class="card mb-24">
+                    <div class="card-header">
+                        <h2 class="mb-0">{{t .Lang "portal.profile.totp_title"}}</h2>
+                    </div>
+
+                    {{if and .Data (index .Data "TOTPPhase")}}
+                        {{if eq (index .Data "TOTPPhase") "verify"}}
+                        <div class="ta-center-mb-16">
+                            <p>{{t .Lang "portal.profile.totp_scan_qr"}}</p>
+                            {{with index .Data "TOTPSetup"}}
+                            <img src="data:image/png;base64,{{.QRCode}}" alt="TOTP QR Code" class="img-card">
+                            <p class="fs-13-c-muted">{{t $.Lang "portal.profile.totp_manual_entry"}}: <code class="usel-all">{{.Secret}}</code></p>
+                            {{end}}
+                        </div>
+                        <form method="POST" action="/profile">
+                            <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
+                            <input type="hidden" name="action" value="totp_enable">
+                            <div class="form-group">
+                                <label for="totp_code">{{t .Lang "portal.profile.totp_enter_code"}}</label>
+                                <input type="text" id="totp_code" name="totp_code" required autofocus autocomplete="one-time-code" inputmode="numeric" pattern="[0-9]{6}" placeholder="000000" class="verify-input">
+                            </div>
+                            <button type="submit" class="btn btn-primary">{{t .Lang "portal.profile.totp_verify_enable"}}</button>
+                        </form>
+
+                        {{else if eq (index .Data "TOTPPhase") "recovery"}}
+                        <div class="mb-16">
+                            <p><strong>{{t .Lang "portal.profile.totp_recovery_title"}}</strong></p>
+                            <p class="fs-13-c-muted">{{t .Lang "portal.profile.totp_recovery_warning"}}</p>
+                            <div class="code-panel">
+                                {{range index .Data "RecoveryCodes"}}
+                                <div>{{.}}</div>
+                                {{end}}
+                            </div>
+                            <p class="fs-13-c-muted">{{t .Lang "portal.profile.totp_recovery_store"}}</p>
+                        </div>
+                        {{end}}
+
+                    {{else if and .Data (index .Data "TOTPEnabled")}}
+                    <div class="mb-16">
+                        <p class="c-success-fw-600">{{t .Lang "portal.profile.totp_status_enabled"}}</p>
+                        {{if and .Data (index .Data "TOTPRecoveryRemaining")}}
+                        <p class="fs-13-c-muted">{{t .Lang "portal.profile.totp_recovery_remaining"}} {{index .Data "TOTPRecoveryRemaining"}}</p>
+                        {{end}}
+                    </div>
+                    <form method="POST" action="/profile">
+                        <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
+                        <input type="hidden" name="action" value="totp_disable">
+                        <div class="form-group">
+                            <label for="totp_code_disable">{{t .Lang "portal.profile.totp_disable_label"}}</label>
+                            <input type="text" id="totp_code_disable" name="totp_code" required autocomplete="one-time-code" inputmode="numeric" pattern="[0-9]{6}" placeholder="000000" class="verify-input">
+                        </div>
+                        <button type="submit" class="btn btn-danger">{{t .Lang "portal.profile.totp_disable_btn"}}</button>
+                    </form>
+
+                    {{else}}
+                    <p class="c-muted-mb-16">{{t .Lang "portal.profile.totp_status_disabled"}}</p>
+                    <p class="c-muted-mb-16">{{tHTML .Lang "portal.profile.totp_howto"}}</p>
+                    <form method="POST" action="/profile">
+                        <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
+                        <input type="hidden" name="action" value="totp_setup">
+                        <button type="submit" class="btn btn-primary">{{t .Lang "portal.profile.totp_setup_btn"}}</button>
+                    </form>
+                    {{end}}
+                </div>
+
+                {{/* Consent History */}}
+                {{if and .Data (index .Data "Person")}}
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="mb-0">{{t .Lang "portal.profile.consent_title"}}</h2>
+                    </div>
+                    <p class="c-muted-mb-16">{{t .Lang "portal.profile.consent_desc"}}</p>
+                    {{if and .Data (index .Data "Consents")}}
+                    <table class="table-compact">
+                        <thead>
+                            <tr class="bb-border-ta-left">
+                                <th class="p-8-4">{{t .Lang "portal.profile.consent_type"}}</th>
+                                <th class="p-8-4">{{t .Lang "portal.profile.consent_version"}}</th>
+                                <th class="p-8-4">{{t .Lang "portal.profile.consent_date"}}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {{range index .Data "Consents"}}
+                            <tr class="bb-border">
+                                <td class="p-8-4">{{.DocumentType}}</td>
+                                <td class="p-8-4">{{.DocumentVersion}}</td>
+                                <td class="p-8-4">{{.AcceptedAt}}</td>
+                            </tr>
+                            {{end}}
+                        </tbody>
+                    </table>
+                    {{else}}
+                    <p class="c-muted-fs-13">{{t .Lang "portal.profile.consent_none"}}</p>
+                    {{end}}
+                </div>
+                {{end}}
+            </div>
+        </div>
+    </div>
+</div>
+<script nonce="{{.Nonce}}">
+(function() {
+    var sel = document.getElementById('account_type');
+    var grp = document.getElementById('business_fields_profile');
+    if (sel && grp) {
+        sel.addEventListener('change', function() {
+            grp.classList.toggle('d-none', sel.value !== 'business');
+        });
+    }
+    /* Phone mask: format as user types */
+    var phone = document.getElementById('phone');
+    if (phone) {
+        phone.addEventListener('input', function() {
+            var v = phone.value.replace(/[^\d+]/g, '');
+            if (v.length > 1 && v[0] === '+') {
+                var digits = v.slice(1);
+                var parts = [];
+                for (var i = 0; i < digits.length; i += 3) {
+                    parts.push(digits.slice(i, i + 3));
+                }
+                phone.value = '+' + parts.join(' ');
+            }
+        });
+    }
+})();
+</script>
+{{end}}

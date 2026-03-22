@@ -1,0 +1,32 @@
+{{template "base" .}}
+{{define "content"}}
+<div class="main-content center-page">
+    <div class="center-card card">
+        <div class="ta-center-mb-24">
+            <h1>{{t .Lang "portal.login_2fa.title"}}</h1>
+            <p class="text-secondary mb-0">{{t .Lang "portal.login_2fa.subtitle"}}</p>
+        </div>
+
+        {{if .Error}}
+        <div class="alert alert-error">{{.Error}}</div>
+        {{end}}
+
+        <form method="POST" action="/login/2fa">
+            <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
+            <div class="form-group">
+                <label for="code">{{t .Lang "portal.login_2fa.code_label"}}</label>
+                <input type="text" id="code" name="code" required autofocus autocomplete="one-time-code" inputmode="numeric" pattern="[0-9a-zA-Z]*" placeholder="{{t .Lang "portal.login_2fa.code_placeholder"}}" class="verify-input-wide">
+            </div>
+            <button type="submit" class="btn btn-primary btn-block">{{t .Lang "portal.login_2fa.submit"}}</button>
+        </form>
+
+        <div class="mt-16-ta-center-hint">
+            {{t .Lang "portal.login_2fa.recovery_hint"}}
+        </div>
+
+        <div class="section-divider-center">
+            <a href="/login">{{t .Lang "portal.login_2fa.back_to_login"}}</a>
+        </div>
+    </div>
+</div>
+{{end}}

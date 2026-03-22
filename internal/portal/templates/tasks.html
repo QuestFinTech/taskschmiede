@@ -1,0 +1,151 @@
+{{template "base" .}}
+{{define "content"}}
+{{template "nav" .}}
+
+<div class="main-content">
+    <div class="container">
+        <div class="page-header">
+            <h1>{{t .Lang "portal.tasks.title"}}</h1>
+        </div>
+
+        {{if .Error}}
+        <div class="alert alert-error">{{.Error}}</div>
+        {{end}}
+
+        {{if .Success}}
+        <div class="alert alert-success">{{.Success}}</div>
+        {{end}}
+
+        <div class="card mb-24">
+            <div class="card-header">
+                <h2 class="mb-0">{{t .Lang "portal.tasks.create_task"}}</h2>
+            </div>
+            <form method="POST" action="/tasks">
+                <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
+                <input type="hidden" name="action" value="create">
+                <div class="grid-1-2-gap-12-mb-12">
+                    <div class="form-group mb-0">
+                        <label for="title">{{t .Lang "common.label.title"}}</label>
+                        <input type="text" id="title" name="title" placeholder="{{t .Lang "portal.tasks.placeholder_title"}}" required>
+                    </div>
+                    <div class="form-group mb-0">
+                        <label for="description">{{t .Lang "common.label.description"}}</label>
+                        <input type="text" id="description" name="description" placeholder="{{t .Lang "portal.tasks.placeholder_description"}}">
+                    </div>
+                </div>
+                <div class="grid-1-1-auto-gap-12">
+                    <div class="form-group mb-0">
+                        <label for="endeavour_id">{{t .Lang "portal.tasks.label_endeavour"}} <span class="label-hint">({{t .Lang "common.optional"}})</span></label>
+                        <select id="endeavour_id" name="endeavour_id">
+                            <option value="">{{t .Lang "common.none_selected"}}</option>
+                            {{if .Data}}
+                                {{$edvs := index .Data "Endeavours"}}
+                                {{if $edvs}}
+                                    {{range $edvs}}
+                                    <option value="{{.ID}}">{{.Name}}</option>
+                                    {{end}}
+                                {{end}}
+                            {{end}}
+                        </select>
+                    </div>
+                    <div class="form-group mb-0">
+                        <label for="due_date">{{t .Lang "portal.tasks.label_due_date"}} <span class="label-hint">({{t .Lang "common.optional"}})</span></label>
+                        <input type="datetime-local" id="due_date" name="due_date">
+                    </div>
+                    <button type="submit" class="btn btn-primary h-42">{{t .Lang "common.create"}}</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Filters -->
+        <div class="card mb-24-p-16-24">
+            <form method="GET" action="/tasks" class="flex-gap-12-ai-end-wrap">
+                <div class="form-group mb-0-minw-140">
+                    <label for="filter_status">{{t .Lang "common.label.status"}}</label>
+                    <select id="filter_status" name="status">
+                        <option value="">{{t .Lang "common.all"}}</option>
+                        {{$filterStatus := ""}}
+                        {{if .Data}}{{$filterStatus = index .Data "FilterStatus"}}{{end}}
+                        <option value="planned" {{if eq $filterStatus "planned"}}selected{{end}}>{{t .Lang "status.planned"}}</option>
+                        <option value="active" {{if eq $filterStatus "active"}}selected{{end}}>{{t .Lang "status.active"}}</option>
+                        <option value="done" {{if eq $filterStatus "done"}}selected{{end}}>{{t .Lang "status.done"}}</option>
+                        <option value="canceled" {{if eq $filterStatus "canceled"}}selected{{end}}>{{t .Lang "status.canceled"}}</option>
+                    </select>
+                </div>
+                <div class="form-group mb-0-minw-200">
+                    <label for="filter_search">{{t .Lang "portal.tasks.label_search"}}</label>
+                    <input type="text" id="filter_search" name="search" placeholder="{{t .Lang "common.placeholder.search"}}"
+                        {{if .Data}}value="{{index .Data "FilterSearch"}}"{{end}}>
+                </div>
+                {{if .Data}}
+                    {{$filterEdv := index .Data "FilterEndeavourID"}}
+                    {{if $filterEdv}}
+                    <input type="hidden" name="endeavour_id" value="{{$filterEdv}}">
+                    {{end}}
+                {{end}}
+                <button type="submit" class="btn h-42">{{t .Lang "common.filter"}}</button>
+            </form>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h2 class="mb-0">
+                    {{if .Data}}
+                        {{$filterEdvName := index .Data "FilterEndeavourName"}}
+                        {{if $filterEdvName}}{{t .Lang "portal.tasks.tasks_in" $filterEdvName}}{{else}}{{t .Lang "portal.tasks.section_all"}}{{end}}
+                        <span class="meta-text">({{index .Data "Total"}})</span>
+                    {{else}}{{t .Lang "portal.tasks.section_all"}}{{end}}
+                </h2>
+            </div>
+
+            {{if .Data}}
+                {{$tasks := index .Data "Tasks"}}
+                {{if $tasks}}
+                <table>
+                    <thead>
+                        <tr>
+                            <th>{{t .Lang "portal.tasks.col.title"}}</th>
+                            <th>{{t .Lang "portal.tasks.col.status"}}</th>
+                            <th>{{t .Lang "portal.tasks.col.assignee"}}</th>
+                            <th>{{t .Lang "portal.tasks.col.endeavour"}}</th>
+                            <th>{{t .Lang "portal.tasks.col.estimate"}}</th>
+                            <th>{{t .Lang "portal.tasks.col.due"}}</th>
+                            <th>{{t .Lang "portal.tasks.col.created"}}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {{range $tasks}}
+                        <tr>
+                            <td><a href="/tasks/{{.ID}}"><strong>{{.Title}}</strong></a></td>
+                            <td>
+                                {{if eq .Status "planned"}}
+                                    <span class="badge badge-pending">{{t $.Lang "status.planned"}}</span>
+                                {{else if eq .Status "active"}}
+                                    <span class="badge badge-info">{{t $.Lang "status.active"}}</span>
+                                {{else if eq .Status "done"}}
+                                    <span class="badge badge-active">{{t $.Lang "status.done"}}</span>
+                                {{else if eq .Status "canceled"}}
+                                    <span class="badge badge-inactive">{{t $.Lang "status.canceled"}}</span>
+                                {{else}}
+                                    <span class="badge badge-pending">{{.Status}}</span>
+                                {{end}}
+                            </td>
+                            <td class="fs-14">{{if .AssigneeName}}{{.AssigneeName}}{{else}}<span class="text-muted">-</span>{{end}}</td>
+                            <td class="fs-14">{{if .EndeavourID}}<a href="/endeavours/{{.EndeavourID}}">{{if .EndeavourName}}{{.EndeavourName}}{{else}}{{.EndeavourID}}{{end}}</a>{{else}}<span class="text-muted">-</span>{{end}}</td>
+                            <td class="fs-13">{{if .Estimate}}{{fmtFloat "%.1f" .Estimate}}h{{else}}<span class="text-muted">-</span>{{end}}</td>
+                            <td class="fs-13">{{if .DueDate}}{{fmtDate .DueDate $.Timezone}}{{else}}<span class="text-muted">-</span>{{end}}</td>
+                            <td class="fs-13">{{fmtDateTime .CreatedAt $.Timezone}}</td>
+                        </tr>
+                        {{end}}
+                    </tbody>
+                </table>
+                {{else}}
+                <div class="empty-state">
+                    <p>{{t .Lang "portal.tasks.no_tasks"}}</p>
+                </div>
+                {{end}}
+            {{end}}
+        </div>
+    </div>
+</div>
+{{end}}

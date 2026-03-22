@@ -1,0 +1,132 @@
+{{template "base" .}}
+{{define "content"}}
+{{template "nav" .}}
+
+<div class="main-content">
+    <div class="container">
+        <div class="page-header">
+            <div>
+                <div class="mb-4">
+                    <a href="/admin/rituals?category=reporting" class="fs-13-c-secondary-no-underline">&larr; {{t .Lang "portal.admin_template_detail.back_to_templates"}}</a>
+                </div>
+                <h1>{{if .Data}}{{(index .Data "Template").Name}}{{end}}</h1>
+            </div>
+        </div>
+
+        {{if .Error}}
+        <div class="alert alert-error">{{.Error}}</div>
+        {{end}}
+
+        {{if .Success}}
+        <div class="alert alert-success">{{.Success}}</div>
+        {{end}}
+
+        {{if .Data}}
+        {{$tpl := index .Data "Template"}}
+        {{$editing := index .Data "Editing"}}
+        {{if $tpl}}
+
+        {{if $editing}}
+        <!-- Edit Form -->
+        <div class="card mb-24">
+            <div class="card-header">
+                <h2 class="mb-0">{{t .Lang "portal.admin_template_detail.section_edit"}}</h2>
+            </div>
+            <form method="POST" action="/admin/templates/{{$tpl.ID}}">
+                <input type="hidden" name="csrf_token" value="{{$.CSRFToken}}">
+                <input type="hidden" name="action" value="save">
+                <div class="form-group">
+                    <label for="edit_name">{{t .Lang "portal.admin_template_detail.label_name"}}</label>
+                    <input type="text" id="edit_name" name="name" value="{{$tpl.Name}}">
+                </div>
+                <div class="form-group">
+                    <label for="edit_body">{{t .Lang "portal.admin_template_detail.label_body"}}</label>
+                    <p class="text-muted fs-12-mb-8">{{t .Lang "portal.admin_template_detail.hint_go_template"}}</p>
+                    <textarea id="edit_body" name="body" rows="20" class="code-font">{{$tpl.Body}}</textarea>
+                </div>
+                <div class="flex-gap-8-mt-16">
+                    <button type="submit" class="btn btn-primary">{{t .Lang "portal.admin_template_detail.action_save"}}</button>
+                    <a href="/admin/templates/{{$tpl.ID}}" class="btn">{{t .Lang "portal.admin_template_detail.action_cancel_edit"}}</a>
+                </div>
+            </form>
+        </div>
+        {{end}}
+
+        <!-- Detail Grid -->
+        <div class="card mb-24">
+            <div class="card-header">
+                <h2 class="mb-0">{{t .Lang "portal.admin_template_detail.section_details"}}</h2>
+                <div class="flex-gap-8">
+                    <span class="badge badge-info">{{$tpl.Scope}}</span>
+                    {{if eq $tpl.Status "active"}}
+                        <span class="badge badge-active">{{t .Lang "status.active"}}</span>
+                    {{else}}
+                        <span class="badge badge-inactive">{{t .Lang "status.archived"}}</span>
+                    {{end}}
+                </div>
+            </div>
+            <div class="grid-auto-1fr-gap-8-16-fs-14">
+                <span class="text-secondary">ID</span>
+                <span class="ff-mono-fs-13">{{$tpl.ID}}</span>
+                <span class="text-secondary">{{t .Lang "portal.admin_template_detail.label_name"}}</span>
+                <span><strong>{{$tpl.Name}}</strong></span>
+                <span class="text-secondary">{{t .Lang "portal.admin_template_detail.label_scope"}}</span>
+                <span>{{$tpl.Scope}}</span>
+                <span class="text-secondary">{{t .Lang "portal.admin_template_detail.label_lang"}}</span>
+                <span><span class="lang-badge">{{upper $tpl.Lang}}</span></span>
+                <span class="text-secondary">{{t .Lang "portal.admin_template_detail.label_version"}}</span>
+                <span>v{{$tpl.Version}}</span>
+                {{if $tpl.PredecessorID}}
+                <span class="text-secondary">{{t .Lang "portal.admin_template_detail.label_predecessor"}}</span>
+                <span><a href="/admin/templates/{{$tpl.PredecessorID}}">{{$tpl.PredecessorID}}</a></span>
+                {{end}}
+                {{if $tpl.CreatedBy}}
+                <span class="text-secondary">{{t .Lang "portal.admin_template_detail.label_created_by"}}</span>
+                <span>{{$tpl.CreatedBy}}</span>
+                {{end}}
+                <span class="text-secondary">{{t .Lang "common.label.created"}}</span>
+                <span>{{fmtDateTime $tpl.CreatedAt $.Timezone}}</span>
+                <span class="text-secondary">{{t .Lang "common.label.updated"}}</span>
+                <span>{{fmtDateTime $tpl.UpdatedAt $.Timezone}}</span>
+            </div>
+
+            <!-- Actions -->
+            {{if eq $tpl.Status "active"}}
+            <div class="section-divider-flex-gap-8">
+                {{if not $editing}}
+                <form method="POST" action="/admin/templates/{{$tpl.ID}}" class="d-inline">
+                    <input type="hidden" name="csrf_token" value="{{$.CSRFToken}}">
+                    <input type="hidden" name="action" value="edit">
+                    <button type="submit" class="btn btn-sm btn-primary">{{t .Lang "portal.admin_ritual_detail.action_edit"}}</button>
+                </form>
+                {{end}}
+                <form method="POST" action="/admin/templates/{{$tpl.ID}}" class="d-inline">
+                    <input type="hidden" name="csrf_token" value="{{$.CSRFToken}}">
+                    <input type="hidden" name="action" value="archive">
+                    <button type="submit" class="btn btn-sm btn-danger">{{t .Lang "portal.admin_ritual_detail.action_archive"}}</button>
+                </form>
+                <form method="POST" action="/admin/templates/{{$tpl.ID}}" class="inline-flex-ai-center-gap-4-ml-12">
+                    <input type="hidden" name="csrf_token" value="{{$.CSRFToken}}">
+                    <input type="hidden" name="action" value="create_translation">
+                    <input type="text" name="lang" placeholder="de" class="input-num-60">
+                    <button type="submit" class="btn btn-sm">{{t .Lang "portal.admin_template_detail.action_create_translation"}}</button>
+                </form>
+            </div>
+            {{end}}
+        </div>
+
+        <!-- Template Body -->
+        {{if not $editing}}
+        <div class="card mb-24">
+            <div class="card-header">
+                <h2 class="mb-0">{{t .Lang "portal.admin_template_detail.section_body"}}</h2>
+            </div>
+            <pre class="code-block">{{$tpl.Body}}</pre>
+        </div>
+        {{end}}
+
+        {{end}}
+        {{end}}
+    </div>
+</div>
+{{end}}

@@ -1,0 +1,68 @@
+/* Taskschmiede docs search styles */
+.ts-search-wrapper {
+  position: relative;
+  margin-left: 1rem;
+}
+.ts-search-wrapper input {
+  padding: 0.35rem 0.75rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  width: 220px;
+  font-family: inherit;
+}
+.ts-search-wrapper input:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
+}
+.ts-search-results {
+  display: none;
+  position: absolute;
+  top: 100%;
+  right: 0;
+  width: 420px;
+  max-height: 480px;
+  overflow-y: auto;
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  z-index: 1000;
+  margin-top: 4px;
+}
+.ts-search-item {
+  display: block;
+  padding: 0.6rem 0.85rem;
+  border-bottom: 1px solid #f0f0f0;
+  color: #333;
+  text-decoration: none;
+  cursor: pointer;
+}
+.ts-search-item:hover {
+  background: #f5f7ff;
+}
+.ts-search-item:last-child {
+  border-bottom: none;
+}
+.ts-search-title {
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+.ts-search-section {
+  font-weight: normal;
+  font-size: 0.75rem;
+  color: #888;
+  margin-left: 0.5rem;
+  text-transform: capitalize;
+}
+.ts-search-summary {
+  font-size: 0.8rem;
+  color: #666;
+  margin-top: 2px;
+}
+.ts-search-empty {
+  color: #999;
+  font-style: italic;
+  cursor: default;
+}

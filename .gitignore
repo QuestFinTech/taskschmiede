@@ -1,0 +1,73 @@
+# If you prefer the allow list template instead of the deny list, see community template:
+# https://github.com/github/gitignore/blob/main/community/Golang/Go.AllowList.gitignore
+#
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+# Binaries at repo root (legacy; builds now go to build/)
+/taskschmiede-portal
+/taskschmiede-support
+/testmail
+
+# Build and runtime directories
+build/
+run/
+website/docs/
+
+# Hugo documentation site
+website/hugo/public/
+website/hugo/node_modules/
+website/hugo/resources/
+
+# Embedded doc content (source of truth is website/hugo/content/)
+# Tracked in git so that go:embed works from git archive exports.
+
+# Log files
+*.log
+
+# Database files
+*.db
+*.db-shm
+*.db-wal
+
+# Test binary, built with `go test -c`
+*.test
+
+# Code coverage profiles and other test artifacts
+*.out
+*.pid
+coverage.*
+*.coverprofile
+profile.cov
+
+# Dependency directories (remove the comment below to include it)
+# vendor/
+
+# Go workspace file
+go.work
+go.work.sum
+
+# env file
+.env
+.env.bak
+.testmail
+
+# config file (may contain passwords from env expansion)
+config.yaml
+
+# Editor/IDE
+.idea/
+.vscode/
+
+# E2E testing artifacts
+e2e-testing/node_modules/
+e2e-testing/test-results/
+e2e-testing/screenshots/
+e2e-testing/package-lock.json
+
+# macOS
+.DS_Store
+tmp/

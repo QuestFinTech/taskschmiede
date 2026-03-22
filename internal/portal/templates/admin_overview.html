@@ -1,0 +1,400 @@
+{{template "base" .}}
+{{define "content"}}
+{{template "nav" .}}
+
+<div class="main-content">
+    <div class="container">
+        <div class="page-header">
+            <h1>{{t .Lang "portal.admin_overview.title"}}</h1>
+        </div>
+
+        {{if .Data}}
+        {{$indicators := index .Data "Indicators"}}
+        {{if $indicators}}
+        <div class="con-wrapper">
+            <!-- System Ablecon -->
+            <div class="card mb-0">
+                <div class="card-header">
+                    <h2 class="mb-0">{{t .Lang "portal.indicators.ablecon_title"}}</h2>
+                </div>
+                <div class="flex-gap-16-ai-start">
+                    <div class="con-meter">
+                        <div class="con-level con-level-1{{if eq $indicators.Ablecon.Level 1}} active{{end}}"></div>
+                        <div class="con-level con-level-2{{if eq $indicators.Ablecon.Level 2}} active{{end}}"></div>
+                        <div class="con-level con-level-3{{if eq $indicators.Ablecon.Level 3}} active{{end}}"></div>
+                        <div class="con-level con-level-4{{if eq $indicators.Ablecon.Level 4}} active{{end}}"></div>
+                    </div>
+                    <div>
+                        <div class="con-status">
+                            {{if eq $indicators.Ablecon.Level 1}}{{t .Lang "portal.indicators.level_1_name"}}{{end}}
+                            {{if eq $indicators.Ablecon.Level 2}}{{t .Lang "portal.indicators.level_2_name"}}{{end}}
+                            {{if eq $indicators.Ablecon.Level 3}}{{t .Lang "portal.indicators.level_3_name"}}{{end}}
+                            {{if eq $indicators.Ablecon.Level 4}}{{t .Lang "portal.indicators.level_4_name"}}{{end}}
+                        </div>
+                        <div class="con-desc">
+                            {{if eq $indicators.Ablecon.Level 1}}{{t .Lang "portal.indicators.ablecon_1_desc"}}{{end}}
+                            {{if eq $indicators.Ablecon.Level 2}}{{t .Lang "portal.indicators.ablecon_2_desc"}}{{end}}
+                            {{if eq $indicators.Ablecon.Level 3}}{{t .Lang "portal.indicators.ablecon_3_desc"}}{{end}}
+                            {{if eq $indicators.Ablecon.Level 4}}{{t .Lang "portal.indicators.ablecon_4_desc"}}{{end}}
+                        </div>
+                        <div class="con-stages">
+                            <span class="con-stage"><span class="con-dot con-dot-1"></span> {{t .Lang "portal.indicators.level_1_name"}} - {{t .Lang "portal.indicators.ablecon_1_short"}}</span>
+                            <span class="con-stage"><span class="con-dot con-dot-2"></span> {{t .Lang "portal.indicators.level_2_name"}} - {{t .Lang "portal.indicators.ablecon_2_short"}}</span>
+                            <span class="con-stage"><span class="con-dot con-dot-3"></span> {{t .Lang "portal.indicators.level_3_name"}} - {{t .Lang "portal.indicators.ablecon_3_short"}}</span>
+                            <span class="con-stage"><span class="con-dot con-dot-4"></span> {{t .Lang "portal.indicators.level_4_name"}} - {{t .Lang "portal.indicators.ablecon_4_short"}}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- System Harmcon -->
+            <div class="card mb-0">
+                <div class="card-header">
+                    <h2 class="mb-0">{{t .Lang "portal.indicators.harmcon_title"}}</h2>
+                </div>
+                <div class="flex-gap-16-ai-start">
+                    <div class="con-meter">
+                        <div class="con-level con-level-1{{if eq $indicators.Harmcon.Level 1}} active{{end}}"></div>
+                        <div class="con-level con-level-2{{if eq $indicators.Harmcon.Level 2}} active{{end}}"></div>
+                        <div class="con-level con-level-3{{if eq $indicators.Harmcon.Level 3}} active{{end}}"></div>
+                        <div class="con-level con-level-4{{if eq $indicators.Harmcon.Level 4}} active{{end}}"></div>
+                    </div>
+                    <div>
+                        <div class="con-status">
+                            {{if eq $indicators.Harmcon.Level 1}}{{t .Lang "portal.indicators.level_1_name"}}{{end}}
+                            {{if eq $indicators.Harmcon.Level 2}}{{t .Lang "portal.indicators.level_2_name"}}{{end}}
+                            {{if eq $indicators.Harmcon.Level 3}}{{t .Lang "portal.indicators.level_3_name"}}{{end}}
+                            {{if eq $indicators.Harmcon.Level 4}}{{t .Lang "portal.indicators.level_4_name"}}{{end}}
+                        </div>
+                        <div class="con-desc">
+                            {{if eq $indicators.Harmcon.Level 1}}{{t .Lang "portal.indicators.harmcon_1_desc"}}{{end}}
+                            {{if eq $indicators.Harmcon.Level 2}}{{t .Lang "portal.indicators.harmcon_2_desc"}}{{end}}
+                            {{if eq $indicators.Harmcon.Level 3}}{{t .Lang "portal.indicators.harmcon_3_desc"}}{{end}}
+                            {{if eq $indicators.Harmcon.Level 4}}{{t .Lang "portal.indicators.harmcon_4_desc"}}{{end}}
+                        </div>
+                        <div class="con-stages">
+                            <span class="con-stage"><span class="con-dot con-dot-1"></span> {{t .Lang "portal.indicators.level_1_name"}} - {{t .Lang "portal.indicators.harmcon_1_short"}}</span>
+                            <span class="con-stage"><span class="con-dot con-dot-2"></span> {{t .Lang "portal.indicators.level_2_name"}} - {{t .Lang "portal.indicators.harmcon_2_short"}}</span>
+                            <span class="con-stage"><span class="con-dot con-dot-3"></span> {{t .Lang "portal.indicators.level_3_name"}} - {{t .Lang "portal.indicators.harmcon_3_short"}}</span>
+                            <span class="con-stage"><span class="con-dot con-dot-4"></span> {{t .Lang "portal.indicators.level_4_name"}} - {{t .Lang "portal.indicators.harmcon_4_short"}}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {{if $indicators.OrgAblecon}}
+        <div class="card mb-24">
+            <div class="card-header">
+                <h2 class="mb-0">{{t .Lang "admin.dashboard.org_ablecon"}}</h2>
+            </div>
+            <div class="flex-wrap-gap-8">
+                {{range $indicators.OrgAblecon}}
+                <span class="con-badge con-badge-{{.Level}}" title="Level {{.Level}}">{{.OrgName}}</span>
+                {{end}}
+            </div>
+        </div>
+        {{end}}
+        {{end}}
+
+        {{$blockSignals := index .Data "BlockSignals"}}
+        {{if $blockSignals}}
+        <div class="card mb-24">
+            <div class="card-header">
+                <h2 class="mb-0">{{t .Lang "admin.block_signals.title"}}</h2>
+                <span class="text-secondary fs-14">{{t .Lang "admin.block_signals.subtitle"}}</span>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>{{t .Lang "admin.block_signals.col_sponsor"}}</th>
+                        <th>{{t .Lang "admin.block_signals.col_email"}}</th>
+                        <th>{{t .Lang "admin.block_signals.col_blocked"}}</th>
+                        <th>{{t .Lang "admin.block_signals.col_total"}}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{range $blockSignals}}
+                    <tr>
+                        <td><strong>{{.SponsorName}}</strong></td>
+                        <td class="text-muted fs-14">{{.SponsorEmail}}</td>
+                        <td><span class="badge badge-suspended">{{.BlockedCount}}</span></td>
+                        <td>{{.TotalAgents}}</td>
+                    </tr>
+                    {{end}}
+                </tbody>
+            </table>
+        </div>
+        {{end}}
+
+        {{$tierUsage := index .Data "TierUsage"}}
+        {{if $tierUsage}}
+        <div class="card mb-24">
+            <div class="card-header">
+                <h2 class="mb-0">{{t .Lang "admin.dashboard.section_tier_usage"}}</h2>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>{{t .Lang "admin.dashboard.tier_col_tier"}}</th>
+                        <th>{{t .Lang "admin.dashboard.tier_col_users"}}</th>
+                        <th>{{t .Lang "admin.dashboard.tier_col_orgs"}}</th>
+                        <th>{{t .Lang "admin.dashboard.tier_col_endeavours"}}</th>
+                        <th>{{t .Lang "admin.dashboard.tier_col_teams"}}</th>
+                        <th>{{t .Lang "admin.dashboard.tier_col_agents"}}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{range $tierUsage}}
+                    <tr>
+                        <td><strong>{{.TierName}}</strong></td>
+                        <td>{{.Users}}</td>
+                        <td>{{.Orgs}}</td>
+                        <td>{{.Endeavours}}</td>
+                        <td>{{.Teams}}</td>
+                        <td>{{.Agents}}</td>
+                    </tr>
+                    {{end}}
+                </tbody>
+            </table>
+        </div>
+        {{end}}
+
+        {{$stats := index .Data "Stats"}}
+        {{if $stats}}
+        <div class="stats-grid mb-24">
+            <a href="/admin/users" class="stat-card-link">
+                <div class="stat-card">
+                    <div class="stat-value">{{$stats.Users}}</div>
+                    <div class="stat-label">{{t .Lang "portal.admin_overview.stat_users"}}</div>
+                </div>
+            </a>
+            <a href="/admin/users" class="stat-card-link">
+                <div class="stat-card">
+                    <div class="stat-value">{{$stats.MasterAdmins}}</div>
+                    <div class="stat-label">{{t .Lang "portal.admin_overview.stat_master_admins"}}</div>
+                </div>
+            </a>
+            <a href="/admin/resources" class="stat-card-link">
+                <div class="stat-card">
+                    <div class="stat-value">{{$stats.Resources}}</div>
+                    <div class="stat-label">{{t .Lang "portal.admin_overview.stat_resources"}}</div>
+                </div>
+            </a>
+            <a href="/organizations" class="stat-card-link">
+                <div class="stat-card">
+                    <div class="stat-value">{{$stats.Organizations}}</div>
+                    <div class="stat-label">{{t .Lang "portal.admin_overview.stat_organizations"}}</div>
+                </div>
+            </a>
+            <a href="/endeavours" class="stat-card-link">
+                <div class="stat-card">
+                    <div class="stat-value">{{$stats.Endeavours}}</div>
+                    <div class="stat-label">{{t .Lang "portal.admin_overview.stat_endeavours"}}</div>
+                </div>
+            </a>
+            <a href="/demands" class="stat-card-link">
+                <div class="stat-card">
+                    <div class="stat-value">{{$stats.Demands}}</div>
+                    <div class="stat-label">{{t .Lang "portal.admin_overview.stat_demands"}}</div>
+                </div>
+            </a>
+            <a href="/tasks" class="stat-card-link">
+                <div class="stat-card">
+                    <div class="stat-value">{{$stats.Tasks}}</div>
+                    <div class="stat-label">{{t .Lang "portal.admin_overview.stat_tasks"}}</div>
+                </div>
+            </a>
+        </div>
+        {{end}}
+
+        {{$kpi := index .Data "KPI"}}
+        {{if $kpi}}
+        <!-- Task Distribution -->
+        <div class="card">
+            <div class="card-header">
+                <h2 class="mb-0">{{t .Lang "admin.dashboard.section_task_distribution"}}</h2>
+            </div>
+            <div class="kpi-bar-container">
+                {{$tasks := $kpi.Tasks}}
+                {{$planned := index $tasks "planned"}}
+                {{$active := index $tasks "active"}}
+                {{$done := index $tasks "done"}}
+                {{$canceled := index $tasks "canceled"}}
+                <style nonce="{{.Nonce}}">.kpi-task .kpi-planned{flex:{{$planned}}}.kpi-task .kpi-active{flex:{{$active}}}.kpi-task .kpi-done{flex:{{$done}}}.kpi-task .kpi-canceled{flex:{{$canceled}}}</style>
+                <div class="kpi-bar kpi-task">
+                    <div class="kpi-segment kpi-planned"></div>
+                    <div class="kpi-segment kpi-active"></div>
+                    <div class="kpi-segment kpi-done"></div>
+                    <div class="kpi-segment kpi-canceled"></div>
+                </div>
+                <div class="kpi-legend">
+                    <span class="kpi-legend-item"><span class="kpi-dot kpi-planned"></span> {{t .Lang "admin.dashboard.legend_planned"}} {{$planned}}</span>
+                    <span class="kpi-legend-item"><span class="kpi-dot kpi-active"></span> {{t .Lang "admin.dashboard.legend_active"}} {{$active}}</span>
+                    <span class="kpi-legend-item"><span class="kpi-dot kpi-done"></span> {{t .Lang "admin.dashboard.legend_done"}} {{$done}}</span>
+                    <span class="kpi-legend-item"><span class="kpi-dot kpi-canceled"></span> {{t .Lang "admin.dashboard.legend_canceled"}} {{$canceled}}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Demand Distribution -->
+        <div class="card">
+            <div class="card-header">
+                <h2 class="mb-0">{{t .Lang "admin.dashboard.section_demand_distribution"}}</h2>
+            </div>
+            <div class="kpi-bar-container">
+                {{$demands := $kpi.Demands}}
+                {{$open := index $demands "open"}}
+                {{$inProgress := index $demands "in_progress"}}
+                {{$fulfilled := index $demands "fulfilled"}}
+                {{$dCanceled := index $demands "canceled"}}
+                <style nonce="{{.Nonce}}">.kpi-demand .kpi-planned{flex:{{$open}}}.kpi-demand .kpi-active{flex:{{$inProgress}}}.kpi-demand .kpi-done{flex:{{$fulfilled}}}.kpi-demand .kpi-canceled{flex:{{$dCanceled}}}</style>
+                <div class="kpi-bar kpi-demand">
+                    <div class="kpi-segment kpi-planned"></div>
+                    <div class="kpi-segment kpi-active"></div>
+                    <div class="kpi-segment kpi-done"></div>
+                    <div class="kpi-segment kpi-canceled"></div>
+                </div>
+                <div class="kpi-legend">
+                    <span class="kpi-legend-item"><span class="kpi-dot kpi-planned"></span> {{t .Lang "admin.dashboard.legend_open"}} {{$open}}</span>
+                    <span class="kpi-legend-item"><span class="kpi-dot kpi-active"></span> {{t .Lang "admin.dashboard.legend_in_progress"}} {{$inProgress}}</span>
+                    <span class="kpi-legend-item"><span class="kpi-dot kpi-done"></span> {{t .Lang "admin.dashboard.legend_fulfilled"}} {{$fulfilled}}</span>
+                    <span class="kpi-legend-item"><span class="kpi-dot kpi-canceled"></span> {{t .Lang "admin.dashboard.legend_canceled"}} {{$dCanceled}}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Security Stats -->
+        <div class="stats-grid mb-16">
+            {{$security := $kpi.Security}}
+            <div class="stat-card">
+                <div class="stat-value text-success">{{index $security "login_success_1h"}}</div>
+                <div class="stat-label">{{t .Lang "admin.dashboard.stat_logins_1h"}}</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value text-error">{{index $security "login_failure_1h"}}</div>
+                <div class="stat-label">{{t .Lang "admin.dashboard.stat_failed_logins_1h"}}</div>
+            </div>
+            <div class="stat-card">
+                {{$rateLimits := index $security "rate_limit_hits_1h"}}
+                <div class="stat-value{{if $rateLimits}} text-error{{end}}">{{$rateLimits}}</div>
+                <div class="stat-label">{{t .Lang "admin.dashboard.stat_rate_limits_1h"}}</div>
+            </div>
+            {{$users := $kpi.Users}}
+            <div class="stat-card">
+                <div class="stat-value">{{index $users "active"}}</div>
+                <div class="stat-label">{{t .Lang "admin.dashboard.stat_active_users"}}</div>
+            </div>
+        </div>
+
+        {{if $kpi.Timestamp}}
+        <p class="text-muted fs-11-mb-16">
+            {{t .Lang "admin.dashboard.kpi_snapshot"}} {{fmtDateTime $kpi.Timestamp $.Timezone}}
+        </p>
+        {{end}}
+        {{end}}
+
+        <!-- Content Guard -->
+        {{$cgStats := index .Data "CGStats"}}
+        {{if $cgStats}}
+        <div class="card mb-16">
+            <div class="card-header">
+                <h2 class="mb-0">{{t .Lang "admin.dashboard.section_content_guard"}}</h2>
+            </div>
+            <div class="stats-grid mb-12">
+                <div class="stat-card">
+                    <div class="stat-value">{{$cgStats.TotalScanned}}</div>
+                    <div class="stat-label">{{t .Lang "admin.dashboard.cg_total_scanned"}}</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value text-success">{{$cgStats.Clean}}</div>
+                    <div class="stat-label">{{t .Lang "admin.dashboard.cg_clean"}}</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value text-warning">{{$cgStats.Low}}</div>
+                    <div class="stat-label">{{t .Lang "admin.dashboard.cg_low"}}</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value text-warning">{{$cgStats.Medium}}</div>
+                    <div class="stat-label">{{t .Lang "admin.dashboard.cg_medium"}}</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value text-error">{{$cgStats.High}}</div>
+                    <div class="stat-label">{{t .Lang "admin.dashboard.cg_high"}}</div>
+                </div>
+            </div>
+            {{if $cgStats.ByEntityType}}
+            <p class="fs-13-m-0-0-8">{{t .Lang "admin.dashboard.cg_by_entity_type"}}
+                {{range $type, $count := $cgStats.ByEntityType}}
+                <span class="badge badge-info ml-4">{{$type}}: {{$count}}</span>
+                {{end}}
+            </p>
+            {{end}}
+            <p class="text-secondary fs-13-m-0">
+                {{t .Lang "admin.dashboard.cg_llm_queue"}}
+                {{t .Lang "admin.dashboard.cg_llm_pending"}} {{$cgStats.LLMPending}} |
+                {{t .Lang "admin.dashboard.cg_llm_completed"}} {{$cgStats.LLMCompleted}} |
+                {{t .Lang "admin.dashboard.cg_llm_error"}} {{$cgStats.LLMError}} |
+                {{t .Lang "admin.dashboard.cg_llm_failed"}} {{$cgStats.LLMFailed}}
+            </p>
+        </div>
+        {{end}}
+
+        <!-- System-wide Recent Activity (last 24h) -->
+        <div class="card">
+            <div class="card-header">
+                <h2 class="mb-0">{{t .Lang "portal.dashboard.section_recent_activity"}}</h2>
+            </div>
+            {{$summary := index .Data "ActivitySummary"}}
+            {{$hourly := index .Data "ActivityHourly"}}
+            {{$maxH := index .Data "ActivityHourlyMax"}}
+            {{if gt $summary.Total 0}}
+            <div class="py-12">
+                <div class="flex-jc-between-ai-center-mb-12">
+                    <span class="fs-14">{{t .Lang "portal.dashboard.activity_last_24h"}}</span>
+                    <span class="fs-13-c-secondary">{{$summary.Total}} {{t .Lang "portal.dashboard.activity_total"}} {{if gt $summary.UniqueActors 0}} &middot; {{$summary.UniqueActors}} {{t .Lang "portal.dashboard.activity_unique_actors"}}{{end}}</span>
+                </div>
+                {{if $hourly}}
+                <div class="spark-bars-80">
+                    {{range $hourly}}
+                    {{$total := add (add .Logins .Tasks) (add .Demands .Endeavours)}}
+                    <div class="flex-1-full-col" title="{{printf "%02d" .Hour}}:00 — {{$total}} events">
+                        <div class="spark-day-label">{{printf "%02d" .Hour}}</div>
+                        <div class="flex-1-pos-rel">
+                            <div class="bar-bg"></div>
+                            <div class="bar-stack spark-h{{.Hour}}">
+                            {{if gt $total 0}}
+                            <style nonce="{{$.Nonce}}">.spark-h{{.Hour}} .spark-seg-endeavours{height:{{sparkPct .Endeavours $maxH 68}}px}.spark-h{{.Hour}} .spark-seg-demands{height:{{sparkPct .Demands $maxH 68}}px}.spark-h{{.Hour}} .spark-seg-tasks{height:{{sparkPct .Tasks $maxH 68}}px}.spark-h{{.Hour}} .spark-seg-logins{height:{{sparkPct .Logins $maxH 68}}px}</style>
+                            {{if gt .Endeavours 0}}<div class="spark-seg-endeavours spark-seg-top"></div>{{end}}
+                            {{if gt .Demands 0}}<div class="spark-seg-demands"></div>{{end}}
+                            {{if gt .Tasks 0}}<div class="spark-seg-tasks"></div>{{end}}
+                            {{if gt .Logins 0}}<div class="spark-seg-logins spark-seg-bottom"></div>{{end}}
+                            {{end}}
+                            </div>
+                        </div>
+                    </div>
+                    {{end}}
+                </div>
+                <div class="spark-labels">
+                    <span>{{t .Lang "portal.dashboard.activity_now"}}</span><span>-6h</span><span>-12h</span><span>-18h</span><span>-24h</span>
+                </div>
+                {{end}}
+                <div class="flex-center-legend">
+                    {{if gt $summary.Logins 0}}<span class="flex-ai-center-gap-4"><span class="dot-blue"></span> Logins ({{$summary.Logins}})</span>{{end}}
+                    <span class="c-text-secondary">Changes:</span>
+                    {{if gt $summary.Tasks 0}}<span class="flex-ai-center-gap-4"><span class="dot-yellow"></span> Tasks ({{$summary.Tasks}})</span>{{end}}
+                    {{if gt $summary.Demands 0}}<span class="flex-ai-center-gap-4"><span class="dot-warning"></span> Demands ({{$summary.Demands}})</span>{{end}}
+                    {{if gt $summary.Endeavours 0}}<span class="flex-ai-center-gap-4"><span class="dot-success"></span> Endeavours ({{$summary.Endeavours}})</span>{{end}}
+                    {{if gt $summary.Resources 0}}<span class="flex-ai-center-gap-4"><span class="dot-secondary"></span> Resources ({{$summary.Resources}})</span>{{end}}
+                    {{if gt $summary.Orgs 0}}<span class="flex-ai-center-gap-4"><span class="dot-secondary"></span> Organizations ({{$summary.Orgs}})</span>{{end}}
+                </div>
+            </div>
+            {{else}}
+            <div class="empty-state p-24">
+                <p class="text-muted">{{t .Lang "portal.dashboard.no_recent_activity"}}</p>
+            </div>
+            {{end}}
+        </div>
+
+        {{end}}
+    </div>
+</div>
+{{end}}

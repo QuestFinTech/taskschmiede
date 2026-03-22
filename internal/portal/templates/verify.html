@@ -1,0 +1,100 @@
+{{template "base" .}}
+{{define "content"}}
+<div class="main-content center-page">
+    <div class="center-card card">
+        {{if .Data}}{{if index .Data "SetupMode"}}
+        <div class="setup-steps flex-jc-center-gap-8-mb-24">
+            <span class="setup-step setup-step-done">1. {{t .Lang "portal.setup.step_account"}}</span>
+            <span class="setup-step setup-step-active">2. {{t .Lang "portal.setup.step_verify"}}</span>
+            <span class="setup-step">3. {{t .Lang "portal.setup.step_configure"}}</span>
+        </div>
+        {{end}}{{end}}
+
+        <div class="ta-center-mb-24">
+            <h1>{{t .Lang "portal.verify.title"}}</h1>
+            {{if .Data}}
+                {{if index .Data "Verified"}}
+                    <p class="text-secondary mb-0">{{t .Lang "portal.verify.title"}}</p>
+                {{else if index .Data "Lookup"}}
+                    <p class="text-secondary mb-0">{{t .Lang "portal.verify.subtitle_lookup"}}</p>
+                {{else}}
+                    <p class="text-secondary mb-0">{{t .Lang "portal.verify.subtitle_code" (index .Data "Email")}}</p>
+                {{end}}
+            {{end}}
+        </div>
+
+        {{if .Error}}
+        <div class="alert alert-error">{{.Error}}</div>
+        {{end}}
+
+        {{if .Success}}
+        <div class="alert alert-success">{{.Success}}</div>
+        {{end}}
+
+        {{if .Data}}{{if index .Data "FallbackCode"}}
+        <div class="alert notice-warning">
+            <p class="warning-note">Email is not configured. Use this code to continue:</p>
+            <div class="brand-badge">
+                <span class="brand-code-lg">{{index .Data "FallbackCode"}}</span>
+            </div>
+        </div>
+        {{end}}{{end}}
+
+        {{if .Data}}
+            {{if index .Data "Verified"}}
+                <div class="ta-center-mt-16">
+                    <a href="/login" class="btn btn-primary">{{t .Lang "common.sign_in"}}</a>
+                </div>
+            {{else if index .Data "Lookup"}}
+                <form method="GET" action="/verify">
+                    <div class="form-group">
+                        <label for="email">{{t .Lang "portal.verify.label_email"}}</label>
+                        <input type="email" id="email" name="email" required autofocus placeholder="{{t .Lang "common.placeholder.email"}}">
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-block">{{t .Lang "portal.verify.look_up"}}</button>
+                </form>
+            {{else}}
+                <form method="POST" action="/verify?email={{index .Data "Email"}}{{if index .Data "SetupMode"}}&setup=1{{end}}">
+                    <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
+                    <div class="form-group">
+                        <label for="code">{{t .Lang "portal.verify.label_code"}} <span class="label-hint">({{t .Lang "portal.verify.code_format_hint"}})</span></label>
+                        <input type="text" id="code" name="code" required autofocus placeholder="{{t .Lang "common.placeholder.verification_code"}}" autocomplete="off" class="brand-code-md">
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-block">{{t .Lang "portal.verify.verify"}}</button>
+                </form>
+
+                <div class="mt-16-ta-center">
+                    <p class="text-muted fs-13">
+                        {{t .Lang "portal.verify.code_expires_in" (index .Data "ExpiresIn")}}
+                    </p>
+                    <form method="POST" action="/verify?email={{index .Data "Email"}}{{if index .Data "SetupMode"}}&setup=1{{end}}" class="d-inline">
+                        <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
+                        <input type="hidden" name="action" value="resend">
+                        {{if index .Data "SetupMode"}}<input type="hidden" name="setup" value="1">{{end}}
+                        <button type="submit" class="btn btn-sm">{{t .Lang "portal.verify.resend_code"}}</button>
+                    </form>
+                </div>
+            {{end}}
+        {{end}}
+    </div>
+</div>
+
+<style nonce="{{.Nonce}}">
+.setup-steps { font-size: 13px; }
+.setup-step {
+    padding: 4px 12px;
+    border-radius: 12px;
+    color: var(--text-muted);
+    background: var(--bg-grey);
+}
+.setup-step-active {
+    color: var(--primary);
+    background: #eff6ff;
+    font-weight: 600;
+}
+.setup-step-done {
+    color: var(--success);
+    background: #f0fdf4;
+}
+</style>
+{{end}}

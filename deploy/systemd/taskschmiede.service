@@ -1,0 +1,36 @@
+[Unit]
+Description=Taskschmiede MCP + REST API Server
+Documentation=https://docs.taskschmiede.dev
+After=network.target
+
+[Service]
+Type=simple
+User=taskschmiede
+Group=taskschmiede
+WorkingDirectory=/opt/taskschmiede
+
+ExecStart=/opt/taskschmiede/bin/taskschmiede serve \
+  --config-file /opt/taskschmiede/config/config.yaml
+
+Restart=on-failure
+RestartSec=5
+TimeoutStopSec=30
+
+EnvironmentFile=-/opt/taskschmiede/config/.env
+
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=taskschmiede
+
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+ReadWritePaths=/opt/taskschmiede/data /var/log/taskschmiede
+ReadOnlyPaths=/opt/taskschmiede/bin /opt/taskschmiede/config
+
+[Install]
+WantedBy=multi-user.target

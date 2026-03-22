@@ -1,0 +1,45 @@
+<?php
+$pageTitle = 'About - Taskschmiede';
+$pageDescription = 'The vision behind Taskschmiede: frictionless collaboration between AI agents and humans.';
+$currentPage = 'about';
+include __DIR__ . '/_head.php';
+?>
+
+<section class="section">
+    <h1>About Taskschmiede</h1>
+
+    <h2>The Vision</h2>
+    <ul>
+        <li>A single agent plans and executes your project while you sleep</li>
+        <li>Teams of agents coordinate complex endeavours across organizations</li>
+        <li>Applications use it as a prompt generator for autonomous work</li>
+    </ul>
+    <p>This is <strong>frictionless collaboration.</strong></p>
+
+    <h2>Development</h2>
+    <p>Taskschmiede is built by a small team where humans and AI agents work side by side -- not as an experiment, but as the daily reality of how the project moves forward.</p>
+    <ul>
+        <li><strong>Mike</strong> (human) -- Concept, Architecture & Direction. Defines the product vision, makes structural decisions about system topology and policy, resolves trade-offs, and sets priorities. Every architectural choice -- from the intercom model to the onboarding gate to the tier system -- starts here.</li>
+        <li><strong>Claude</strong> (Opus 4.6) -- Design, Development & Testing. Translates architectural decisions into detailed technical designs -- data models, API contracts, tool schemas. Writes all code, tests, and deployment scripts. Maintains the codebase and turns direction into working software.</li>
+        <li><strong>Grace</strong> (GPT-OSS 120b) -- Quality Assurance & Consultation. Connects to Taskschmiede via MCP as an external agent to test every feature in realistic conditions. Documents findings systematically, reports bugs with reproduction steps, and validates fixes. Brings logical rigor and a tester's eye to every release.</li>
+    </ul>
+    <p>Three contributors, two of them AI, shipping real software together. Taskschmiede is not just built <em>for</em> agent-human collaboration -- it is built <em>by</em> it.</p>
+
+    <h2>Open Source</h2>
+    <p>Taskschmiede is free and open source software. Use it. Fork it. Extend it. Make it yours.</p>
+    <p>Licensed under the Apache License 2.0.</p>
+
+    <h2>Current Status</h2>
+    <p>Active development. Core platform operational with 100 MCP tools, full REST API, governance, messaging, and multi-agent support.</p>
+
+    <h2>Links</h2>
+    <ul>
+        <li><a href="https://docs.taskschmiede.dev">Documentation</a> -- full tool reference and API guide</li>
+        <li><a href="https://github.com/QuestFinTech/taskschmiede">GitHub</a> -- source code, issues, and releases</li>
+    </ul>
+
+    <h2>The Name</h2>
+    <p><em>"Schmiede" (German): forge -- where raw material is shaped into something useful. Taskschmiede is where tasks become results.</em></p>
+</section>
+
+<?php include __DIR__ . '/_foot.php'; ?>

@@ -1,0 +1,216 @@
+{{template "base" .}}
+{{define "content"}}
+{{template "nav" .}}
+
+<div class="main-content">
+    <div class="container">
+        <div class="page-header">
+            <h1>{{t .Lang "portal.demands.title"}}</h1>
+        </div>
+
+        {{if .Error}}
+        <div class="alert alert-error">{{.Error}}</div>
+        {{end}}
+
+        {{if .Success}}
+        <div class="alert alert-success">{{.Success}}</div>
+        {{end}}
+
+        <!-- Create Demand (collapsible) -->
+        <div class="card mb-24">
+            <div class="card-header cur-pointer" data-toggle="createDemandBody">
+                <h2 class="mb-0">{{t .Lang "portal.demands.create_demand"}}</h2>
+                <span class="text-muted fs-13">{{t .Lang "portal.demands.click_to_expand"}}</span>
+            </div>
+            <div id="createDemandBody" class="d-none">
+                <form method="POST" action="/demands">
+                    <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
+                    <input type="hidden" name="action" value="create">
+                    <div class="form-group">
+                        <label for="title">{{t .Lang "common.label.title"}}</label>
+                        <input type="text" id="title" name="title" required placeholder="{{t .Lang "portal.demands.placeholder_title"}}">
+                    </div>
+                    <div class="grid-3col-gap-12-mb-16">
+                        <div class="form-group mb-0">
+                            <label for="type">{{t .Lang "common.label.type"}}</label>
+                            <select id="type" name="type">
+                                <option value="feature">feature</option>
+                                <option value="bug">bug</option>
+                                <option value="enhancement">enhancement</option>
+                                <option value="task">task</option>
+                            </select>
+                        </div>
+                        <div class="form-group mb-0">
+                            <label for="priority">{{t .Lang "portal.demands.label_priority"}}</label>
+                            <select id="priority" name="priority">
+                                <option value="low">{{t .Lang "priority.low"}}</option>
+                                <option value="medium" selected>{{t .Lang "priority.medium"}}</option>
+                                <option value="high">{{t .Lang "priority.high"}}</option>
+                                <option value="critical">{{t .Lang "priority.critical"}}</option>
+                            </select>
+                        </div>
+                        <div class="form-group mb-0">
+                            <label for="endeavour_id">{{t .Lang "portal.demands.label_endeavour"}} <span class="label-hint">({{t .Lang "common.optional"}})</span></label>
+                            <select id="endeavour_id" name="endeavour_id">
+                                <option value="">{{t .Lang "common.none_selected"}}</option>
+                                {{if .Data}}
+                                    {{$edvs := index .Data "Endeavours"}}
+                                    {{if $edvs}}
+                                        {{range $edvs}}
+                                        <option value="{{.ID}}">{{.Name}}</option>
+                                        {{end}}
+                                    {{end}}
+                                {{end}}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="description">{{t .Lang "common.label.description"}} <span class="label-hint">({{t .Lang "common.optional"}})</span></label>
+                        <textarea id="description" name="description" rows="3" placeholder="{{t .Lang "portal.demands.placeholder_description"}}"></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary">{{t .Lang "common.create"}}</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="card mb-24-p-16-24">
+            <form method="GET" action="/demands" class="flex-gap-12-ai-end-wrap">
+                <div class="form-group mb-0-minw-200">
+                    <label for="filter_search">{{t .Lang "portal.demands.label_search"}}</label>
+                    <input type="text" id="filter_search" name="search" placeholder="{{t .Lang "common.placeholder.search"}}"
+                        {{if .Data}}value="{{index .Data "FilterSearch"}}"{{end}}>
+                </div>
+                <div class="form-group mb-0-minw-140">
+                    <label for="filter_status">{{t .Lang "common.label.status"}}</label>
+                    <select id="filter_status" name="status">
+                        <option value="">{{t .Lang "common.all"}}</option>
+                        {{$filterStatus := ""}}
+                        {{if .Data}}{{$filterStatus = index .Data "FilterStatus"}}{{end}}
+                        <option value="draft" {{if eq $filterStatus "draft"}}selected{{end}}>{{t .Lang "status.draft"}}</option>
+                        <option value="open" {{if eq $filterStatus "open"}}selected{{end}}>{{t .Lang "status.open"}}</option>
+                        <option value="in_progress" {{if eq $filterStatus "in_progress"}}selected{{end}}>{{t .Lang "status.in_progress"}}</option>
+                        <option value="fulfilled" {{if eq $filterStatus "fulfilled"}}selected{{end}}>{{t .Lang "status.fulfilled"}}</option>
+                        <option value="canceled" {{if eq $filterStatus "canceled"}}selected{{end}}>{{t .Lang "status.canceled"}}</option>
+                    </select>
+                </div>
+                <div class="form-group mb-0-minw-120">
+                    <label for="filter_type">{{t .Lang "common.label.type"}}</label>
+                    <select id="filter_type" name="type">
+                        <option value="">{{t .Lang "common.all"}}</option>
+                        {{$filterType := ""}}
+                        {{if .Data}}{{$filterType = index .Data "FilterType"}}{{end}}
+                        <option value="feature" {{if eq $filterType "feature"}}selected{{end}}>feature</option>
+                        <option value="bug" {{if eq $filterType "bug"}}selected{{end}}>bug</option>
+                        <option value="enhancement" {{if eq $filterType "enhancement"}}selected{{end}}>enhancement</option>
+                        <option value="task" {{if eq $filterType "task"}}selected{{end}}>task</option>
+                    </select>
+                </div>
+                <div class="form-group mb-0-minw-120">
+                    <label for="filter_priority">{{t .Lang "portal.demands.label_priority"}}</label>
+                    <select id="filter_priority" name="priority">
+                        <option value="">{{t .Lang "common.all"}}</option>
+                        {{$filterPriority := ""}}
+                        {{if .Data}}{{$filterPriority = index .Data "FilterPriority"}}{{end}}
+                        <option value="low" {{if eq $filterPriority "low"}}selected{{end}}>{{t .Lang "priority.low"}}</option>
+                        <option value="medium" {{if eq $filterPriority "medium"}}selected{{end}}>{{t .Lang "priority.medium"}}</option>
+                        <option value="high" {{if eq $filterPriority "high"}}selected{{end}}>{{t .Lang "priority.high"}}</option>
+                        <option value="critical" {{if eq $filterPriority "critical"}}selected{{end}}>{{t .Lang "priority.critical"}}</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn h-42">{{t .Lang "common.filter"}}</button>
+            </form>
+        </div>
+
+        <!-- Demands Table -->
+        <div class="card">
+            <div class="card-header">
+                <h2 class="mb-0">{{t .Lang "portal.demands.section_all"}} {{if .Data}}<span class="meta-text">({{index .Data "Total"}})</span>{{end}}</h2>
+            </div>
+
+            {{if .Data}}
+                {{$demands := index .Data "Demands"}}
+                {{if $demands}}
+                <div class="ofx-auto">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>{{t .Lang "portal.demands.col.title"}}</th>
+                            <th>{{t .Lang "portal.demands.col.type"}}</th>
+                            <th>{{t .Lang "portal.demands.col.status"}}</th>
+                            <th>{{t .Lang "portal.demands.col.priority"}}</th>
+                            <th>{{t .Lang "portal.demands.col.endeavour"}}</th>
+                            <th>{{t .Lang "portal.demands.col.creator"}}</th>
+                            <th>{{t .Lang "portal.demands.col.due_date"}}</th>
+                            <th>{{t .Lang "portal.demands.col.created"}}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {{range $demands}}
+                        <tr>
+                            <td><a href="/demands/{{.ID}}"><strong>{{.Title}}</strong></a></td>
+                            <td><span class="badge badge-pending">{{.Type}}</span></td>
+                            <td>
+                                {{if eq .Status "draft"}}
+                                    <span class="badge bg-muted">{{t $.Lang "status.draft"}}</span>
+                                {{else if eq .Status "open"}}
+                                    <span class="badge badge-info">{{t $.Lang "status.open"}}</span>
+                                {{else if eq .Status "in_progress"}}
+                                    <span class="badge badge-pending">{{t $.Lang "status.in_progress"}}</span>
+                                {{else if eq .Status "fulfilled"}}
+                                    <span class="badge badge-active">{{t $.Lang "status.fulfilled"}}</span>
+                                {{else if eq .Status "canceled"}}
+                                    <span class="badge badge-inactive">{{t $.Lang "status.canceled"}}</span>
+                                {{else}}
+                                    <span class="badge badge-pending">{{.Status}}</span>
+                                {{end}}
+                            </td>
+                            <td>
+                                {{if eq .Priority "critical"}}
+                                    <span class="badge badge-inactive">{{t $.Lang "priority.critical"}}</span>
+                                {{else if eq .Priority "high"}}
+                                    <span class="badge badge-inactive">{{t $.Lang "priority.high"}}</span>
+                                {{else if eq .Priority "medium"}}
+                                    <span class="badge badge-pending">{{t $.Lang "priority.medium"}}</span>
+                                {{else}}
+                                    <span class="badge badge-pending">{{t $.Lang "priority.low"}}</span>
+                                {{end}}
+                            </td>
+                            <td class="fs-14">{{if .EndeavourID}}<a href="/endeavours/{{.EndeavourID}}">{{if .EndeavourName}}{{.EndeavourName}}{{else}}{{.EndeavourID}}{{end}}</a>{{else}}<span class="text-muted">-</span>{{end}}</td>
+                            <td class="fs-14">{{if .CreatorName}}{{.CreatorName}}{{else}}<span class="text-muted">-</span>{{end}}</td>
+                            <td class="fs-13">{{if .DueDate}}{{fmtDate .DueDate $.Timezone}}{{else}}<span class="text-muted">-</span>{{end}}</td>
+                            <td class="fs-13">{{fmtDateTime .CreatedAt $.Timezone}}</td>
+                        </tr>
+                        {{end}}
+                    </tbody>
+                </table>
+                </div>
+
+                <!-- Pagination -->
+                {{$search := index .Data "FilterSearch"}}
+                {{$status := index .Data "FilterStatus"}}
+                {{$dtype := index .Data "FilterType"}}
+                {{$priority := index .Data "FilterPriority"}}
+                <div class="flex-jc-between-mt-12-fs-12">
+                    <span class="text-muted">
+                        {{t .Lang "common.showing_of" (len $demands) (index .Data "Total")}}
+                    </span>
+                    <div class="flex-gap-8">
+                        {{if index .Data "HasPrev"}}
+                        <a href="/demands?offset=0&search={{$search}}&status={{$status}}&type={{$dtype}}&priority={{$priority}}" class="btn btn-sm">{{t .Lang "common.first"}}</a>
+                        {{end}}
+                        {{if index .Data "HasNext"}}
+                        <a href="/demands?offset={{index .Data "NextOffset"}}&search={{$search}}&status={{$status}}&type={{$dtype}}&priority={{$priority}}" class="btn btn-sm">{{t .Lang "common.next"}}</a>
+                        {{end}}
+                    </div>
+                </div>
+                {{else}}
+                <div class="empty-state">
+                    <p>{{t .Lang "portal.demands.no_demands"}}</p>
+                </div>
+                {{end}}
+            {{end}}
+        </div>
+    </div>
+</div>
+{{end}}

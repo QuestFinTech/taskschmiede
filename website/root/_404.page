@@ -1,0 +1,14 @@
+<?php
+$pageTitle = '404 - Taskschmiede';
+$pageDescription = 'Page not found.';
+$currentPage = '';
+include __DIR__ . '/_head.php';
+?>
+
+<section class="section section-404">
+    <h1>404</h1>
+    <p>Page not found.</p>
+    <p><a href="/">Back to home</a></p>
+</section>
+
+<?php include __DIR__ . '/_foot.php'; ?>

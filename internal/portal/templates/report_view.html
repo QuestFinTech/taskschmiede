@@ -1,0 +1,54 @@
+{{template "base" .}}
+{{define "content"}}
+{{template "nav" .}}
+
+<div class="main-content">
+    <div class="container">
+        {{if .Error}}
+        <div class="alert alert-error">{{.Error}}</div>
+        {{end}}
+
+        {{if .Success}}
+        <div class="alert alert-success">{{.Success}}</div>
+        {{end}}
+
+        {{if .Data}}
+        {{$report := index .Data "Report"}}
+        {{$scope := index .Data "Scope"}}
+        {{$id := index .Data "ID"}}
+        {{if $report}}
+        <div class="page-header">
+            <div>
+                <h1>{{.Title}}</h1>
+                <p class="text-muted mb-0-fs-13">
+                    {{t .Lang "portal.reports.generated_at"}} {{$report.GeneratedAt}}
+                </p>
+            </div>
+            <div class="flex-gap-8-ai-stretch">
+                <a href="/reports/{{$scope}}/{{$id}}?format=download" class="btn btn-sm btn-center-160">{{t .Lang "portal.reports.download"}}</a>
+                <form method="POST" action="/reports/{{$scope}}/{{$id}}" class="d-inline-flex">
+                    <input type="hidden" name="csrf_token" value="{{$.CSRFToken}}">
+                    <input type="hidden" name="action" value="email">
+                    <button type="submit" class="btn btn-sm minw-160">{{t .Lang "portal.reports.email"}}</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="card p-32-36">
+            <div class="md-content" data-md>{{$report.Markdown}}</div>
+        </div>
+
+        <div class="mt-16">
+            {{if eq $scope "task"}}
+            <a href="/tasks/{{$id}}" class="text-secondary fs-13">&larr; {{t .Lang "portal.reports.back_to_task"}}</a>
+            {{else if eq $scope "demand"}}
+            <a href="/demands/{{$id}}" class="text-secondary fs-13">&larr; {{t .Lang "portal.reports.back_to_demand"}}</a>
+            {{else if eq $scope "endeavour"}}
+            <a href="/endeavours/{{$id}}" class="text-secondary fs-13">&larr; {{t .Lang "portal.reports.back_to_endeavour"}}</a>
+            {{end}}
+        </div>
+        {{end}}
+        {{end}}
+    </div>
+</div>
+{{end}}

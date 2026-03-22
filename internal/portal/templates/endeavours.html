@@ -1,0 +1,106 @@
+{{template "base" .}}
+{{define "content"}}
+{{template "nav" .}}
+
+<div class="main-content">
+    <div class="container">
+        <div class="page-header">
+            <h1>{{t .Lang "portal.endeavours.title"}}</h1>
+            {{if .User}}{{$limits := index .User "tier_limits"}}{{$usage := index .User "tier_usage"}}
+            {{if $limits}}{{if $usage}}{{if index $usage "endeavours_per_org"}}<p class="text-secondary fs-13-m-0">{{t .Lang "portal.endeavours.tier_usage" (index $usage "endeavours_per_org") (fmtLimit (index $limits "max_endeavours_per_org")) (index .User "tier_name")}}</p>{{end}}{{end}}{{end}}
+            {{end}}
+        </div>
+
+        {{if .Error}}
+        <div class="alert alert-error">{{.Error}}</div>
+        {{end}}
+
+        {{if .Success}}
+        <div class="alert alert-success">{{.Success}}</div>
+        {{end}}
+
+        {{$edvLimitReached := false}}
+        {{if .User}}{{$limits := index .User "tier_limits"}}{{$usage := index .User "tier_usage"}}
+        {{if $limits}}{{if $usage}}{{if index $usage "endeavours_per_org"}}{{$maxEdv := index $limits "max_endeavours_per_org"}}{{if gt $maxEdv 0.0}}{{if ge (index $usage "endeavours_per_org") $maxEdv}}{{$edvLimitReached = true}}{{end}}{{end}}{{end}}{{end}}{{end}}
+        {{end}}
+
+        {{if $edvLimitReached}}
+        <div class="card mb-24">
+            <div class="card-header">
+                <h2 class="mb-0">{{t .Lang "portal.endeavours.create_endeavour"}}</h2>
+            </div>
+            <p class="text-muted fs-14">{{t .Lang "portal.tier.limit_reached_endeavours"}}</p>
+        </div>
+        {{else}}
+        <div class="card mb-24">
+            <div class="card-header">
+                <h2 class="mb-0">{{t .Lang "portal.endeavours.create_endeavour"}}</h2>
+            </div>
+            <form method="POST" action="/endeavours">
+                <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
+                <input type="hidden" name="action" value="create">
+                <div class="grid-1-2-auto-gap-12">
+                    <div class="form-group mb-0">
+                        <label for="name">{{t .Lang "common.label.name"}}</label>
+                        <input type="text" id="name" name="name" placeholder="{{t .Lang "portal.endeavours.placeholder_name"}}" required>
+                    </div>
+                    <div class="form-group mb-0">
+                        <label for="description">{{t .Lang "common.label.description"}}</label>
+                        <input type="text" id="description" name="description" placeholder="{{t .Lang "common.placeholder.brief_description"}}">
+                    </div>
+                    <button type="submit" class="btn btn-primary h-42">{{t .Lang "common.create"}}</button>
+                </div>
+            </form>
+        </div>
+        {{end}}
+
+        <div class="card">
+            <div class="card-header">
+                <h2 class="mb-0">{{t .Lang "portal.endeavours.section_all"}} {{if .Data}}{{$edvs := index .Data "Endeavours"}}<span class="meta-text">({{len $edvs}})</span>{{end}}</h2>
+            </div>
+
+            {{if .Data}}
+                {{$edvs := index .Data "Endeavours"}}
+                {{if $edvs}}
+                <table>
+                    <thead>
+                        <tr>
+                            <th>{{t .Lang "portal.endeavours.col.name"}}</th>
+                            <th>{{t .Lang "portal.endeavours.col.description"}}</th>
+                            <th>{{t .Lang "portal.endeavours.col.status"}}</th>
+                            <th>{{t .Lang "portal.endeavours.col.goals"}}</th>
+                            <th>{{t .Lang "portal.endeavours.col.created"}}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {{range $edvs}}
+                        <tr>
+                            <td><a href="/endeavours/{{.ID}}"><strong>{{.Name}}</strong></a></td>
+                            <td class="fs-14-c-secondary">{{.Description}}</td>
+                            <td>
+                                {{if eq .Status "active"}}
+                                    <span class="badge badge-active">{{t $.Lang "status.active"}}</span>
+                                {{else if eq .Status "completed"}}
+                                    <span class="badge badge-info">{{t $.Lang "status.completed"}}</span>
+                                {{else if eq .Status "archived"}}
+                                    <span class="badge badge-inactive">{{t $.Lang "status.archived"}}</span>
+                                {{else}}
+                                    <span class="badge badge-pending">{{.Status}}</span>
+                                {{end}}
+                            </td>
+                            <td>{{len .Goals}}</td>
+                            <td class="fs-13">{{fmtDateTime .CreatedAt $.Timezone}}</td>
+                        </tr>
+                        {{end}}
+                    </tbody>
+                </table>
+                {{else}}
+                <div class="empty-state">
+                    <p>{{t .Lang "portal.endeavours.no_endeavours"}}</p>
+                </div>
+                {{end}}
+            {{end}}
+        </div>
+    </div>
+</div>
+{{end}}

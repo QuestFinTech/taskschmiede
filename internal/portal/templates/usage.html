@@ -1,0 +1,103 @@
+{{template "base" .}}
+{{define "content"}}
+{{template "nav" .}}
+
+<div class="main-content">
+    <div class="container">
+        <div class="page-header">
+            <h1>{{t .Lang "portal.usage.title"}}</h1>
+        </div>
+
+        {{if .Error}}
+        <div class="alert alert-error">{{.Error}}</div>
+        {{end}}
+
+        {{if .Data}}
+        {{$user := index .Data "User"}}
+        {{if $user}}
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-value tt-cap">
+                    {{if index $user "tier_name"}}{{index $user "tier_name"}}{{else}}{{t .Lang "status.free"}}{{end}}
+                </div>
+                <div class="stat-label">{{t .Lang "portal.usage.stat_current_tier"}}</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">{{if index $user "user_type"}}{{index $user "user_type"}}{{else}}-{{end}}</div>
+                <div class="stat-label">{{t .Lang "portal.usage.stat_account_type"}}</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">{{if index $user "status"}}{{index $user "status"}}{{else}}-{{end}}</div>
+                <div class="stat-label">{{t .Lang "portal.usage.stat_account_status"}}</div>
+            </div>
+        </div>
+
+        <div class="two-col">
+            <div class="card mb-0">
+                <div class="card-header">
+                    <h2 class="mb-0">{{t .Lang "portal.usage.section_account_details"}}</h2>
+                </div>
+                <div class="grid-auto-1fr-gap-8-16-fs-14">
+                    <span class="text-secondary">{{t .Lang "portal.usage.label_name"}}</span>
+                    <span>{{index $user "name"}}</span>
+                    <span class="text-secondary">{{t .Lang "portal.usage.label_email"}}</span>
+                    <span>{{index $user "email"}}</span>
+                    <span class="text-secondary">{{t .Lang "portal.usage.label_user_id"}}</span>
+                    <span class="ff-mono-fs-13">{{index $user "id"}}</span>
+                    {{if index $user "resource_id"}}
+                    <span class="text-secondary">{{t .Lang "portal.usage.label_resource_id"}}</span>
+                    <span class="ff-mono-fs-13">{{index $user "resource_id"}}</span>
+                    {{end}}
+                </div>
+            </div>
+
+            <div class="card mb-0">
+                <div class="card-header">
+                    <h2 class="mb-0">{{t .Lang "portal.usage.section_current_usage"}}</h2>
+                </div>
+                {{$limits := index $user "tier_limits"}}
+                {{$usage := index $user "tier_usage"}}
+                {{if $limits}}
+                <style nonce="{{.Nonce}}">.utb-orgs{width:{{tierPct (index $usage "orgs") (index $limits "max_orgs")}}%;{{if gt (tierPct (index $usage "orgs") (index $limits "max_orgs")) 0}}min-width:2px{{end}}}.utb-edv{width:{{tierPct (index $usage "endeavours_per_org") (index $limits "max_endeavours_per_org")}}%;{{if gt (tierPct (index $usage "endeavours_per_org") (index $limits "max_endeavours_per_org")) 0}}min-width:2px{{end}}}.utb-agt{width:{{tierPct (index $usage "agents_per_org") (index $limits "max_agents_per_org")}}%;{{if gt (tierPct (index $usage "agents_per_org") (index $limits "max_agents_per_org")) 0}}min-width:2px{{end}}}.utb-cph{width:{{tierPct (index $usage "creations_per_hour") (index $limits "max_creations_per_hour")}}%;{{if gt (tierPct (index $usage "creations_per_hour") (index $limits "max_creations_per_hour")) 0}}min-width:2px{{end}}}</style>
+                <div class="flex-col-gap-10">
+                    <div class="flex-ai-center-gap-10-fs-13">
+                        <span class="label-col-120">{{t .Lang "portal.usage.limit_organizations"}}</span>
+                        <div class="tier-bar-lg">
+                            <div class="tier-bar-fill-lg utb-orgs"></div>
+                        </div>
+                        <span class="count-col">{{index $usage "orgs"}}/{{fmtLimit (index $limits "max_orgs")}}</span>
+                    </div>
+                    <div class="flex-ai-center-gap-10-fs-13">
+                        <span class="label-col-120">{{t .Lang "portal.usage.limit_endeavours_per_org"}}</span>
+                        <div class="tier-bar-lg">
+                            <div class="tier-bar-fill-lg utb-edv"></div>
+                        </div>
+                        <span class="count-col">{{index $usage "endeavours_per_org"}}/{{fmtLimit (index $limits "max_endeavours_per_org")}}</span>
+                    </div>
+                    <div class="flex-ai-center-gap-10-fs-13">
+                        <span class="label-col-120">{{t .Lang "portal.usage.limit_agents_per_org"}}</span>
+                        <div class="tier-bar-lg">
+                            <div class="tier-bar-fill-lg utb-agt"></div>
+                        </div>
+                        <span class="count-col">{{index $usage "agents_per_org"}}/{{fmtLimit (index $limits "max_agents_per_org")}}</span>
+                    </div>
+                    <div class="flex-ai-center-gap-10-fs-13">
+                        <span class="label-col-120">{{t .Lang "portal.usage.limit_creations_per_hour"}}</span>
+                        <div class="tier-bar-lg">
+                            <div class="tier-bar-fill-lg utb-cph"></div>
+                        </div>
+                        <span class="count-col">{{index $usage "creations_per_hour"}}/{{fmtLimit (index $limits "max_creations_per_hour")}}</span>
+                    </div>
+                </div>
+                {{else}}
+                <p class="text-muted fs-14">{{t .Lang "portal.usage.no_tier_limits"}}</p>
+                {{end}}
+            </div>
+        </div>
+
+        {{end}}
+        {{end}}
+    </div>
+</div>
+{{end}}

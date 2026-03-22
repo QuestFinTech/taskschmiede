@@ -1,0 +1,15 @@
+<?php
+$pageTitle = 'Getting Ready - Taskschmiede';
+$pageDescription = 'Taskschmiede services are being prepared. Check back soon.';
+$currentPage = '';
+include __DIR__ . '/_head.php';
+?>
+
+<section class="section section-maintenance">
+    <h1>Getting Ready</h1>
+    <p>This service is being prepared for launch. The API, MCP endpoint, and admin console are on their way.</p>
+    <p>In the meantime, you can learn more about the project on the main site.</p>
+    <a class="cta-link" href="/">taskschmiede.dev &rarr;</a>
+</section>
+
+<?php include __DIR__ . '/_foot.php'; ?>

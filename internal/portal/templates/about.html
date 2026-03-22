@@ -1,0 +1,85 @@
+{{template "base" .}}
+{{define "content"}}
+{{template "nav" .}}
+
+<div class="main-content">
+    <div class="container">
+        <div class="page-header">
+            <h1>{{t .Lang "portal.about.title"}}</h1>
+        </div>
+
+        {{$info := .Data}}
+
+        <div class="card mb-16">
+            <h2 class="section-title">{{t .Lang "portal.about.services"}}</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>{{t .Lang "portal.about.service"}}</th>
+                        <th>{{t .Lang "portal.about.endpoint"}}</th>
+                        <th>{{t .Lang "portal.about.port"}}</th>
+                        <th>{{t .Lang "portal.about.status"}}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>MCP Server + REST API</td>
+                        <td><code>{{index $info "api_url"}}</code></td>
+                        <td><code>{{index $info "api_port"}}</code></td>
+                        <td>{{if index $info "api_healthy"}}<span class="badge badge-success">{{t .Lang "portal.about.healthy"}}</span>{{else}}<span class="badge badge-error">{{t .Lang "portal.about.unreachable"}}</span>{{end}}</td>
+                    </tr>
+                    <tr>
+                        <td>Portal</td>
+                        <td><code>{{index $info "portal_addr"}}</code></td>
+                        <td><code>{{index $info "portal_port"}}</code></td>
+                        <td><span class="badge badge-success">{{t .Lang "portal.about.healthy"}}</span></td>
+                    </tr>
+                    <tr>
+                        <td>MCP Proxy</td>
+                        <td><code>{{index $info "proxy_url"}}</code></td>
+                        <td><code>{{index $info "proxy_port"}}</code></td>
+                        <td>{{if eq (index $info "proxy_status") "healthy"}}<span class="badge badge-success">{{t .Lang "portal.about.healthy"}}</span>{{else}}<span class="badge badge-muted">{{t .Lang "portal.about.not_active"}}</span>{{end}}</td>
+                    </tr>
+                    <tr>
+                        <td>Notification Server</td>
+                        <td><code>{{index $info "notify_url"}}</code></td>
+                        <td><code>{{index $info "notify_port"}}</code></td>
+                        <td>{{if eq (index $info "notify_status") "healthy"}}<span class="badge badge-success">{{t .Lang "portal.about.healthy"}}</span>{{else}}<span class="badge badge-muted">{{t .Lang "portal.about.not_active"}}</span>{{end}}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="card mb-16">
+            <h2 class="section-title">{{t .Lang "portal.about.configuration"}}</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>{{t .Lang "portal.about.setting"}}</th>
+                        <th>{{t .Lang "portal.about.value"}}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td>{{t .Lang "portal.about.version"}}</td><td><code>{{index $info "version"}}</code></td></tr>
+                    <tr><td>{{t .Lang "portal.about.api_version"}}</td><td><code>{{index $info "api_version"}}</code></td></tr>
+                    <tr><td>{{t .Lang "portal.about.secure_cookies"}}</td><td>{{if index $info "secure"}}{{t .Lang "common.yes"}}{{else}}{{t .Lang "common.no"}}{{end}}</td></tr>
+                    <tr><td>{{t .Lang "portal.about.languages"}}</td><td>{{index $info "languages"}}</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="card mb-16">
+            <h2 class="section-title">{{t .Lang "portal.about.about_section"}}</h2>
+            <p class="mb-12">Taskschmiede is a structured collaboration platform for humans and AI agents.</p>
+            <table>
+                <tbody>
+                    <tr><td class="w-160">{{t .Lang "portal.about.copyright"}}</td><td>&copy; 2026 Quest Financial Technologies S.a r.l.-S., Luxembourg</td></tr>
+                    <tr><td>{{t .Lang "portal.about.license"}}</td><td>Apache License 2.0</td></tr>
+                    <tr><td>{{t .Lang "portal.about.documentation"}}</td><td><a href="{{index $info "docs_url"}}" target="_blank" rel="noopener">{{index $info "docs_url"}}</a></td></tr>
+                    <tr><td>{{t .Lang "portal.about.source_code"}}</td><td><a href="https://github.com/QuestFinTech/taskschmiede" target="_blank" rel="noopener">github.com/QuestFinTech/taskschmiede</a></td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{{end}}

@@ -1,0 +1,232 @@
+{{template "base" .}}
+{{define "content"}}
+{{template "nav" .}}
+
+<div class="main-content">
+    <div class="container">
+        <div class="page-header">
+            <h1>{{t .Lang "portal.agents.title"}}</h1>
+            {{if .User}}{{$limits := index .User "tier_limits"}}{{$usage := index .User "tier_usage"}}
+            {{if $limits}}{{if $usage}}{{if index $usage "agents_per_org"}}<p class="text-secondary fs-13-m-0">{{t .Lang "portal.agents.tier_usage" (index $usage "agents_per_org") (fmtLimit (index $limits "max_agents_per_org")) (index .User "tier_name")}}</p>{{end}}{{end}}{{end}}
+            {{end}}
+        </div>
+
+        {{if .Error}}
+        <div class="alert alert-error">{{.Error}}</div>
+        {{end}}
+
+        {{if .Success}}
+        <div class="alert alert-success wb-break-all">{{.Success}}</div>
+        {{end}}
+
+        {{$agentLimitReached := false}}
+        {{if .User}}{{$limits := index .User "tier_limits"}}{{$usage := index .User "tier_usage"}}
+        {{if $limits}}{{if $usage}}{{if index $usage "agents_per_org"}}{{$maxAgents := index $limits "max_agents_per_org"}}{{if gt $maxAgents 0.0}}{{if ge (index $usage "agents_per_org") $maxAgents}}{{$agentLimitReached = true}}{{end}}{{end}}{{end}}{{end}}{{end}}
+        {{end}}
+
+        {{if $agentLimitReached}}
+        <div class="card mb-24">
+            <div class="card-header">
+                <h2 class="mb-0">{{t .Lang "portal.agents.invite_agent"}}</h2>
+            </div>
+            <p class="text-muted fs-14">{{t .Lang "portal.tier.limit_reached_agents"}}</p>
+        </div>
+        {{else}}
+        <div class="card mb-24">
+            <div class="card-header">
+                <h2 class="mb-0">{{t .Lang "portal.agents.invite_agent"}}</h2>
+            </div>
+            <p class="text-secondary fs-14-mb-16">
+                {{t .Lang "portal.agents.create_token_desc"}}
+            </p>
+            <form method="POST" action="/agents">
+                <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
+                <input type="hidden" name="action" value="create">
+                <div class="grid-2-1-1-auto-gap-12">
+                    <div class="form-group mb-0">
+                        <label for="name">{{t .Lang "portal.agents.label_token_name"}}</label>
+                        <input type="text" id="name" name="name" placeholder="{{t .Lang "portal.agents.placeholder_token_name"}}" value="Agent token">
+                    </div>
+                    <div class="form-group mb-0">
+                        <label for="max_uses">{{t .Lang "portal.agents.label_max_uses"}}</label>
+                        <input type="number" id="max_uses" name="max_uses" value="1" min="1">
+                    </div>
+                    <div class="form-group mb-0">
+                        <label for="expires_at">{{t .Lang "portal.agents.label_expires_at"}} <span class="label-hint">({{t .Lang "common.optional"}})</span></label>
+                        <input type="datetime-local" id="expires_at" name="expires_at">
+                    </div>
+                    <button type="submit" class="btn btn-primary h-42">{{t .Lang "common.create"}}</button>
+                </div>
+            </form>
+        </div>
+        {{end}}
+
+        <div class="card mb-24">
+            <div class="card-header">
+                <h2 class="mb-0">{{t .Lang "portal.agents.section_invitation_tokens"}} {{if .Data}}<span class="meta-text">({{index .Data "TokenActiveCount"}} {{t .Lang "portal.agents.token_filter_active"}}, {{index .Data "TokenUsedCount"}} {{t .Lang "portal.agents.token_filter_used"}})</span>{{end}}</h2>
+            </div>
+            {{if .Data}}
+            <div class="flex-gap-6-mb-16">
+                {{$tf := index .Data "TokenFilter"}}
+                <a href="/agents" class="btn btn-sm{{if eq $tf ""}} btn-primary{{end}}">{{t .Lang "portal.agents.token_filter_all"}}</a>
+                <a href="/agents?token_status=active" class="btn btn-sm{{if eq $tf "active"}} btn-primary{{end}}">{{t .Lang "portal.agents.token_filter_active"}} ({{index .Data "TokenActiveCount"}})</a>
+                <a href="/agents?token_status=used" class="btn btn-sm{{if eq $tf "used"}} btn-primary{{end}}">{{t .Lang "portal.agents.token_filter_used"}} ({{index .Data "TokenUsedCount"}})</a>
+                <a href="/agents?token_status=expired" class="btn btn-sm{{if eq $tf "expired"}} btn-primary{{end}}">{{t .Lang "portal.agents.token_filter_expired"}} ({{index .Data "TokenExpiredCount"}})</a>
+            </div>
+            {{end}}
+
+            {{if .Data}}
+                {{$tokens := index .Data "Tokens"}}
+                {{if $tokens}}
+                <table>
+                    <thead>
+                        <tr>
+                            <th>{{t .Lang "portal.agents.col.name"}}</th>
+                            <th>{{t .Lang "portal.agents.col.id"}}</th>
+                            <th>{{t .Lang "portal.agents.col.uses"}}</th>
+                            <th>{{t .Lang "portal.agents.col.status"}}</th>
+                            <th>{{t .Lang "portal.agents.col.created"}}</th>
+                            <th>{{t .Lang "portal.agents.col.expires"}}</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {{range $tokens}}
+                        <tr>
+                            <td>{{.Token.Name}}</td>
+                            <td class="ff-mono-fs-13">{{.Token.ID}}</td>
+                            <td>{{.Token.Uses}}{{if .Token.MaxUses}} / {{.Token.MaxUses}}{{end}}</td>
+                            <td>
+                                {{if eq .Status "active"}}
+                                    <span class="badge badge-active">{{t $.Lang "status.active"}}</span>
+                                {{else if eq .Status "exhausted"}}
+                                    <span class="badge badge-pending">{{t $.Lang "status.exhausted"}}</span>
+                                {{else}}
+                                    <span class="badge badge-inactive">{{.Status}}</span>
+                                {{end}}
+                            </td>
+                            <td class="fs-13">{{fmtDate .Token.CreatedAt $.Timezone}}</td>
+                            <td class="fs-13">
+                                {{if .Token.ExpiresAt}}{{fmtDate .Token.ExpiresAt $.Timezone}}{{else}}-{{end}}
+                            </td>
+                            <td>
+                                {{if eq .Status "active"}}
+                                <form method="POST" action="/agents" class="d-inline">
+                                    <input type="hidden" name="csrf_token" value="{{$.CSRFToken}}">
+                                    <input type="hidden" name="action" value="revoke">
+                                    <input type="hidden" name="token_id" value="{{.Token.ID}}">
+                                    <button type="submit" class="btn btn-sm btn-danger" data-confirm="{{t $.Lang "portal.agents.confirm_revoke"}}">{{t $.Lang "common.revoke"}}</button>
+                                </form>
+                                {{end}}
+                            </td>
+                        </tr>
+                        {{end}}
+                    </tbody>
+                </table>
+                {{else}}
+                <div class="empty-state">
+                    <p>{{t .Lang "portal.agents.no_tokens"}}</p>
+                </div>
+                {{end}}
+            {{end}}
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h2 class="mb-0">{{t .Lang "portal.agents.section_agents"}} {{if .Data}}<span class="meta-text">({{index .Data "AgentCount"}})</span>{{end}}</h2>
+            </div>
+
+            {{if .Data}}
+                {{$agents := index .Data "Agents"}}
+                {{if $agents}}
+                <table>
+                    <thead>
+                        <tr>
+                            <th>{{t .Lang "portal.agents.col.name"}}</th>
+                            <th>{{t .Lang "portal.agents.col.email"}}</th>
+                            <th>{{t .Lang "portal.agents.col.status"}}</th>
+                            <th>{{t .Lang "portal.agents.col.health"}}</th>
+                            <th>{{t .Lang "portal.agents.col.onboarding"}}</th>
+                            <th>{{t .Lang "portal.agents.col.created"}}</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {{range $agents}}
+                        <tr>
+                            <td><a href="/agents/{{.ID}}">{{.Name}}</a></td>
+                            <td class="fs-13">{{.Email}}</td>
+                            <td>
+                                {{if eq .Status "active"}}
+                                    <span class="badge badge-active">{{t $.Lang "status.active"}}</span>
+                                {{else if eq .Status "blocked"}}
+                                    <span class="badge badge-suspended">{{t $.Lang "status.blocked"}}</span>
+                                {{else if eq .Status "suspended"}}
+                                    <span class="badge badge-suspended">{{t $.Lang "status.suspended"}}</span>
+                                {{else if eq .Status "inactive"}}
+                                    <span class="badge badge-inactive">{{t $.Lang "status.inactive"}}</span>
+                                {{else}}
+                                    <span class="badge badge-pending">{{.Status}}</span>
+                                {{end}}
+                            </td>
+                            <td>
+                                {{if .HealthStatus}}
+                                    {{if eq .HealthStatus "healthy"}}
+                                        <span class="badge badge-active">{{t $.Lang "status.healthy"}}</span>
+                                    {{else if eq .HealthStatus "degraded"}}
+                                        <span class="badge badge-pending">{{t $.Lang "status.degraded"}}</span>
+                                    {{else}}
+                                        <span class="badge badge-inactive">{{.HealthStatus}}</span>
+                                    {{end}}
+                                {{else}}
+                                    <span class="text-muted">-</span>
+                                {{end}}
+                            </td>
+                            <td>
+                                {{if .OnboardingStatus}}
+                                    {{if eq .OnboardingStatus "completed"}}
+                                        <span class="badge badge-active">{{t $.Lang "status.completed"}}</span>
+                                    {{else if eq .OnboardingStatus "pending"}}
+                                        <span class="badge badge-pending">{{t $.Lang "status.pending"}}</span>
+                                    {{else if eq .OnboardingStatus "in_progress"}}
+                                        <span class="badge badge-info">{{t $.Lang "status.in_progress"}}</span>
+                                    {{else}}
+                                        <span class="badge badge-pending">{{.OnboardingStatus}}</span>
+                                    {{end}}
+                                {{else}}
+                                    <span class="text-muted">-</span>
+                                {{end}}
+                            </td>
+                            <td class="fs-13">{{fmtDateTime .CreatedAt $.Timezone}}</td>
+                            <td class="ws-nowrap-ta-right">
+                                {{if eq .Status "active"}}
+                                <form method="POST" action="/agents" class="d-inline">
+                                    <input type="hidden" name="csrf_token" value="{{$.CSRFToken}}">
+                                    <input type="hidden" name="action" value="block">
+                                    <input type="hidden" name="agent_id" value="{{.ID}}">
+                                    <button type="submit" class="btn btn-sm btn-warning" data-confirm="{{t $.Lang "portal.agent_detail.confirm_block"}}">{{t $.Lang "portal.agent_detail.action_block"}}</button>
+                                </form>
+                                {{else if eq .Status "blocked"}}
+                                <form method="POST" action="/agents" class="d-inline">
+                                    <input type="hidden" name="csrf_token" value="{{$.CSRFToken}}">
+                                    <input type="hidden" name="action" value="unblock">
+                                    <input type="hidden" name="agent_id" value="{{.ID}}">
+                                    <button type="submit" class="btn btn-sm btn-primary" data-confirm="{{t $.Lang "portal.agent_detail.confirm_unblock"}}">{{t $.Lang "portal.agent_detail.action_unblock"}}</button>
+                                </form>
+                                {{end}}
+                                <a href="/agents/{{.ID}}" class="btn btn-sm">{{t $.Lang "common.view"}}</a>
+                            </td>
+                        </tr>
+                        {{end}}
+                    </tbody>
+                </table>
+                {{else}}
+                <div class="empty-state">
+                    <p>{{t .Lang "portal.agents.no_agents"}}</p>
+                </div>
+                {{end}}
+            {{end}}
+        </div>
+    </div>
+</div>
+{{end}}

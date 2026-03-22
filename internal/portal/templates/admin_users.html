@@ -1,0 +1,187 @@
+{{template "base" .}}
+{{define "content"}}
+{{template "nav" .}}
+
+<div class="main-content">
+    <div class="container">
+        <div class="page-header">
+            <h1>{{t .Lang "portal.admin_users.title"}}</h1>
+        </div>
+
+        {{if .Error}}
+        <div class="alert alert-error">{{.Error}}</div>
+        {{end}}
+
+        {{if .Success}}
+        <div class="alert alert-success">{{.Success}}</div>
+        {{end}}
+
+        {{if .Data}}
+        <!-- Filters -->
+        <div class="card mb-24-p-16-24">
+            <form method="GET" action="/admin/users" class="flex-gap-12-ai-end-wrap">
+                <div class="form-group mb-0-minw-200">
+                    <label for="filter_search">{{t .Lang "portal.admin_users.label_search"}}</label>
+                    <input type="text" id="filter_search" name="search" placeholder="{{t .Lang "common.placeholder.search"}}" value="{{index .Data "Search"}}">
+                </div>
+                <div class="form-group mb-0-minw-140">
+                    <label for="filter_status">{{t .Lang "common.label.status"}}</label>
+                    <select id="filter_status" name="status">
+                        <option value="">{{t .Lang "common.all"}}</option>
+                        {{$status := index .Data "Status"}}
+                        <option value="active" {{if eq $status "active"}}selected{{end}}>{{t .Lang "status.active"}}</option>
+                        <option value="inactive" {{if eq $status "inactive"}}selected{{end}}>{{t .Lang "status.inactive"}}</option>
+                        <option value="blocked" {{if eq $status "blocked"}}selected{{end}}>{{t .Lang "status.blocked"}}</option>
+                        <option value="suspended" {{if eq $status "suspended"}}selected{{end}}>{{t .Lang "status.suspended"}}</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn h-40">{{t .Lang "common.filter"}}</button>
+            </form>
+        </div>
+
+        <!-- Users Table -->
+        <div class="card">
+            <div class="card-header">
+                <h2 class="mb-0">{{t .Lang "portal.admin_users.section_all"}}</h2>
+                <span class="text-secondary fs-14">{{t .Lang "common.total" (index .Data "Total")}}</span>
+            </div>
+
+            {{$users := index .Data "Users"}}
+            {{if $users}}
+            <div class="ofx-auto">
+            <table>
+                <thead>
+                    <tr>
+                        <th>{{t .Lang "portal.admin_users.col.name"}}</th>
+                        <th>{{t .Lang "portal.admin_users.col.email"}}</th>
+                        <th>{{t .Lang "portal.admin_users.col.status"}}</th>
+                        <th>{{t .Lang "portal.admin_users.col.type"}}</th>
+                        <th>{{t .Lang "portal.admin_users.col.tier"}}</th>
+                        <th>{{t .Lang "portal.admin_users.col.created"}}</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{range $users}}
+                    <tr>
+                        <td><a href="/admin/users/{{.ID}}"><strong>{{.Name}}</strong></a>{{if .IsAdmin}} <span class="badge badge-info">{{t $.Lang "portal.admin_users.badge_master_admin"}}</span>{{end}}</td>
+                        <td class="text-muted fs-14">{{.Email}}</td>
+                        <td>
+                            {{if eq .Status "active"}}
+                                <span class="badge badge-active">{{t $.Lang "status.active"}}</span>
+                            {{else if eq .Status "blocked"}}
+                                <span class="badge badge-suspended">{{t $.Lang "status.blocked"}}</span>
+                            {{else if eq .Status "suspended"}}
+                                <span class="badge badge-suspended">{{t $.Lang "status.suspended"}}</span>
+                            {{else}}
+                                <span class="badge badge-inactive">{{t $.Lang "status.inactive"}}</span>
+                            {{end}}
+                        </td>
+                        <td>
+                            {{if eq .UserType "admin"}}
+                                <span class="badge badge-info">admin</span>
+                            {{else if eq .UserType "agent"}}
+                                <span class="badge badge-pending">agent</span>
+                            {{else}}
+                                <span class="badge badge-active">human</span>
+                            {{end}}
+                        </td>
+                        <td class="fs-14">Tier {{.Tier}}</td>
+                        <td class="fs-13-ws-nowrap">{{fmtDateTime .CreatedAt $.Timezone}}</td>
+                        <td class="ws-nowrap">
+                            {{if eq .UserType "human"}}
+                            {{if .IsAdmin}}
+                            <form method="POST" action="/admin/users" class="d-inline">
+                                <input type="hidden" name="csrf_token" value="{{$.CSRFToken}}">
+                                <input type="hidden" name="action" value="demote_admin">
+                                <input type="hidden" name="user_id" value="{{.ID}}">
+                                <input type="hidden" name="search" value="{{index $.Data "Search"}}">
+                                <input type="hidden" name="filter_status" value="{{index $.Data "Status"}}">
+                                <input type="hidden" name="offset" value="{{index $.Data "Offset"}}">
+                                <button type="submit" class="btn btn-sm" data-confirm="Remove master admin privileges from {{.Name}}?">Demote</button>
+                            </form>
+                            {{else}}
+                            <form method="POST" action="/admin/users" class="d-inline">
+                                <input type="hidden" name="csrf_token" value="{{$.CSRFToken}}">
+                                <input type="hidden" name="action" value="promote_admin">
+                                <input type="hidden" name="user_id" value="{{.ID}}">
+                                <input type="hidden" name="search" value="{{index $.Data "Search"}}">
+                                <input type="hidden" name="filter_status" value="{{index $.Data "Status"}}">
+                                <input type="hidden" name="offset" value="{{index $.Data "Offset"}}">
+                                <button type="submit" class="btn btn-sm btn-info" data-confirm="Promote {{.Name}} to master admin?">Promote</button>
+                            </form>
+                            {{end}}
+                            {{end}}
+                            {{if eq .Status "active"}}
+                            <form method="POST" action="/admin/users" class="d-inline">
+                                <input type="hidden" name="csrf_token" value="{{$.CSRFToken}}">
+                                <input type="hidden" name="action" value="suspend">
+                                <input type="hidden" name="user_id" value="{{.ID}}">
+                                <input type="hidden" name="search" value="{{index $.Data "Search"}}">
+                                <input type="hidden" name="filter_status" value="{{index $.Data "Status"}}">
+                                <input type="hidden" name="offset" value="{{index $.Data "Offset"}}">
+                                <button type="submit" class="btn btn-sm btn-warning" data-confirm="{{t $.Lang "portal.admin_users.confirm_suspend"}}">{{t $.Lang "portal.admin_users.action_suspend"}}</button>
+                            </form>
+                            <form method="POST" action="/admin/users" class="d-inline">
+                                <input type="hidden" name="csrf_token" value="{{$.CSRFToken}}">
+                                <input type="hidden" name="action" value="toggle_status">
+                                <input type="hidden" name="user_id" value="{{.ID}}">
+                                <input type="hidden" name="search" value="{{index $.Data "Search"}}">
+                                <input type="hidden" name="filter_status" value="{{index $.Data "Status"}}">
+                                <input type="hidden" name="offset" value="{{index $.Data "Offset"}}">
+                                <button type="submit" class="btn btn-sm btn-danger">{{t $.Lang "portal.admin_users.action_deactivate"}}</button>
+                            </form>
+                            {{else if eq .Status "suspended"}}
+                            <form method="POST" action="/admin/users" class="d-inline">
+                                <input type="hidden" name="csrf_token" value="{{$.CSRFToken}}">
+                                <input type="hidden" name="action" value="reactivate">
+                                <input type="hidden" name="user_id" value="{{.ID}}">
+                                <input type="hidden" name="search" value="{{index $.Data "Search"}}">
+                                <input type="hidden" name="filter_status" value="{{index $.Data "Status"}}">
+                                <input type="hidden" name="offset" value="{{index $.Data "Offset"}}">
+                                <button type="submit" class="btn btn-sm btn-primary">{{t $.Lang "portal.admin_users.action_reactivate"}}</button>
+                            </form>
+                            {{else if eq .Status "inactive"}}
+                            <form method="POST" action="/admin/users" class="d-inline">
+                                <input type="hidden" name="csrf_token" value="{{$.CSRFToken}}">
+                                <input type="hidden" name="action" value="toggle_status">
+                                <input type="hidden" name="user_id" value="{{.ID}}">
+                                <input type="hidden" name="search" value="{{index $.Data "Search"}}">
+                                <input type="hidden" name="filter_status" value="{{index $.Data "Status"}}">
+                                <input type="hidden" name="offset" value="{{index $.Data "Offset"}}">
+                                <button type="submit" class="btn btn-sm btn-primary">{{t $.Lang "portal.admin_users.action_activate"}}</button>
+                            </form>
+                            {{end}}
+                        </td>
+                    </tr>
+                    {{end}}
+                </tbody>
+            </table>
+            </div>
+
+            <!-- Pagination -->
+            {{$search := index .Data "Search"}}
+            {{$status := index .Data "Status"}}
+            <div class="flex-jc-between-mt-12-fs-12">
+                <span class="text-muted">
+                    {{t .Lang "common.showing_of" (len $users) (index .Data "Total")}}
+                </span>
+                <div class="flex-gap-8">
+                    {{if index .Data "HasPrev"}}
+                    <a href="/admin/users?offset=0&search={{$search}}&status={{$status}}" class="btn btn-sm">{{t .Lang "common.first"}}</a>
+                    {{end}}
+                    {{if index .Data "HasNext"}}
+                    <a href="/admin/users?offset={{index .Data "NextOffset"}}&search={{$search}}&status={{$status}}" class="btn btn-sm">{{t .Lang "common.next"}}</a>
+                    {{end}}
+                </div>
+            </div>
+            {{else}}
+            <div class="empty-state">
+                <p>{{t .Lang "portal.admin_users.no_users"}}</p>
+            </div>
+            {{end}}
+        </div>
+        {{end}}
+    </div>
+</div>
+{{end}}

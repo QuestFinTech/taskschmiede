@@ -1,0 +1,110 @@
+{{template "base" .}}
+{{define "content"}}
+{{template "nav" .}}
+
+<div class="main-content">
+    <div class="container">
+        <div class="page-header">
+            <h1>{{t .Lang "portal.activity.title"}}</h1>
+        </div>
+
+        {{if .Error}}
+        <div class="alert alert-error">{{.Error}}</div>
+        {{end}}
+
+        <div class="card">
+            <div class="card-header">
+                <h2 class="mb-0">{{t .Lang "portal.activity_feed.section_entries"}} {{if .Data}}<span class="meta-text">({{index .Data "Total"}})</span>{{end}}</h2>
+            </div>
+            {{if .Data}}
+                {{$entries := index .Data "Entries"}}
+                {{$actorMap := index .Data "ActorMap"}}
+                {{$entityMap := index .Data "EntityMap"}}
+                {{$endeavourMap := index .Data "EndeavourMap"}}
+                {{if $entries}}
+                <div class="ofx-auto">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>{{t .Lang "portal.activity_feed.col.time"}}</th>
+                            <th>{{t .Lang "portal.activity_feed.col.actor"}}</th>
+                            <th>{{t .Lang "portal.activity_feed.col.type"}}</th>
+                            <th>{{t .Lang "portal.activity_feed.col.action"}}</th>
+                            <th>{{t .Lang "portal.activity_feed.col.details"}}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {{range $entries}}
+                        <tr>
+                            <td class="ws-nowrap-fs-13">{{fmtDateTime .CreatedAt $.Timezone}}</td>
+                            <td class="truncate-150" title="{{.ActorID}}">
+                                {{if .ActorID}}
+                                    {{$name := index $actorMap .ActorID}}
+                                    {{if $name}}<strong>{{$name}}</strong>{{else}}{{.ActorID}}{{end}}
+                                {{else}}-{{end}}
+                            </td>
+                            <td>
+                                {{if eq .Type "login"}}<span class="badge badge-info">login</span>
+                                {{else}}<span class="badge badge-pending">{{.EntityType}}</span>
+                                {{end}}
+                            </td>
+                            <td>
+                                {{if eq .Action "create"}}<span class="badge badge-active">{{.Action}}</span>
+                                {{else if eq .Action "update"}}<span class="badge badge-pending">{{.Action}}</span>
+                                {{else if eq .Action "login_success"}}<span class="badge badge-active">{{.Summary}}</span>
+                                {{else if eq .Action "cancel"}}<span class="badge badge-inactive">{{.Action}}</span>
+                                {{else if eq .Action "archive"}}<span class="badge badge-inactive">{{.Action}}</span>
+                                {{else if eq .Action "delete"}}<span class="badge badge-inactive">{{.Action}}</span>
+                                {{else}}<span class="badge badge-pending">{{.Action}}</span>
+                                {{end}}
+                            </td>
+                            <td class="fs-13">
+                                {{if eq .Type "login"}}
+                                    {{if .Source}}<span class="text-muted">{{.Source}}</span>{{end}}
+                                {{else}}
+                                    {{$eName := index $entityMap .EntityID}}
+                                    {{if $eName}}<strong title="{{.EntityID}}">{{$eName}}</strong>{{else if .EntityID}}<span class="text-muted" title="{{.EntityID}}">{{.EntityID}}</span>{{end}}
+                                    {{if .EndeavourID}}
+                                        {{$edvName := index $endeavourMap .EndeavourID}}
+                                        {{if $edvName}}<span class="text-muted" title="{{.EndeavourID}}"> -- {{$edvName}}</span>{{end}}
+                                    {{end}}
+                                    {{if .Fields}}
+                                        <span class="ml-8">
+                                        {{$meta := .Metadata}}
+                                        {{range .Fields}}{{$v := metaVal $meta .}}{{if $v}}<span class="badge badge-pending fs-11-m-1">{{.}}: {{$v}}</span>{{else}}<span class="badge badge-pending fs-11-m-1">{{.}}</span>{{end}}{{end}}
+                                        </span>
+                                    {{end}}
+                                {{end}}
+                            </td>
+                        </tr>
+                        {{end}}
+                    </tbody>
+                </table>
+                </div>
+
+                {{$offset := index .Data "Offset"}}
+                {{$limit := index .Data "Limit"}}
+                {{$total := index .Data "Total"}}
+                <div class="flex-jc-between-mt-12-fs-12">
+                    <span class="text-muted">
+                        {{t .Lang "common.showing_of" (len $entries) $total}}
+                    </span>
+                    <div class="flex-gap-8">
+                        {{if index .Data "HasPrev"}}
+                        <a href="/activity?offset=0" class="btn btn-sm">{{t .Lang "common.first"}}</a>
+                        {{end}}
+                        {{if index .Data "HasNext"}}
+                        <a href="/activity?offset={{index .Data "NextOffset"}}" class="btn btn-sm">{{t .Lang "common.next"}}</a>
+                        {{end}}
+                    </div>
+                </div>
+                {{else}}
+                <div class="empty-state">
+                    <p>{{t .Lang "portal.activity.no_activity"}}</p>
+                </div>
+                {{end}}
+            {{end}}
+        </div>
+    </div>
+</div>
+{{end}}

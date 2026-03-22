@@ -1,0 +1,147 @@
+{{template "base" .}}
+{{define "content"}}
+{{template "nav" .}}
+
+<div class="main-content">
+    <div class="container">
+        <div class="page-header">
+            <h1>{{t .Lang "portal.orgs.title"}}</h1>
+            {{if .User}}{{$limits := index .User "tier_limits"}}{{$usage := index .User "tier_usage"}}
+            {{if $limits}}<p class="text-secondary fs-13-m-0">{{t .Lang "portal.orgs.tier_usage" (index $usage "orgs") (fmtLimit (index $limits "max_orgs")) (index .User "tier_name")}}</p>{{end}}
+            {{end}}
+        </div>
+
+        {{if .Error}}
+        <div class="alert alert-error">{{.Error}}</div>
+        {{end}}
+
+        {{if .Success}}
+        <div class="alert alert-success">{{.Success}}</div>
+        {{end}}
+
+        {{$orgLimitReached := false}}
+        {{$maxOrgs := 0.0}}
+        {{if .User}}{{$limits := index .User "tier_limits"}}{{$usage := index .User "tier_usage"}}
+        {{if $limits}}{{$maxOrgs = index $limits "max_orgs"}}{{if gt $maxOrgs 0.0}}{{if ge (index $usage "orgs") $maxOrgs}}{{$orgLimitReached = true}}{{end}}{{end}}{{end}}
+        {{end}}
+
+        {{if $orgLimitReached}}
+        <div class="card mb-24">
+            <div class="card-header">
+                <h2 class="mb-0">{{t .Lang "portal.orgs.create_org"}}</h2>
+            </div>
+            <p class="text-muted fs-14">{{t .Lang "portal.tier.limit_reached_orgs"}}</p>
+        </div>
+        {{else}}
+        <div class="card mb-24">
+            <div class="card-header">
+                <h2 class="mb-0">{{t .Lang "portal.orgs.create_org"}}</h2>
+            </div>
+            <form method="POST" action="/organizations">
+                <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
+                <input type="hidden" name="action" value="create">
+                <div class="grid-1-2-auto-gap-12">
+                    <div class="form-group mb-0">
+                        <label for="name">{{t .Lang "common.label.name"}}</label>
+                        <input type="text" id="name" name="name" placeholder="{{t .Lang "portal.orgs.placeholder_name"}}" required>
+                    </div>
+                    <div class="form-group mb-0">
+                        <label for="description">{{t .Lang "common.label.description"}}</label>
+                        <input type="text" id="description" name="description" placeholder="{{t .Lang "common.placeholder.brief_description"}}">
+                    </div>
+                    <button type="submit" class="btn btn-primary h-42">{{t .Lang "common.create"}}</button>
+                </div>
+            </form>
+        </div>
+        {{end}}
+
+        <!-- Filters (hidden when org limit is 1) -->
+        {{if not (eq $maxOrgs 1.0)}}
+        <div class="card mb-24-p-16-24">
+            <form method="GET" action="/organizations" class="flex-gap-12-ai-end-wrap">
+                <div class="form-group mb-0">
+                    <label for="search">{{t .Lang "common.search"}}</label>
+                    <input type="text" id="search" name="search" placeholder="{{t .Lang "common.search"}}..." value="{{if .Data}}{{index .Data "Search"}}{{end}}" class="minw-180">
+                </div>
+                <div class="form-group mb-0-minw-130">
+                    <label for="status">{{t .Lang "common.label.status"}}</label>
+                    <select id="status" name="status">
+                        <option value="">{{t .Lang "common.all"}}</option>
+                        {{$status := ""}}{{if .Data}}{{$status = index .Data "Status"}}{{end}}
+                        <option value="active" {{if eq $status "active"}}selected{{end}}>{{t .Lang "status.active"}}</option>
+                        <option value="archived" {{if eq $status "archived"}}selected{{end}}>{{t .Lang "status.archived"}}</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn h-40">{{t .Lang "common.filter"}}</button>
+            </form>
+        </div>
+        {{end}}
+
+        <div class="card">
+            <div class="card-header">
+                <h2 class="mb-0">{{t .Lang "portal.orgs.section_all"}} {{if .Data}}<span class="meta-text">({{index .Data "Total"}})</span>{{end}}</h2>
+            </div>
+
+            {{if .Data}}
+                {{$orgs := index .Data "Organizations"}}
+                {{if $orgs}}
+                <table>
+                    <thead>
+                        <tr>
+                            <th>{{t .Lang "portal.orgs.col.name"}}</th>
+                            <th>{{t .Lang "portal.orgs.col.description"}}</th>
+                            <th>{{t .Lang "portal.orgs.col.status"}}</th>
+                            <th>{{t .Lang "portal.orgs.col.members"}}</th>
+                            <th>{{t .Lang "portal.orgs.col.endeavours"}}</th>
+                            <th>{{t .Lang "portal.orgs.col.created"}}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {{range $orgs}}
+                        <tr>
+                            <td><a href="/organizations/{{.ID}}"><strong>{{.Name}}</strong></a></td>
+                            <td class="fs-14-c-secondary">{{.Description}}</td>
+                            <td>
+                                {{if eq .Status "active"}}
+                                    <span class="badge badge-active">{{t $.Lang "status.active"}}</span>
+                                {{else if eq .Status "archived"}}
+                                    <span class="badge badge-inactive">{{t $.Lang "status.archived"}}</span>
+                                {{else}}
+                                    <span class="badge badge-pending">{{.Status}}</span>
+                                {{end}}
+                            </td>
+                            <td>{{.MemberCount}}</td>
+                            <td>{{.EndeavourCount}}</td>
+                            <td class="fs-13">{{fmtDateTime .CreatedAt $.Timezone}}</td>
+                        </tr>
+                        {{end}}
+                    </tbody>
+                </table>
+
+                {{$total := index .Data "Total"}}
+                {{$limit := index .Data "Limit"}}
+                {{$offset := index .Data "Offset"}}
+                {{if gt $total $limit}}
+                <div class="card-footer">
+                    <span>{{t .Lang "common.showing_range" $offset (len $orgs) $total}}</span>
+                    <div class="flex-gap-8">
+                        {{if gt $offset 0}}
+                        <a href="/organizations?offset=0" class="btn btn-sm">{{t .Lang "common.first"}}</a>
+                        {{end}}
+                        {{if gt $total (add $offset $limit)}}
+                        <a href="/organizations?offset={{add $offset $limit}}" class="btn btn-sm">{{t .Lang "common.next"}}</a>
+                        {{end}}
+                    </div>
+                </div>
+                {{end}}
+
+                {{else}}
+                <div class="empty-state">
+                    <p>{{t .Lang "portal.orgs.no_orgs"}}</p>
+                </div>
+                {{end}}
+            {{end}}
+        </div>
+    </div>
+</div>
+{{end}}

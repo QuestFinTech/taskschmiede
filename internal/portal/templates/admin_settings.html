@@ -1,0 +1,140 @@
+{{template "base" .}}
+{{define "content"}}
+{{template "nav" .}}
+
+<div class="main-content">
+    <div class="container">
+        <div class="page-header">
+            <h1>{{t .Lang "portal.admin_settings.title"}}</h1>
+        </div>
+
+        {{if .Error}}
+        <div class="alert alert-error">{{.Error}}</div>
+        {{end}}
+
+        {{if .Success}}
+        <div class="alert alert-success">{{.Success}}</div>
+        {{end}}
+
+        <!-- MCP Access -->
+        <div class="card mb-24">
+            <div class="card-header">
+                <h2 class="mb-0">{{t .Lang "portal.admin_settings.section_mcp_access"}}</h2>
+            </div>
+            <p class="text-muted mb-16-fs-14">
+                {{t .Lang "portal.admin_settings.mcp_access_desc"}}
+            </p>
+            {{if .Data}}
+            {{$mcp := index .Data "MCPEnabled"}}
+            <div class="flex-ai-center-gap-16">
+                <span class="fw-700-fs-14 {{if $mcp}}c-success{{else}}text-muted{{end}}">
+                    {{if $mcp}}{{t .Lang "portal.admin_settings.mcp_enabled"}}{{else}}{{t .Lang "portal.admin_settings.mcp_disabled"}}{{end}}
+                </span>
+                <form method="POST" action="/admin/settings" class="m-0">
+                    <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
+                    <input type="hidden" name="action" value="toggle_mcp">
+                    <button type="submit" class="btn btn-sm">
+                        {{if $mcp}}{{t .Lang "portal.admin_settings.mcp_disable"}}{{else}}{{t .Lang "portal.admin_settings.mcp_enable"}}{{end}}
+                    </button>
+                </form>
+            </div>
+            {{end}}
+        </div>
+
+        <!-- Quotas -->
+        <div class="card">
+            <div class="card-header">
+                <h2 class="mb-0">{{t .Lang "portal.admin_settings.section_quotas"}}</h2>
+            </div>
+            <p class="text-muted mb-16-fs-14">
+                {{t .Lang "portal.admin_settings.quotas_desc"}}
+            </p>
+            {{if .Data}}
+            {{$q := index .Data "Quotas"}}
+            <form method="POST" action="/admin/settings">
+                <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
+                <input type="hidden" name="action" value="update_quotas">
+
+                <h3 class="fs-14-mb-12-c-primary">{{t .Lang "portal.admin_settings.subsection_instance"}}</h3>
+                <div class="grid-auto-180-gap-12-mb-20">
+                    <div class="form-group mb-0">
+                        <label for="q-max-users">{{t .Lang "portal.admin_settings.label_max_active_users"}}</label>
+                        <input type="number" id="q-max-users" name="instance.max_active_users" value="{{index $q "instance.max_active_users"}}" min="1" class="maxw-180">
+                    </div>
+                    <div class="form-group mb-0">
+                        <label for="q-warn-days">{{t .Lang "portal.admin_settings.label_inactivity_warn_days"}}</label>
+                        <input type="number" id="q-warn-days" name="inactivity.warn_days" value="{{index $q "inactivity.warn_days"}}" min="1" class="maxw-180">
+                    </div>
+                    <div class="form-group mb-0">
+                        <label for="q-deact-days">{{t .Lang "portal.admin_settings.label_inactivity_deactivate_days"}}</label>
+                        <input type="number" id="q-deact-days" name="inactivity.deactivate_days" value="{{index $q "inactivity.deactivate_days"}}" min="1" class="maxw-180">
+                    </div>
+                    <div class="form-group mb-0">
+                        <label for="q-sweep-threshold">{{t .Lang "portal.admin_settings.label_sweep_capacity_threshold"}}</label>
+                        <input type="text" id="q-sweep-threshold" name="inactivity.sweep_capacity_threshold" value="{{index $q "inactivity.sweep_capacity_threshold"}}" placeholder="0.8" class="maxw-180">
+                    </div>
+                    <div class="form-group mb-0">
+                        <label for="q-waitlist-window">{{t .Lang "portal.admin_settings.label_waitlist_notification_days"}}</label>
+                        <input type="number" id="q-waitlist-window" name="waitlist.notification_window_days" value="{{index $q "waitlist.notification_window_days"}}" min="1" class="maxw-180">
+                    </div>
+                </div>
+
+                {{$tiers := index .Data "Tiers"}}
+                {{if $tiers}}
+                {{range $tiers}}
+                <h3 class="fs-14-mb-12-c-primary">{{.Name}}</h3>
+                <div class="grid-auto-180-gap-12-mb-20">
+                    <div class="form-group mb-0">
+                        <label>{{t $.Lang "portal.admin_settings.label_max_users"}}</label>
+                        <input type="number" name="tier.{{.ID}}.max_users" value="{{index $q (printf "tier.%d.max_users" .ID)}}" min="-1" class="maxw-180">
+                    </div>
+                    <div class="form-group mb-0">
+                        <label>{{t $.Lang "portal.admin_settings.label_max_orgs_per_user"}}</label>
+                        <input type="number" name="tier.{{.ID}}.max_orgs" value="{{index $q (printf "tier.%d.max_orgs" .ID)}}" min="-1" class="maxw-180">
+                    </div>
+                    <div class="form-group mb-0">
+                        <label>{{t $.Lang "portal.admin_settings.label_max_endeavours_per_org"}}</label>
+                        <input type="number" name="tier.{{.ID}}.max_endeavours_per_org" value="{{index $q (printf "tier.%d.max_endeavours_per_org" .ID)}}" min="-1" class="maxw-180">
+                    </div>
+                    <div class="form-group mb-0">
+                        <label>{{t $.Lang "portal.admin_settings.label_max_agents_per_org"}}</label>
+                        <input type="number" name="tier.{{.ID}}.max_agents_per_org" value="{{index $q (printf "tier.%d.max_agents_per_org" .ID)}}" min="-1" class="maxw-180">
+                    </div>
+                    <div class="form-group mb-0">
+                        <label>{{t $.Lang "portal.admin_settings.label_max_creations_per_hour"}}</label>
+                        <input type="number" name="tier.{{.ID}}.max_creations_per_hour" value="{{index $q (printf "tier.%d.max_creations_per_hour" .ID)}}" min="-1" class="maxw-180">
+                    </div>
+                    <div class="form-group mb-0">
+                        <label>{{t $.Lang "portal.admin_settings.label_max_active_endeavours"}}</label>
+                        <input type="number" name="tier.{{.ID}}.max_active_endeavours" value="{{index $q (printf "tier.%d.max_active_endeavours" .ID)}}" min="-1" class="maxw-180">
+                    </div>
+                    <div class="form-group mb-0">
+                        <label>{{t $.Lang "portal.admin_settings.label_max_teams_per_org"}}</label>
+                        <input type="number" name="tier.{{.ID}}.max_teams_per_org" value="{{index $q (printf "tier.%d.max_teams_per_org" .ID)}}" min="-1" class="maxw-180">
+                    </div>
+                </div>
+                {{end}}
+                {{end}}
+
+                <button type="submit" class="btn btn-primary">{{t .Lang "portal.admin_settings.save_quotas"}}</button>
+            </form>
+            {{end}}
+        </div>
+
+        <!-- System Info -->
+        {{if .Data}}
+        <div class="card mt-24">
+            <div class="card-header">
+                <h2 class="mb-0">{{t .Lang "portal.admin_settings.section_system_info"}}</h2>
+            </div>
+            <div class="grid-auto-1fr-gap-8-16-fs-14">
+                <span class="text-secondary">{{t .Lang "portal.admin_settings.info_version"}}</span>
+                <span class="ff-mono">{{index .Data "Version"}}</span>
+                <span class="text-secondary">{{t .Lang "portal.admin_settings.info_database"}}</span>
+                <span>SQLite with WAL mode</span>
+            </div>
+        </div>
+        {{end}}
+    </div>
+</div>
+{{end}}

@@ -1,0 +1,58 @@
+{{template "base" .}}
+{{define "content"}}
+{{template "nav" .}}
+
+<div class="main-content">
+    <div class="container">
+        <div class="page-header">
+            <h1>{{t .Lang "portal.support.title"}}</h1>
+        </div>
+
+        {{$sd := .Data}}
+
+        {{if and .Success $sd.CaseID}}
+        <div class="alert alert-success mb-16">
+            <p>{{.Success}}</p>
+            <p>Your reference number: <strong>{{$sd.CaseID}}</strong></p>
+        </div>
+        <p><a href="/dashboard">&larr; Back to Dashboard</a></p>
+        {{else}}
+        <p class="mb-16">Need help? Submit a request and our support team will get back to you. Your request will be handled by our AI-assisted support team. A human team member is always available on request.</p>
+
+        {{if .Error}}
+        <div class="alert alert-error mb-16">
+            <p>{{.Error}}</p>
+        </div>
+        {{end}}
+
+        <div class="card maxw-640">
+            <form method="POST" action="/support">
+                <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
+
+                <div class="form-group">
+                    <label for="support-topic">Topic</label>
+                    <select id="support-topic" name="topic" class="select-lg">
+                        <option value="support"{{if eq $sd.Topic "support"}} selected{{end}}>Support -- questions, help, technical issues</option>
+                        <option value="legal"{{if eq $sd.Topic "legal"}} selected{{end}}>Legal -- privacy, DPA, data protection</option>
+                        <option value="sales"{{if eq $sd.Topic "sales"}} selected{{end}}>Sales -- pricing, plans, enterprise</option>
+                        <option value="product"{{if eq $sd.Topic "product"}} selected{{end}}>Product -- features, suggestions, feedback</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="support-subject">Subject</label>
+                    <input type="text" id="support-subject" name="subject" value="{{$sd.Subject}}" placeholder="Optional">
+                </div>
+
+                <div class="form-group">
+                    <label for="support-message">Message *</label>
+                    <textarea id="support-message" name="message" rows="6" required placeholder="Describe your question or issue">{{$sd.Message}}</textarea>
+                </div>
+
+                <button type="submit" class="btn btn-primary">Submit Request</button>
+            </form>
+        </div>
+        {{end}}
+    </div>
+</div>
+{{end}}

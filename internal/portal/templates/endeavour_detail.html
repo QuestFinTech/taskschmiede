@@ -1,0 +1,295 @@
+{{template "base" .}}
+{{define "content"}}
+{{template "nav" .}}
+
+<div class="main-content">
+    <div class="container">
+        <div class="page-header">
+            <div>
+                <div class="mb-4">
+                    <a href="/endeavours" class="fs-13-c-secondary-no-underline">&larr; {{t .Lang "portal.endeavour_detail.back_to_endeavours"}}</a>
+                </div>
+                <h1>{{if .Data}}{{index .Data "EndeavourName"}}{{end}}</h1>
+            </div>
+        </div>
+
+        {{if .Error}}
+        <div class="alert alert-error">{{.Error}}</div>
+        {{end}}
+
+        {{if .Success}}
+        <div class="alert alert-success">{{.Success}}</div>
+        {{end}}
+
+        {{if .Data}}
+        {{$edv := index .Data "Endeavour"}}
+        {{if $edv}}
+
+        <div class="two-col mb-24">
+            <div class="card mb-0">
+                <div class="card-header">
+                    <h2 class="mb-0">{{t .Lang "portal.reports.title"}}</h2>
+                </div>
+                <p class="fs-13-c-secondary-mb-12">
+                    {{t .Lang "portal.reports.description"}}
+                </p>
+                <div class="flex-gap-8-ai-stretch">
+                    <a href="/reports/endeavour/{{$edv.ID}}" class="btn btn-sm flex-1-ta-center">{{t .Lang "portal.reports.view"}}</a>
+                    <a href="/reports/endeavour/{{$edv.ID}}?format=download" class="btn btn-sm flex-1-ta-center">{{t .Lang "portal.reports.download"}}</a>
+                    <form method="POST" action="/reports/endeavour/{{$edv.ID}}" class="flex-1-d-flex">
+                        <input type="hidden" name="csrf_token" value="{{$.CSRFToken}}">
+                        <input type="hidden" name="action" value="email">
+                        <button type="submit" class="btn btn-sm flex-1">{{t .Lang "portal.reports.email"}}</button>
+                    </form>
+                </div>
+            </div>
+            <div class="card mb-0">
+                <div class="card-header">
+                    <h2 class="mb-0">{{t .Lang "portal.export.title"}}</h2>
+                </div>
+                <p class="fs-13-c-secondary-mb-12">
+                    {{t .Lang "portal.export.description_endeavour"}}
+                </p>
+                <a href="/endeavours/{{$edv.ID}}/export" class="btn btn-sm">{{t .Lang "portal.export.download"}}</a>
+            </div>
+        </div>
+
+        <div class="two-col mb-24">
+            <div class="card mb-0">
+                <div class="card-header">
+                    <h2 class="mb-0">{{t .Lang "portal.endeavour_detail.section_details"}}</h2>
+                    {{if eq $edv.Status "active"}}
+                        <span class="badge badge-active">{{t .Lang "status.active"}}</span>
+                    {{else if eq $edv.Status "completed"}}
+                        <span class="badge badge-info">{{t .Lang "status.completed"}}</span>
+                    {{else if eq $edv.Status "archived"}}
+                        <span class="badge badge-inactive">{{t .Lang "status.archived"}}</span>
+                    {{else}}
+                        <span class="badge badge-pending">{{$edv.Status}}</span>
+                    {{end}}
+                </div>
+                <div class="grid-auto-1fr-gap-8-16-fs-14">
+                    <span class="text-secondary">{{t .Lang "portal.endeavour_detail.label_description"}}</span>
+                    <div class="md-content" data-md>{{$edv.Description}}</div>
+                    <span class="text-secondary">{{t .Lang "portal.endeavour_detail.label_created"}}</span>
+                    <span>{{fmtDateTime $edv.CreatedAt $.Timezone}}</span>
+                    <span class="text-secondary">{{t .Lang "portal.endeavour_detail.label_updated"}}</span>
+                    <span>{{fmtDateTime $edv.UpdatedAt $.Timezone}}</span>
+                    {{if $edv.StartDate}}
+                    <span class="text-secondary">{{t .Lang "portal.endeavour_detail.label_start_date"}}</span>
+                    <span>{{$edv.StartDate}}</span>
+                    {{end}}
+                    {{if $edv.EndDate}}
+                    <span class="text-secondary">{{t .Lang "portal.endeavour_detail.label_end_date"}}</span>
+                    <span>{{$edv.EndDate}}</span>
+                    {{end}}
+                </div>
+
+                {{if ne $edv.Status "archived"}}
+                <div class="section-divider">
+                    <form method="POST" action="/endeavours/{{$edv.ID}}">
+                        <input type="hidden" name="csrf_token" value="{{$.CSRFToken}}">
+                        <input type="hidden" name="action" value="update">
+                        <div class="form-group mb-12">
+                            <label for="edv_name">{{t .Lang "portal.endeavour_detail.label_name"}}</label>
+                            <input type="text" id="edv_name" name="name" value="{{$edv.Name}}">
+                        </div>
+                        <div class="flex-gap-12-ai-end-mb-12">
+                            <div class="form-group mb-0-flex-1">
+                                <label for="edv_status">{{t .Lang "portal.endeavour_detail.label_status"}}</label>
+                                <select id="edv_status" name="status" {{if eq $edv.Status "completed"}}disabled{{end}}>
+                                    <option value="pending" {{if eq $edv.Status "pending"}}selected{{end}}>{{t .Lang "status.pending"}}</option>
+                                    <option value="active" {{if eq $edv.Status "active"}}selected{{end}}>{{t .Lang "status.active"}}</option>
+                                    <option value="on_hold" {{if eq $edv.Status "on_hold"}}selected{{end}}>{{t .Lang "status.on_hold"}}</option>
+                                    <option value="completed" {{if eq $edv.Status "completed"}}selected{{end}}>{{t .Lang "status.completed"}}</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="flex-gap-12-ai-end-mb-12">
+                            <div class="form-group mb-0-flex-1">
+                                <label for="edv_start_date">{{t .Lang "portal.endeavour_detail.label_start_date"}}</label>
+                                <input type="date" id="edv_start_date" name="start_date" {{if $edv.StartDate}}value="{{truncDate $edv.StartDate}}"{{end}}>
+                            </div>
+                            <div class="form-group mb-0-flex-1">
+                                <label for="edv_end_date">{{t .Lang "portal.endeavour_detail.label_end_date"}}</label>
+                                <input type="date" id="edv_end_date" name="end_date" {{if $edv.EndDate}}value="{{truncDate $edv.EndDate}}"{{end}}>
+                            </div>
+                        </div>
+                        <div class="flex-gap-12-ai-center">
+                            <div class="form-group mb-0-flex-1">
+                                <label class="flex-ai-center-gap-8-cur-fs-14">
+                                    <input type="checkbox" name="taskschmied_enabled" value="true" {{if $edv.TaskschmiedEnabled}}checked{{end}} class="w-auto">
+                                    {{t .Lang "portal.endeavour_detail.label_taskschmied_enabled"}}
+                                </label>
+                            </div>
+                            <button type="submit" class="btn btn-primary">{{t .Lang "common.save"}}</button>
+                        </div>
+                    </form>
+                </div>
+                {{end}}
+
+                {{if eq $edv.Status "archived"}}
+                <div class="section-divider">
+                    <div class="grid-auto-1fr-gap-8-16-fs-14">
+                        {{if $edv.ArchivedReason}}
+                        <span class="text-secondary">{{t .Lang "portal.endeavour_detail.label_archived_reason"}}</span>
+                        <span>{{$edv.ArchivedReason}}</span>
+                        {{end}}
+                        {{if $edv.ArchivedAt}}
+                        <span class="text-secondary">{{t .Lang "portal.endeavour_detail.label_archived_at"}}</span>
+                        <span>{{$edv.ArchivedAt}}</span>
+                        {{end}}
+                    </div>
+                </div>
+                {{end}}
+            </div>
+
+            <div class="card mb-0">
+                <div class="card-header">
+                    <h2 class="mb-0">{{t .Lang "portal.endeavour_detail.section_progress"}}</h2>
+                </div>
+                {{$progress := $edv.Progress}}
+                {{if $progress}}
+                <div class="stats-grid mb-0">
+                    <div class="stat-card">
+                        <div class="stat-value">{{index $progress "planned"}}</div>
+                        <div class="stat-label">{{t .Lang "portal.endeavour_detail.stat_planned"}}</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">{{index $progress "active"}}</div>
+                        <div class="stat-label">{{t .Lang "portal.endeavour_detail.stat_active"}}</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">{{index $progress "done"}}</div>
+                        <div class="stat-label">{{t .Lang "portal.endeavour_detail.stat_done"}}</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">{{index $progress "canceled"}}</div>
+                        <div class="stat-label">{{t .Lang "portal.endeavour_detail.stat_canceled"}}</div>
+                    </div>
+                </div>
+                {{else}}
+                <div class="empty-state p-24">
+                    <p class="text-muted">{{t .Lang "portal.endeavour_detail.no_progress"}}</p>
+                </div>
+                {{end}}
+
+                {{if $edv.Goals}}
+                <div class="section-divider-16">
+                    <h3 class="mb-12">{{t .Lang "portal.endeavour_detail.section_goals"}}</h3>
+                    <form method="POST" action="/endeavours/{{$edv.ID}}">
+                        <input type="hidden" name="csrf_token" value="{{$.CSRFToken}}">
+                        <input type="hidden" name="action" value="update_goals">
+                        {{range $edv.Goals}}
+                        <div class="flex-ai-center-gap-8-py-6-fs-14">
+                            <select name="goal_status_{{index . "id"}}" class="input-xs-auto">
+                                {{$gs := index . "status"}}
+                                <option value="open" {{if eq $gs "open"}}selected{{end}}>{{t $.Lang "status.open"}}</option>
+                                <option value="achieved" {{if eq $gs "achieved"}}selected{{end}}>{{t $.Lang "status.achieved"}}</option>
+                                <option value="abandoned" {{if eq $gs "abandoned"}}selected{{end}}>{{t $.Lang "status.abandoned"}}</option>
+                            </select>
+                            <span>{{index . "title"}}</span>
+                        </div>
+                        {{end}}
+                        <button type="submit" class="btn btn-primary btn-sm mt-8">{{t .Lang "portal.endeavour_detail.save_goals"}}</button>
+                    </form>
+                </div>
+                {{end}}
+
+                <div class="section-divider-16">
+                    <h3 class="mb-12">{{t .Lang "portal.endeavour_detail.add_goal"}}</h3>
+                    <form method="POST" action="/endeavours/{{$edv.ID}}">
+                        <input type="hidden" name="csrf_token" value="{{$.CSRFToken}}">
+                        <input type="hidden" name="action" value="add_goal">
+                        <div class="flex-gap-8-ai-end">
+                            <div class="form-group mb-0-flex-1">
+                                <input type="text" name="goal_title" placeholder="{{t .Lang "common.label.title"}}" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary h-42">{{t .Lang "common.add"}}</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tasks in this endeavour -->
+        <div class="card">
+            <div class="card-header">
+                <h2 class="mb-0">{{t .Lang "portal.endeavour_detail.section_tasks"}}</h2>
+                <a href="/tasks?endeavour_id={{$edv.ID}}" class="btn btn-sm">{{t .Lang "common.view_all"}}</a>
+            </div>
+
+            {{$tasks := index .Data "Tasks"}}
+            {{if $tasks}}
+            <table>
+                <thead>
+                    <tr>
+                        <th>{{t .Lang "portal.endeavour_detail.col.title"}}</th>
+                        <th>{{t .Lang "portal.endeavour_detail.col.status"}}</th>
+                        <th>{{t .Lang "portal.endeavour_detail.col.assignee"}}</th>
+                        <th>{{t .Lang "portal.endeavour_detail.col.created"}}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{range $tasks}}
+                    <tr>
+                        <td><a href="/tasks/{{.ID}}">{{.Title}}</a></td>
+                        <td>
+                            {{if eq .Status "planned"}}
+                                <span class="badge badge-pending">{{t $.Lang "status.planned"}}</span>
+                            {{else if eq .Status "active"}}
+                                <span class="badge badge-info">{{t $.Lang "status.active"}}</span>
+                            {{else if eq .Status "done"}}
+                                <span class="badge badge-active">{{t $.Lang "status.done"}}</span>
+                            {{else if eq .Status "canceled"}}
+                                <span class="badge badge-inactive">{{t $.Lang "status.canceled"}}</span>
+                            {{else}}
+                                <span class="badge badge-pending">{{.Status}}</span>
+                            {{end}}
+                        </td>
+                        <td class="fs-14">{{if .AssigneeName}}{{.AssigneeName}}{{else}}<span class="text-muted">{{t $.Lang "common.unassigned"}}</span>{{end}}</td>
+                        <td class="fs-13">{{fmtDateTime .CreatedAt $.Timezone}}</td>
+                    </tr>
+                    {{end}}
+                </tbody>
+            </table>
+            {{else}}
+            <div class="empty-state p-24">
+                <p class="text-muted">{{t .Lang "portal.endeavour_detail.no_tasks"}}</p>
+            </div>
+            {{end}}
+        </div>
+
+        <!-- Agent Access -->
+        {{$agents := index .Data "Agents"}}
+        {{if $agents}}
+        <div class="card">
+            <div class="card-header">
+                <h2 class="mb-0">{{t .Lang "portal.endeavour_detail.section_agent_access"}}</h2>
+            </div>
+            <form method="POST" action="/endeavours/{{$edv.ID}}">
+                <input type="hidden" name="csrf_token" value="{{$.CSRFToken}}">
+                <input type="hidden" name="action" value="grant_access">
+                <div class="flex-gap-8-ai-end">
+                    <div class="form-group mb-0-flex-1">
+                        <label for="agent_user_id">{{t .Lang "portal.endeavour_detail.grant_access_label"}}</label>
+                        <select id="agent_user_id" name="agent_user_id" required>
+                            <option value="">{{t .Lang "portal.endeavour_detail.select_agent"}}</option>
+                            {{range $agents}}
+                            <option value="{{.ID}}">{{.Name}} ({{.Email}})</option>
+                            {{end}}
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary h-42">{{t .Lang "portal.endeavour_detail.grant_access"}}</button>
+                </div>
+            </form>
+        </div>
+        {{end}}
+
+        {{/* Archive section hidden -- use MCP or API for now */}}
+
+        {{end}}
+        {{end}}
+    </div>
+</div>
+{{end}}

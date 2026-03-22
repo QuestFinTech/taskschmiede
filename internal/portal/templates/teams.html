@@ -1,0 +1,128 @@
+{{template "base" .}}
+{{define "content"}}
+{{template "nav" .}}
+
+<div class="main-content">
+    <div class="container">
+        <div class="page-header">
+            <h1>{{t .Lang "portal.teams.title"}}</h1>
+            {{if .User}}{{$limits := index .User "tier_limits"}}{{$usage := index .User "tier_usage"}}
+            {{if $limits}}{{if $usage}}{{if index $usage "teams_per_org"}}<p class="text-secondary fs-13-m-0">{{t .Lang "portal.teams.tier_usage" (index $usage "teams_per_org") (fmtLimit (index $limits "max_teams_per_org")) (index .User "tier_name")}}</p>{{end}}{{end}}{{end}}
+            {{end}}
+        </div>
+
+        {{if .Error}}
+        <div class="alert alert-error">{{.Error}}</div>
+        {{end}}
+
+        {{if .Success}}
+        <div class="alert alert-success">{{.Success}}</div>
+        {{end}}
+
+        {{if .Data}}{{if index .Data "CanManageTeams"}}
+        <!-- Create Team -->
+        <div class="card mb-24">
+            <div class="card-header">
+                <h2 class="mb-0">{{t .Lang "portal.teams.create_team"}}</h2>
+            </div>
+            <form method="POST" action="/teams">
+                <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
+                <input type="hidden" name="action" value="create">
+                <div class="flex-gap-12-ai-end-wrap">
+                    <div class="form-group mb-0-flex-1-minw-200">
+                        <label for="team_name">{{t .Lang "common.label.name"}}</label>
+                        <input type="text" id="team_name" name="name" required placeholder="{{t .Lang "portal.teams.placeholder_name"}}">
+                    </div>
+                    <div class="form-group mb-0-minw-200">
+                        <label for="team_endeavour">{{t .Lang "portal.teams.label_endeavour"}}</label>
+                        <select id="team_endeavour" name="endeavour_id">
+                            <option value="">--</option>
+                            {{if .Data}}
+                            {{$endeavours := index .Data "Endeavours"}}
+                            {{if $endeavours}}
+                                {{range $endeavours}}
+                                <option value="{{.ID}}">{{.Name}}</option>
+                                {{end}}
+                            {{end}}
+                            {{end}}
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary h-42">{{t .Lang "common.create"}}</button>
+                </div>
+            </form>
+        </div>
+        {{end}}{{end}}
+
+        <!-- Teams Table -->
+        <div class="card">
+            <div class="card-header">
+                <h2 class="mb-0">{{t .Lang "portal.teams.section_all"}} {{if .Data}}<span class="meta-text">({{index .Data "Total"}})</span>{{end}}</h2>
+            </div>
+
+            {{if .Data}}
+                {{$teams := index .Data "Teams"}}
+                {{if $teams}}
+                <div class="ofx-auto">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>{{t .Lang "portal.teams.col.name"}}</th>
+                            <th>{{t .Lang "portal.teams.col.endeavour"}}</th>
+                            <th>{{t .Lang "portal.teams.col.status"}}</th>
+                            <th>{{t .Lang "portal.teams.col.members"}}</th>
+                            <th>{{t .Lang "portal.teams.col.created"}}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {{range $teams}}
+                        <tr>
+                            <td><a href="/teams/{{.ID}}"><strong>{{.Name}}</strong></a></td>
+                            <td>
+                                {{$edv := index . "Endeavour"}}
+                                {{if $edv}}
+                                    <a href="/endeavours/{{$edv.ID}}">{{$edv.Name}}</a>
+                                {{else}}
+                                    <span class="text-muted">--</span>
+                                {{end}}
+                            </td>
+                            <td>
+                                {{if eq .Status "active"}}
+                                    <span class="badge badge-active">{{t $.Lang "status.active"}}</span>
+                                {{else}}
+                                    <span class="badge badge-inactive">{{t $.Lang "status.inactive"}}</span>
+                                {{end}}
+                            </td>
+                            <td>{{index . "MemberCount"}}</td>
+                            <td class="fs-13">{{fmtDateTime .CreatedAt $.Timezone}}</td>
+                        </tr>
+                        {{end}}
+                    </tbody>
+                </table>
+                </div>
+
+                <!-- Pagination -->
+                {{$search := index .Data "Search"}}
+                {{$status := index .Data "Status"}}
+                <div class="flex-jc-between-mt-12-fs-12">
+                    <span class="text-muted">
+                        {{t .Lang "common.showing_of" (len $teams) (index .Data "Total")}}
+                    </span>
+                    <div class="flex-gap-8">
+                        {{if index .Data "HasPrev"}}
+                        <a href="/teams?offset=0&search={{$search}}&status={{$status}}" class="btn btn-sm">{{t .Lang "common.first"}}</a>
+                        {{end}}
+                        {{if index .Data "HasNext"}}
+                        <a href="/teams?offset={{index .Data "NextOffset"}}&search={{$search}}&status={{$status}}" class="btn btn-sm">{{t .Lang "common.next"}}</a>
+                        {{end}}
+                    </div>
+                </div>
+                {{else}}
+                <div class="empty-state">
+                    <p>{{t .Lang "portal.teams.no_teams"}}</p>
+                </div>
+                {{end}}
+            {{end}}
+        </div>
+    </div>
+</div>
+{{end}}

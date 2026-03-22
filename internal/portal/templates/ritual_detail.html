@@ -1,0 +1,259 @@
+{{template "base" .}}
+{{define "content"}}
+{{template "nav" .}}
+
+<div class="main-content">
+    <div class="container">
+        <div class="page-header">
+            <div>
+                <div class="mb-4">
+                    <a href="/rituals" class="fs-13-c-secondary-no-underline">&larr; {{t .Lang "portal.rituals.back_to_list"}}</a>
+                </div>
+                <h1>{{if .Data}}{{index .Data "RitualName"}}{{end}}</h1>
+            </div>
+        </div>
+
+        {{if .Error}}
+        <div class="alert alert-error">{{.Error}}</div>
+        {{end}}
+
+        {{if .Success}}
+        <div class="alert alert-success">{{.Success}}</div>
+        {{end}}
+
+        {{if .Data}}
+        {{$ritual := index .Data "Ritual"}}
+        {{if $ritual}}
+
+        {{$editing := index .Data "Editing"}}
+        {{$isTemplate := index .Data "IsTemplate"}}
+
+        {{if $editing}}
+        <!-- Edit Form (only for non-templates) -->
+        <div class="card mb-24">
+            <div class="card-header">
+                <h2 class="mb-0">{{t .Lang "portal.ritual_detail.section_edit"}}</h2>
+            </div>
+            <form method="POST" action="/rituals/{{$ritual.ID}}">
+                <input type="hidden" name="csrf_token" value="{{$.CSRFToken}}">
+                <input type="hidden" name="action" value="save">
+                <div class="form-group">
+                    <label for="edit_name">{{t .Lang "common.label.name"}}</label>
+                    <input type="text" id="edit_name" name="name" value="{{$ritual.Name}}">
+                </div>
+                <div class="form-group">
+                    <label for="edit_description">{{t .Lang "common.label.description"}}</label>
+                    <textarea id="edit_description" name="description" rows="3">{{$ritual.Description}}</textarea>
+                </div>
+                <div class="form-group">
+                    <label>{{t .Lang "portal.ritual_detail.label_schedule"}}</label>
+                    <div class="flex-gap-12-ai-start-wrap">
+                        <div>
+                            <label class="fs-12-vis-hidden">Type</label>
+                            <select id="edit_schedule_type" name="schedule_type" class="select-lg-130">
+                                <option value="manual"{{if $ritual.Schedule}}{{if eq (index $ritual.Schedule "type") "manual"}} selected{{end}}{{end}}>Manual</option>
+                                <option value="cron"{{if $ritual.Schedule}}{{if eq (index $ritual.Schedule "type") "cron"}} selected{{end}}{{end}}>Cron</option>
+                                <option value="interval"{{if $ritual.Schedule}}{{if eq (index $ritual.Schedule "type") "interval"}} selected{{end}}{{end}}>Interval</option>
+                            </select>
+                        </div>
+                        <div id="cronFields" class="d-none">
+                            <label for="edit_cron_expr" class="fs-12">{{t .Lang "portal.ritual_detail.label_cron_expression"}}</label>
+                            <input type="text" id="edit_cron_expr" name="schedule_expression" placeholder="0 9 * * 1-5" value="{{if $ritual.Schedule}}{{if index $ritual.Schedule "expression"}}{{index $ritual.Schedule "expression"}}{{end}}{{end}}" class="w-180">
+                            <div id="cronPreview" class="fs-12-c-secondary-mt-4"></div>
+                        </div>
+                        <div id="intervalFields" class="d-none">
+                            <label for="edit_interval_every" class="fs-12">{{t .Lang "portal.ritual_detail.label_interval_every"}}</label>
+                            <div class="flex-gap-8">
+                                <input type="text" id="edit_interval_every" name="schedule_every" placeholder="2w" value="{{if $ritual.Schedule}}{{if index $ritual.Schedule "every"}}{{index $ritual.Schedule "every"}}{{end}}{{end}}" class="w-80">
+                                <input type="text" id="edit_interval_on" name="schedule_on" placeholder="monday" value="{{if $ritual.Schedule}}{{if index $ritual.Schedule "on"}}{{index $ritual.Schedule "on"}}{{end}}{{end}}" class="w-100">
+                            </div>
+                            <div class="fs-11-c-secondary-mt-4">{{t .Lang "portal.ritual_detail.interval_help"}}</div>
+                        </div>
+                    </div>
+                </div>
+                <script nonce="{{.Nonce}}">
+                var dowNames = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+                function cronDescribe(expr) {
+                    var f = expr.trim().split(/\s+/);
+                    if (f.length !== 5) return '';
+                    var min = f[0], hr = f[1], dom = f[2], mon = f[3], dow = f[4];
+                    var parts = [];
+                    if (min === '*' && hr === '*') {
+                        parts.push('Every minute');
+                    } else if (min === '*') {
+                        parts.push('Every minute past hour ' + fmtHr(hr));
+                    } else if (hr === '*') {
+                        parts.push('At minute ' + min + ' of every hour');
+                    } else {
+                        parts.push('At ' + fmtTime(hr, min));
+                    }
+                    if (dom !== '*') parts.push('on day ' + dom + ' of the month');
+                    if (mon !== '*') parts.push('in ' + fmtMon(mon));
+                    if (dow !== '*') parts.push('on ' + fmtDow(dow));
+                    return parts.join(' ');
+                }
+                function fmtTime(h, m) {
+                    var hi = parseInt(h, 10), mi = parseInt(m, 10);
+                    if (isNaN(hi) || isNaN(mi)) return h + ':' + m;
+                    return (hi < 10 ? '0' : '') + hi + ':' + (mi < 10 ? '0' : '') + mi;
+                }
+                function fmtHr(h) {
+                    var hi = parseInt(h, 10);
+                    return isNaN(hi) ? h : (hi < 10 ? '0' : '') + hi + ':00';
+                }
+                function fmtDow(d) {
+                    if (d.indexOf('-') >= 0) {
+                        var p = d.split('-');
+                        return dowN(p[0]) + ' through ' + dowN(p[1]);
+                    }
+                    if (d.indexOf(',') >= 0) {
+                        return d.split(',').map(dowN).join(', ');
+                    }
+                    return dowN(d);
+                }
+                function dowN(s) { var n = parseInt(s, 10); return (n >= 0 && n <= 6) ? dowNames[n] : s; }
+                function fmtMon(m) {
+                    var names = ['','January','February','March','April','May','June','July','August','September','October','November','December'];
+                    var n = parseInt(m, 10);
+                    return (n >= 1 && n <= 12) ? names[n] : m;
+                }
+                function updateCronPreview() {
+                    var el = document.getElementById('cronPreview');
+                    var expr = document.getElementById('edit_cron_expr').value;
+                    if (!expr.trim()) { el.textContent = ''; return; }
+                    var desc = cronDescribe(expr);
+                    el.textContent = desc || 'Enter 5 fields: minute hour day-of-month month day-of-week';
+                    el.style.color = desc ? 'var(--success)' : 'var(--text-secondary)';
+                }
+                function toggleScheduleFields() {
+                    var t = document.getElementById('edit_schedule_type').value;
+                    document.getElementById('cronFields').classList.toggle('d-none', t !== 'cron');
+                    document.getElementById('intervalFields').classList.toggle('d-none', t !== 'interval');
+                    if (t === 'cron') updateCronPreview();
+                }
+                var schedSel = document.getElementById('edit_schedule_type');
+                if (schedSel) schedSel.addEventListener('change', toggleScheduleFields);
+                var cronInput = document.getElementById('edit_cron_expr');
+                if (cronInput) cronInput.addEventListener('input', updateCronPreview);
+                toggleScheduleFields();
+                </script>
+                <div class="flex-gap-8-mt-16">
+                    <button type="submit" class="btn btn-primary">{{t .Lang "common.save"}}</button>
+                    <a href="/rituals/{{$ritual.ID}}" class="btn">{{t .Lang "common.cancel"}}</a>
+                </div>
+            </form>
+        </div>
+        {{end}}
+
+        <!-- Detail Grid -->
+        <div class="card mb-24">
+            <div class="card-header">
+                <h2 class="mb-0">{{t .Lang "portal.ritual_detail.section_details"}}</h2>
+                <div class="flex-gap-8">
+                    {{if eq $ritual.Origin "template"}}
+                        <span class="badge badge-info">{{t .Lang "portal.ritual_detail.origin_template"}}</span>
+                    {{else if eq $ritual.Origin "fork"}}
+                        <span class="badge badge-pending">{{t .Lang "portal.ritual_detail.origin_fork"}}</span>
+                    {{else}}
+                        <span class="badge badge-active">{{t .Lang "portal.ritual_detail.origin_custom"}}</span>
+                    {{end}}
+                    {{if eq $ritual.Status "active"}}
+                        <span class="badge badge-active">{{t .Lang "status.active"}}</span>
+                    {{else}}
+                        <span class="badge badge-inactive">{{t .Lang "status.archived"}}</span>
+                    {{end}}
+                </div>
+            </div>
+            <div class="grid-auto-1fr-gap-8-16-fs-14">
+                <span class="text-secondary">{{t .Lang "common.label.name"}}</span>
+                <span><strong>{{$ritual.Name}}</strong></span>
+                {{if $ritual.MethodologyID}}
+                <span class="text-secondary">{{t .Lang "portal.ritual_detail.label_methodology"}}</span>
+                <span><span class="badge badge-info">{{fmtMethodology $ritual.MethodologyID}}</span></span>
+                {{end}}
+                {{if $ritual.Description}}
+                <span class="text-secondary">{{t .Lang "common.label.description"}}</span>
+                <span>{{$ritual.Description}}</span>
+                {{end}}
+                {{if $ritual.Schedule}}
+                <span class="text-secondary">{{t .Lang "portal.ritual_detail.label_schedule"}}</span>
+                <span>{{fmtSchedule $ritual.Schedule}}</span>
+                {{end}}
+                {{if $ritual.EndeavourID}}
+                <span class="text-secondary">{{t .Lang "portal.ritual_detail.label_endeavour"}}</span>
+                <span><a href="/endeavours/{{$ritual.EndeavourID}}">{{$ritual.EndeavourID}}</a></span>
+                {{end}}
+                {{if $ritual.IsEnabled}}
+                <span class="text-secondary">{{t .Lang "portal.ritual_detail.label_enabled"}}</span>
+                <span class="c-success">{{t .Lang "common.yes"}}</span>
+                {{else}}
+                <span class="text-secondary">{{t .Lang "portal.ritual_detail.label_enabled"}}</span>
+                <span class="text-muted">{{t .Lang "common.no"}}</span>
+                {{end}}
+                <span class="text-secondary">{{t .Lang "common.label.created"}}</span>
+                <span>{{fmtDateTime $ritual.CreatedAt $.Timezone}}</span>
+            </div>
+
+            <!-- Actions -->
+            {{if eq $ritual.Status "active"}}
+            <div class="section-divider-flex-gap-8-wrap">
+                {{if $isTemplate}}
+                <!-- Templates can only be forked -->
+                <div>
+                    <form method="POST" action="/rituals/{{$ritual.ID}}" class="flex-gap-8-ai-center">
+                        <input type="hidden" name="csrf_token" value="{{$.CSRFToken}}">
+                        <input type="hidden" name="action" value="fork">
+                        <select name="endeavour_id" required class="select-lg-220">
+                            <option value="">{{t .Lang "portal.ritual_detail.select_endeavour"}}</option>
+                            {{$edvs := index $.Data "Endeavours"}}
+                            {{if $edvs}}{{range $edvs}}
+                            <option value="{{.ID}}">{{.Name}}</option>
+                            {{end}}{{end}}
+                        </select>
+                        <button type="submit" class="btn btn-primary h-38-px-16-nowrap">{{t .Lang "portal.ritual_detail.action_fork"}}</button>
+                    </form>
+                    <p class="text-muted fs-12-mt-6">{{t .Lang "portal.ritual_detail.active_endeavours_only"}}</p>
+                </div>
+                {{else}}
+                <!-- User's own rituals: edit, enable/disable, archive -->
+                {{if not $editing}}
+                <form method="POST" action="/rituals/{{$ritual.ID}}" class="d-inline">
+                    <input type="hidden" name="csrf_token" value="{{$.CSRFToken}}">
+                    <input type="hidden" name="action" value="edit">
+                    <button type="submit" class="btn btn-sm btn-primary">{{t .Lang "common.edit"}}</button>
+                </form>
+                {{end}}
+                <form method="POST" action="/rituals/{{$ritual.ID}}" class="d-inline">
+                    <input type="hidden" name="csrf_token" value="{{$.CSRFToken}}">
+                    <input type="hidden" name="action" value="toggle_enabled">
+                    {{if $ritual.IsEnabled}}
+                    <button type="submit" class="btn btn-sm">{{t .Lang "portal.ritual_detail.action_disable"}}</button>
+                    {{else}}
+                    <button type="submit" class="btn btn-sm btn-primary">{{t .Lang "portal.ritual_detail.action_enable"}}</button>
+                    {{end}}
+                </form>
+                <form method="POST" action="/rituals/{{$ritual.ID}}" class="d-inline">
+                    <input type="hidden" name="csrf_token" value="{{$.CSRFToken}}">
+                    <input type="hidden" name="action" value="archive">
+                    <button type="submit" class="btn btn-sm btn-danger">{{t .Lang "portal.ritual_detail.action_archive"}}</button>
+                </form>
+                {{end}}
+            </div>
+            {{end}}
+        </div>
+
+        <!-- Prompt -->
+        {{if $ritual.Prompt}}
+        <div class="card">
+            <div class="card-header">
+                <h2 class="mb-0">{{t .Lang "portal.ritual_detail.section_prompt"}}</h2>
+            </div>
+            <pre class="code-block">{{$ritual.Prompt}}</pre>
+        </div>
+        {{end}}
+
+        {{end}}
+        {{end}}
+    </div>
+</div>
+{{end}}

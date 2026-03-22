@@ -1,0 +1,2313 @@
+openapi: 3.1.0
+info:
+    title: Taskschmiede REST API
+    version: v1
+    description: |
+        Agent-first task and project management API. All endpoints return JSON.
+        Timestamps are UTC in RFC 3339 format. Entity IDs use the format `prefix_hexstring`
+        (e.g., `tsk_a1b2c3...`, `edv_d4e5f6...`).
+    license:
+        name: Apache 2.0
+        url: https://www.apache.org/licenses/LICENSE-2.0
+    contact:
+        name: Quest Financial Technologies
+        url: https://github.com/QuestFinTech/taskschmiede
+servers:
+    - url: http://localhost:9000
+      description: Local development
+security:
+    - bearerAuth: []
+tags:
+    - name: Auth
+      description: Authentication and user profile
+    - name: Tasks
+      description: Atomic units of work
+    - name: Endeavours
+      description: Goal-oriented work containers
+    - name: Organizations
+      description: Organizational units
+    - name: Demands
+      description: Work requests (stories, bugs, spikes, etc.)
+    - name: Resources
+      description: People, teams, and other capacity units
+    - name: Artifacts
+      description: Documents, links, and deliverables
+    - name: Rituals
+      description: Recurring process templates
+    - name: RitualRuns
+      description: Ritual execution records
+    - name: Comments
+      description: Discussion on any entity
+    - name: Approvals
+      description: Approval decisions
+    - name: DoD
+      description: Definition of Done policies and endorsements
+    - name: Messages
+      description: Internal messaging
+    - name: Relations
+      description: Entity relationships
+    - name: Users
+      description: User management
+    - name: Templates
+      description: Reusable templates
+    - name: Reports
+      description: Report generation
+    - name: Admin
+      description: Administrative operations
+    - name: Invitations
+      description: Invitation token management
+    - name: Audit
+      description: Audit trail and activity
+    - name: Onboarding
+      description: Agent onboarding
+    - name: Setup
+      description: Initial instance setup
+components:
+    securitySchemes:
+        bearerAuth:
+            type: http
+            scheme: bearer
+            description: Token from POST /api/v1/auth/login
+    parameters:
+        limitParam:
+            name: limit
+            in: query
+            schema:
+                type: integer
+                default: 50
+                maximum: 200
+            description: Maximum results per page
+        offsetParam:
+            name: offset
+            in: query
+            schema:
+                type: integer
+                default: 0
+            description: Pagination offset
+        idPath:
+            name: id
+            in: path
+            required: true
+            schema:
+                type: string
+            description: Entity ID
+    schemas:
+        Error:
+            type: object
+            required: [error]
+            properties:
+                error:
+                    type: object
+                    required: [code, message]
+                    properties:
+                        code:
+                            type: string
+                            enum:
+                                - invalid_input
+                                - unauthorized
+                                - invalid_credentials
+                                - account_suspended
+                                - account_blocked
+                                - forbidden
+                                - not_found
+                                - conflict
+                                - tier_limit
+                                - velocity_limit
+                                - invalid_transition
+                                - internal_error
+                        message:
+                            type: string
+                        details:
+                            description: Optional structured details
+        ListMeta:
+            type: object
+            required: [total, limit, offset]
+            properties:
+                total:
+                    type: integer
+                limit:
+                    type: integer
+                offset:
+                    type: integer
+        Metadata:
+            type: object
+            additionalProperties: true
+            description: Arbitrary key-value metadata
+        Task:
+            type: object
+            required: [id, title, status, created_at, updated_at]
+            properties:
+                id: {type: string, example: "tsk_a1b2c3d4e5f6a7b8"}
+                title: {type: string}
+                description: {type: string}
+                status: {type: string, enum: [planned, active, done, canceled]}
+                endeavour_id: {type: string}
+                endeavour_name: {type: string}
+                demand_id: {type: string}
+                assignee_id: {type: string}
+                assignee_name: {type: string}
+                creator_id: {type: string}
+                creator_name: {type: string}
+                owner_id: {type: string}
+                owner_name: {type: string}
+                estimate: {type: number, nullable: true, description: "Hours"}
+                actual: {type: number, nullable: true, description: "Hours"}
+                due_date: {type: string, format: date-time, nullable: true}
+                metadata: {$ref: "#/components/schemas/Metadata"}
+                created_at: {type: string, format: date-time}
+                updated_at: {type: string, format: date-time}
+                started_at: {type: string, format: date-time, nullable: true}
+                completed_at: {type: string, format: date-time, nullable: true}
+                canceled_at: {type: string, format: date-time, nullable: true}
+                canceled_reason: {type: string}
+        TaskCreate:
+            type: object
+            required: [title, endeavour_id]
+            properties:
+                title: {type: string}
+                description: {type: string}
+                endeavour_id: {type: string}
+                demand_id: {type: string}
+                assignee_id: {type: string}
+                estimate: {type: number}
+                due_date: {type: string, format: date-time}
+                metadata: {$ref: "#/components/schemas/Metadata"}
+        TaskUpdate:
+            type: object
+            properties:
+                title: {type: string}
+                description: {type: string}
+                status: {type: string, enum: [planned, active, done, canceled]}
+                endeavour_id: {type: string}
+                demand_id: {type: string}
+                assignee_id: {type: string}
+                owner_id: {type: string}
+                estimate: {type: number}
+                actual: {type: number}
+                due_date: {type: string, format: date-time}
+                canceled_reason: {type: string}
+                metadata: {$ref: "#/components/schemas/Metadata"}
+        Goal:
+            type: object
+            properties:
+                id: {type: string}
+                title: {type: string}
+                status: {type: string, enum: [open, achieved, abandoned]}
+                linked_entity_type: {type: string}
+                linked_entity_id: {type: string}
+        Endeavour:
+            type: object
+            required: [id, name, status, created_at, updated_at]
+            properties:
+                id: {type: string, example: "edv_a1b2c3d4e5f6a7b8"}
+                name: {type: string}
+                description: {type: string}
+                goals:
+                    type: array
+                    items: {$ref: "#/components/schemas/Goal"}
+                status: {type: string, enum: [pending, active, on_hold, completed, archived]}
+                timezone: {type: string, example: "UTC"}
+                lang: {type: string, example: "en"}
+                start_date: {type: string, format: date-time, nullable: true}
+                end_date: {type: string, format: date-time, nullable: true}
+                completed_at: {type: string, format: date-time, nullable: true}
+                archived_at: {type: string, format: date-time, nullable: true}
+                archived_reason: {type: string}
+                metadata: {$ref: "#/components/schemas/Metadata"}
+                created_at: {type: string, format: date-time}
+                updated_at: {type: string, format: date-time}
+                progress:
+                    type: object
+                    properties:
+                        planned: {type: integer}
+                        active: {type: integer}
+                        done: {type: integer}
+                        canceled: {type: integer}
+        EndeavourCreate:
+            type: object
+            required: [name]
+            properties:
+                name: {type: string}
+                description: {type: string}
+                goals:
+                    type: array
+                    items: {$ref: "#/components/schemas/Goal"}
+                timezone: {type: string}
+                lang: {type: string}
+                start_date: {type: string, format: date-time}
+                end_date: {type: string, format: date-time}
+                metadata: {$ref: "#/components/schemas/Metadata"}
+        EndeavourUpdate:
+            type: object
+            properties:
+                name: {type: string}
+                description: {type: string}
+                status: {type: string, enum: [pending, active, on_hold, completed]}
+                goals:
+                    type: array
+                    items: {$ref: "#/components/schemas/Goal"}
+                timezone: {type: string}
+                lang: {type: string}
+                start_date: {type: string, format: date-time}
+                end_date: {type: string, format: date-time}
+                metadata: {$ref: "#/components/schemas/Metadata"}
+        Organization:
+            type: object
+            required: [id, name, status, created_at, updated_at]
+            properties:
+                id: {type: string, example: "org_a1b2c3d4e5f6a7b8"}
+                name: {type: string}
+                description: {type: string}
+                status: {type: string, enum: [active, inactive]}
+                metadata: {$ref: "#/components/schemas/Metadata"}
+                created_at: {type: string, format: date-time}
+                updated_at: {type: string, format: date-time}
+        OrganizationCreate:
+            type: object
+            required: [name]
+            properties:
+                name: {type: string}
+                description: {type: string}
+                metadata: {$ref: "#/components/schemas/Metadata"}
+        OrganizationUpdate:
+            type: object
+            properties:
+                name: {type: string}
+                description: {type: string}
+                metadata: {$ref: "#/components/schemas/Metadata"}
+        Demand:
+            type: object
+            required: [id, title, type, status, created_at, updated_at]
+            properties:
+                id: {type: string, example: "dmd_a1b2c3d4e5f6a7b8"}
+                type: {type: string, enum: [story, bug, spike, chore]}
+                title: {type: string}
+                description: {type: string}
+                status: {type: string, enum: [open, in_progress, fulfilled, canceled]}
+                priority: {type: string, enum: [low, medium, high, urgent]}
+                endeavour_id: {type: string}
+                endeavour_name: {type: string}
+                creator_id: {type: string}
+                creator_name: {type: string}
+                owner_id: {type: string}
+                owner_name: {type: string}
+                due_date: {type: string, format: date-time, nullable: true}
+                metadata: {$ref: "#/components/schemas/Metadata"}
+                created_at: {type: string, format: date-time}
+                updated_at: {type: string, format: date-time}
+                fulfilled_at: {type: string, format: date-time, nullable: true}
+                canceled_at: {type: string, format: date-time, nullable: true}
+                canceled_reason: {type: string}
+        DemandCreate:
+            type: object
+            required: [title, type, endeavour_id]
+            properties:
+                title: {type: string}
+                type: {type: string, enum: [story, bug, spike, chore]}
+                description: {type: string}
+                priority: {type: string, enum: [low, medium, high, urgent]}
+                endeavour_id: {type: string}
+                due_date: {type: string, format: date-time}
+                metadata: {$ref: "#/components/schemas/Metadata"}
+        DemandUpdate:
+            type: object
+            properties:
+                title: {type: string}
+                description: {type: string}
+                status: {type: string, enum: [open, in_progress, fulfilled, canceled]}
+                priority: {type: string, enum: [low, medium, high, urgent]}
+                owner_id: {type: string}
+                due_date: {type: string, format: date-time}
+                canceled_reason: {type: string}
+                metadata: {$ref: "#/components/schemas/Metadata"}
+        Resource:
+            type: object
+            required: [id, name, type, status, created_at, updated_at]
+            properties:
+                id: {type: string, example: "res_a1b2c3d4e5f6a7b8"}
+                type: {type: string, enum: [person, team, tool, service]}
+                name: {type: string}
+                capacity_model: {type: string}
+                capacity_value: {type: number, nullable: true}
+                skills:
+                    type: array
+                    items: {type: string}
+                metadata: {$ref: "#/components/schemas/Metadata"}
+                status: {type: string, enum: [active, inactive]}
+                created_at: {type: string, format: date-time}
+                updated_at: {type: string, format: date-time}
+        ResourceCreate:
+            type: object
+            required: [name, type]
+            properties:
+                name: {type: string}
+                type: {type: string, enum: [person, team, tool, service]}
+                capacity_model: {type: string}
+                capacity_value: {type: number}
+                skills:
+                    type: array
+                    items: {type: string}
+                metadata: {$ref: "#/components/schemas/Metadata"}
+        ResourceUpdate:
+            type: object
+            properties:
+                name: {type: string}
+                type: {type: string}
+                capacity_model: {type: string}
+                capacity_value: {type: number}
+                skills:
+                    type: array
+                    items: {type: string}
+                status: {type: string}
+                metadata: {$ref: "#/components/schemas/Metadata"}
+        Artifact:
+            type: object
+            required: [id, title, kind, status, created_at, updated_at]
+            properties:
+                id: {type: string, example: "art_a1b2c3d4e5f6a7b8"}
+                kind: {type: string}
+                title: {type: string}
+                url: {type: string}
+                summary: {type: string}
+                tags:
+                    type: array
+                    items: {type: string}
+                metadata: {$ref: "#/components/schemas/Metadata"}
+                created_by: {type: string}
+                status: {type: string}
+                endeavour_id: {type: string}
+                task_id: {type: string}
+                created_at: {type: string, format: date-time}
+                updated_at: {type: string, format: date-time}
+        ArtifactCreate:
+            type: object
+            required: [title, kind]
+            properties:
+                title: {type: string}
+                kind: {type: string}
+                url: {type: string}
+                summary: {type: string}
+                tags:
+                    type: array
+                    items: {type: string}
+                endeavour_id: {type: string}
+                task_id: {type: string}
+                metadata: {$ref: "#/components/schemas/Metadata"}
+        ArtifactUpdate:
+            type: object
+            properties:
+                title: {type: string}
+                kind: {type: string}
+                url: {type: string}
+                summary: {type: string}
+                tags:
+                    type: array
+                    items: {type: string}
+                status: {type: string}
+                metadata: {$ref: "#/components/schemas/Metadata"}
+        Ritual:
+            type: object
+            required: [id, name, status, created_at, updated_at]
+            properties:
+                id: {type: string, example: "rtl_a1b2c3d4e5f6a7b8"}
+                name: {type: string}
+                description: {type: string}
+                prompt: {type: string}
+                version: {type: integer}
+                predecessor_id: {type: string}
+                origin: {type: string}
+                schedule:
+                    type: object
+                    additionalProperties: true
+                is_enabled: {type: boolean}
+                lang: {type: string}
+                metadata: {$ref: "#/components/schemas/Metadata"}
+                created_by: {type: string}
+                status: {type: string}
+                endeavour_id: {type: string}
+                created_at: {type: string, format: date-time}
+                updated_at: {type: string, format: date-time}
+        RitualCreate:
+            type: object
+            required: [name]
+            properties:
+                name: {type: string}
+                description: {type: string}
+                prompt: {type: string}
+                schedule:
+                    type: object
+                    additionalProperties: true
+                is_enabled: {type: boolean}
+                lang: {type: string}
+                endeavour_id: {type: string}
+                metadata: {$ref: "#/components/schemas/Metadata"}
+        RitualUpdate:
+            type: object
+            properties:
+                name: {type: string}
+                description: {type: string}
+                prompt: {type: string}
+                schedule:
+                    type: object
+                    additionalProperties: true
+                is_enabled: {type: boolean}
+                lang: {type: string}
+                status: {type: string}
+                metadata: {$ref: "#/components/schemas/Metadata"}
+        RitualRun:
+            type: object
+            required: [id, ritual_id, status, created_at, updated_at]
+            properties:
+                id: {type: string, example: "rtr_a1b2c3d4e5f6a7b8"}
+                ritual_id: {type: string}
+                status: {type: string}
+                trigger: {type: string}
+                run_by: {type: string}
+                result_summary: {type: string}
+                effects:
+                    type: object
+                    additionalProperties: true
+                error:
+                    type: object
+                    additionalProperties: true
+                metadata: {$ref: "#/components/schemas/Metadata"}
+                started_at: {type: string, format: date-time, nullable: true}
+                finished_at: {type: string, format: date-time, nullable: true}
+                created_at: {type: string, format: date-time}
+                updated_at: {type: string, format: date-time}
+        RitualRunCreate:
+            type: object
+            required: [ritual_id]
+            properties:
+                ritual_id: {type: string}
+                trigger: {type: string}
+                metadata: {$ref: "#/components/schemas/Metadata"}
+        RitualRunUpdate:
+            type: object
+            properties:
+                status: {type: string}
+                result_summary: {type: string}
+                effects:
+                    type: object
+                    additionalProperties: true
+                error:
+                    type: object
+                    additionalProperties: true
+                metadata: {$ref: "#/components/schemas/Metadata"}
+        Comment:
+            type: object
+            required: [id, entity_type, entity_id, author_id, content, created_at, updated_at]
+            properties:
+                id: {type: string, example: "cmt_a1b2c3d4e5f6a7b8"}
+                entity_type: {type: string}
+                entity_id: {type: string}
+                author_id: {type: string}
+                author_name: {type: string}
+                reply_to_id: {type: string}
+                content: {type: string}
+                metadata: {$ref: "#/components/schemas/Metadata"}
+                deleted_at: {type: string, format: date-time, nullable: true}
+                edited_at: {type: string, format: date-time, nullable: true}
+                created_at: {type: string, format: date-time}
+                updated_at: {type: string, format: date-time}
+        CommentCreate:
+            type: object
+            required: [entity_type, entity_id, content]
+            properties:
+                entity_type: {type: string}
+                entity_id: {type: string}
+                reply_to_id: {type: string}
+                content: {type: string}
+                metadata: {$ref: "#/components/schemas/Metadata"}
+        CommentUpdate:
+            type: object
+            properties:
+                content: {type: string}
+                metadata: {$ref: "#/components/schemas/Metadata"}
+        Approval:
+            type: object
+            required: [id, entity_type, entity_id, approver_id, verdict, created_at]
+            properties:
+                id: {type: string, example: "apr_a1b2c3d4e5f6a7b8"}
+                entity_type: {type: string}
+                entity_id: {type: string}
+                approver_id: {type: string}
+                approver_name: {type: string}
+                role: {type: string}
+                verdict: {type: string}
+                comment: {type: string}
+                metadata: {$ref: "#/components/schemas/Metadata"}
+                created_at: {type: string, format: date-time}
+        ApprovalCreate:
+            type: object
+            required: [entity_type, entity_id, verdict]
+            properties:
+                entity_type: {type: string}
+                entity_id: {type: string}
+                verdict: {type: string}
+                comment: {type: string}
+                role: {type: string}
+                metadata: {$ref: "#/components/schemas/Metadata"}
+        DodCondition:
+            type: object
+            properties:
+                id: {type: string}
+                type: {type: string}
+                label: {type: string}
+                params:
+                    type: object
+                    additionalProperties: true
+                required: {type: boolean}
+        DodPolicy:
+            type: object
+            required: [id, name, status, created_at, updated_at]
+            properties:
+                id: {type: string, example: "dod_a1b2c3d4e5f6a7b8"}
+                name: {type: string}
+                description: {type: string}
+                version: {type: integer}
+                predecessor_id: {type: string}
+                origin: {type: string}
+                conditions:
+                    type: array
+                    items: {$ref: "#/components/schemas/DodCondition"}
+                strictness: {type: string}
+                quorum: {type: integer}
+                scope: {type: string}
+                status: {type: string}
+                created_by: {type: string}
+                metadata: {$ref: "#/components/schemas/Metadata"}
+                created_at: {type: string, format: date-time}
+                updated_at: {type: string, format: date-time}
+        DodPolicyCreate:
+            type: object
+            required: [name]
+            properties:
+                name: {type: string}
+                description: {type: string}
+                conditions:
+                    type: array
+                    items: {$ref: "#/components/schemas/DodCondition"}
+                strictness: {type: string}
+                quorum: {type: integer}
+                scope: {type: string}
+                metadata: {$ref: "#/components/schemas/Metadata"}
+        DodPolicyUpdate:
+            type: object
+            properties:
+                name: {type: string}
+                description: {type: string}
+                conditions:
+                    type: array
+                    items: {$ref: "#/components/schemas/DodCondition"}
+                strictness: {type: string}
+                quorum: {type: integer}
+                status: {type: string}
+                metadata: {$ref: "#/components/schemas/Metadata"}
+        Message:
+            type: object
+            required: [id, sender_id, subject, content, created_at]
+            properties:
+                id: {type: string, example: "msg_a1b2c3d4e5f6a7b8"}
+                sender_id: {type: string}
+                sender_name: {type: string}
+                subject: {type: string}
+                content: {type: string}
+                intent: {type: string}
+                reply_to_id: {type: string}
+                entity_type: {type: string}
+                entity_id: {type: string}
+                scope_type: {type: string}
+                scope_id: {type: string}
+                metadata: {$ref: "#/components/schemas/Metadata"}
+                created_at: {type: string, format: date-time}
+        MessageSend:
+            type: object
+            required: [subject, content]
+            properties:
+                subject: {type: string}
+                content: {type: string}
+                intent: {type: string}
+                recipient_id: {type: string}
+                entity_type: {type: string}
+                entity_id: {type: string}
+                scope_type: {type: string}
+                scope_id: {type: string}
+                metadata: {$ref: "#/components/schemas/Metadata"}
+        EntityRelation:
+            type: object
+            required: [id, relationship_type, source_entity_type, source_entity_id, target_entity_type, target_entity_id, created_at]
+            properties:
+                id: {type: string, example: "rel_a1b2c3d4e5f6a7b8"}
+                relationship_type: {type: string}
+                source_entity_type: {type: string}
+                source_entity_id: {type: string}
+                target_entity_type: {type: string}
+                target_entity_id: {type: string}
+                metadata: {$ref: "#/components/schemas/Metadata"}
+                created_by: {type: string}
+                created_at: {type: string, format: date-time}
+        RelationCreate:
+            type: object
+            required: [relationship_type, source_entity_type, source_entity_id, target_entity_type, target_entity_id]
+            properties:
+                relationship_type: {type: string}
+                source_entity_type: {type: string}
+                source_entity_id: {type: string}
+                target_entity_type: {type: string}
+                target_entity_id: {type: string}
+                metadata: {$ref: "#/components/schemas/Metadata"}
+        User:
+            type: object
+            required: [id, name, email, status, created_at, updated_at]
+            properties:
+                id: {type: string, example: "usr_a1b2c3d4e5f6a7b8"}
+                name: {type: string}
+                email: {type: string, format: email}
+                resource_id: {type: string, nullable: true}
+                external_id: {type: string, nullable: true}
+                status: {type: string, enum: [active, suspended, blocked, pending, interview_pending]}
+                is_admin: {type: boolean}
+                login_count: {type: integer}
+                tier: {type: integer}
+                user_type: {type: string, enum: [human, agent]}
+                lang: {type: string}
+                timezone: {type: string}
+                email_copy: {type: boolean}
+                last_active_at: {type: string, format: date-time, nullable: true}
+                metadata: {$ref: "#/components/schemas/Metadata"}
+                created_at: {type: string, format: date-time}
+                updated_at: {type: string, format: date-time}
+        UserCreate:
+            type: object
+            required: [name, email, password]
+            properties:
+                name: {type: string}
+                email: {type: string, format: email}
+                password:
+                    type: string
+                    minLength: 12
+                    description: "Min 12 chars, uppercase, lowercase, digit, special char"
+                user_type: {type: string, enum: [human, agent]}
+                lang: {type: string}
+                timezone: {type: string}
+                metadata: {$ref: "#/components/schemas/Metadata"}
+        UserUpdate:
+            type: object
+            properties:
+                name: {type: string}
+                status: {type: string}
+                lang: {type: string}
+                timezone: {type: string}
+                email_copy: {type: boolean}
+                metadata: {$ref: "#/components/schemas/Metadata"}
+        Template:
+            type: object
+            required: [id, name, scope, status, created_at, updated_at]
+            properties:
+                id: {type: string, example: "tpl_a1b2c3d4e5f6a7b8"}
+                name: {type: string}
+                scope: {type: string}
+                lang: {type: string}
+                body: {type: string}
+                version: {type: integer}
+                predecessor_id: {type: string}
+                metadata: {$ref: "#/components/schemas/Metadata"}
+                created_by: {type: string}
+                status: {type: string}
+                created_at: {type: string, format: date-time}
+                updated_at: {type: string, format: date-time}
+        TemplateCreate:
+            type: object
+            required: [name, scope, body]
+            properties:
+                name: {type: string}
+                scope: {type: string}
+                lang: {type: string}
+                body: {type: string}
+                metadata: {$ref: "#/components/schemas/Metadata"}
+        TemplateUpdate:
+            type: object
+            properties:
+                name: {type: string}
+                scope: {type: string}
+                lang: {type: string}
+                body: {type: string}
+                status: {type: string}
+                metadata: {$ref: "#/components/schemas/Metadata"}
+        InvitationToken:
+            type: object
+            required: [id, name, scope, created_at]
+            properties:
+                id: {type: string}
+                token: {type: string, description: "Only returned on creation"}
+                name: {type: string}
+                scope: {type: string, enum: [human, agent]}
+                organization_id: {type: string}
+                role: {type: string}
+                max_uses: {type: integer, nullable: true}
+                uses: {type: integer}
+                expires_at: {type: string, format: date-time, nullable: true}
+                revoked_at: {type: string, format: date-time, nullable: true}
+                created_at: {type: string, format: date-time}
+                created_by: {type: string}
+        InvitationCreate:
+            type: object
+            required: [name, scope]
+            properties:
+                name: {type: string}
+                scope: {type: string, enum: [human, agent]}
+                organization_id: {type: string}
+                role: {type: string}
+                max_uses: {type: integer}
+                expires_at: {type: string, format: date-time}
+        AuditEntry:
+            type: object
+            required: [id, action, actor_id, created_at]
+            properties:
+                id: {type: string}
+                action: {type: string}
+                actor_id: {type: string}
+                actor_type: {type: string}
+                resource: {type: string}
+                method: {type: string}
+                endpoint: {type: string}
+                status_code: {type: integer}
+                ip: {type: string}
+                source: {type: string}
+                duration_ms: {type: integer}
+                metadata: {$ref: "#/components/schemas/Metadata"}
+                created_at: {type: string, format: date-time}
+        EntityChange:
+            type: object
+            required: [id, action, entity_type, entity_id, created_at]
+            properties:
+                id: {type: string}
+                actor_id: {type: string}
+                action: {type: string}
+                entity_type: {type: string}
+                entity_id: {type: string}
+                endeavour_id: {type: string}
+                fields:
+                    type: array
+                    items: {type: string}
+                metadata: {$ref: "#/components/schemas/Metadata"}
+                created_at: {type: string, format: date-time}
+        LoginRequest:
+            type: object
+            required: [email, password]
+            properties:
+                email: {type: string, format: email}
+                password: {type: string}
+        LoginResponse:
+            type: object
+            properties:
+                token: {type: string}
+                token_id: {type: string}
+                user_id: {type: string}
+                name: {type: string}
+                email: {type: string}
+                expires_at: {type: string, format: date-time}
+        RegisterRequest:
+            type: object
+            required: [email, name, password]
+            properties:
+                email: {type: string, format: email}
+                name: {type: string}
+                password:
+                    type: string
+                    minLength: 12
+                invitation_token: {type: string}
+        VerifyRequest:
+            type: object
+            required: [email, code]
+            properties:
+                email: {type: string, format: email}
+                code: {type: string, pattern: "^[a-z0-9]{3}-[a-z0-9]{3}-[a-z0-9]{3}$"}
+        ForgotPasswordRequest:
+            type: object
+            required: [email]
+            properties:
+                email: {type: string, format: email}
+        ResetPasswordRequest:
+            type: object
+            required: [email, code, new_password]
+            properties:
+                email: {type: string, format: email}
+                code: {type: string}
+                new_password:
+                    type: string
+                    minLength: 12
+        ChangePasswordRequest:
+            type: object
+            required: [current_password, new_password]
+            properties:
+                current_password: {type: string}
+                new_password:
+                    type: string
+                    minLength: 12
+        ProfileUpdate:
+            type: object
+            properties:
+                name: {type: string}
+                lang: {type: string}
+                timezone: {type: string}
+                email_copy: {type: boolean}
+    responses:
+        NotFound:
+            description: Entity not found
+            content:
+                application/json:
+                    schema: {$ref: "#/components/schemas/Error"}
+        Unauthorized:
+            description: Missing or invalid authentication
+            content:
+                application/json:
+                    schema: {$ref: "#/components/schemas/Error"}
+        Forbidden:
+            description: Insufficient permissions
+            content:
+                application/json:
+                    schema: {$ref: "#/components/schemas/Error"}
+        BadRequest:
+            description: Invalid input
+            content:
+                application/json:
+                    schema: {$ref: "#/components/schemas/Error"}
+paths:
+    # ──────────────────────────────────────────────
+    # Auth (Public)
+    # ──────────────────────────────────────────────
+    /api/v1/auth/login:
+        post:
+            tags: [Auth]
+            summary: Login
+            security: []
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema: {$ref: "#/components/schemas/LoginRequest"}
+            responses:
+                "200":
+                    description: Login successful
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    data: {$ref: "#/components/schemas/LoginResponse"}
+                "401": {$ref: "#/components/responses/Unauthorized"}
+    /api/v1/auth/register:
+        post:
+            tags: [Auth]
+            summary: Register new user
+            security: []
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema: {$ref: "#/components/schemas/RegisterRequest"}
+            responses:
+                "201":
+                    description: Registration initiated (verification email sent)
+                "400": {$ref: "#/components/responses/BadRequest"}
+                "409":
+                    description: Email already registered
+                    content:
+                        application/json:
+                            schema: {$ref: "#/components/schemas/Error"}
+    /api/v1/auth/verify:
+        post:
+            tags: [Auth]
+            summary: Verify email with code
+            security: []
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema: {$ref: "#/components/schemas/VerifyRequest"}
+            responses:
+                "200":
+                    description: Email verified, account activated
+                "400": {$ref: "#/components/responses/BadRequest"}
+    /api/v1/auth/forgot-password:
+        post:
+            tags: [Auth]
+            summary: Request password reset
+            security: []
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema: {$ref: "#/components/schemas/ForgotPasswordRequest"}
+            responses:
+                "200":
+                    description: Reset code sent (same response whether email exists or not)
+    /api/v1/auth/reset-password:
+        post:
+            tags: [Auth]
+            summary: Reset password with code
+            security: []
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema: {$ref: "#/components/schemas/ResetPasswordRequest"}
+            responses:
+                "200":
+                    description: Password reset successful
+                "400": {$ref: "#/components/responses/BadRequest"}
+    /api/v1/auth/resend-verification:
+        post:
+            tags: [Auth]
+            summary: Resend verification code
+            security: []
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            required: [email]
+                            properties:
+                                email: {type: string, format: email}
+            responses:
+                "200":
+                    description: Verification code resent
+    # ──────────────────────────────────────────────
+    # Auth (Authenticated)
+    # ──────────────────────────────────────────────
+    /api/v1/auth/whoami:
+        get:
+            tags: [Auth]
+            summary: Get current user profile with tier info
+            responses:
+                "200":
+                    description: User profile
+                "401": {$ref: "#/components/responses/Unauthorized"}
+    /api/v1/auth/profile:
+        patch:
+            tags: [Auth]
+            summary: Update profile
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema: {$ref: "#/components/schemas/ProfileUpdate"}
+            responses:
+                "200":
+                    description: Profile updated
+                "401": {$ref: "#/components/responses/Unauthorized"}
+    /api/v1/auth/change-password:
+        post:
+            tags: [Auth]
+            summary: Change password
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema: {$ref: "#/components/schemas/ChangePasswordRequest"}
+            responses:
+                "200":
+                    description: Password changed
+                "400": {$ref: "#/components/responses/BadRequest"}
+    /api/v1/auth/logout:
+        post:
+            tags: [Auth]
+            summary: Logout (invalidate token)
+            responses:
+                "200":
+                    description: Logged out
+    # ──────────────────────────────────────────────
+    # Tasks
+    # ──────────────────────────────────────────────
+    /api/v1/tasks:
+        post:
+            tags: [Tasks]
+            summary: Create task
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema: {$ref: "#/components/schemas/TaskCreate"}
+            responses:
+                "201":
+                    description: Task created
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    data: {$ref: "#/components/schemas/Task"}
+                "400": {$ref: "#/components/responses/BadRequest"}
+        get:
+            tags: [Tasks]
+            summary: List tasks
+            parameters:
+                - {$ref: "#/components/parameters/limitParam"}
+                - {$ref: "#/components/parameters/offsetParam"}
+                - name: status
+                  in: query
+                  schema: {type: string, enum: [planned, active, done, canceled]}
+                - name: endeavour_id
+                  in: query
+                  schema: {type: string}
+                - name: assignee_id
+                  in: query
+                  schema: {type: string}
+                  description: "Use 'me' to filter by current user"
+                - name: demand_id
+                  in: query
+                  schema: {type: string}
+                - name: search
+                  in: query
+                  schema: {type: string}
+                - name: unassigned
+                  in: query
+                  schema: {type: string, enum: ["true"]}
+                - name: summary
+                  in: query
+                  schema: {type: string, enum: ["true"]}
+                  description: "Return status counts instead of list"
+            responses:
+                "200":
+                    description: Task list
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    data:
+                                        type: array
+                                        items: {$ref: "#/components/schemas/Task"}
+                                    meta: {$ref: "#/components/schemas/ListMeta"}
+    /api/v1/tasks/{id}:
+        get:
+            tags: [Tasks]
+            summary: Get task
+            parameters:
+                - {$ref: "#/components/parameters/idPath"}
+            responses:
+                "200":
+                    description: Task details
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    data: {$ref: "#/components/schemas/Task"}
+                "404": {$ref: "#/components/responses/NotFound"}
+        patch:
+            tags: [Tasks]
+            summary: Update task
+            parameters:
+                - {$ref: "#/components/parameters/idPath"}
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema: {$ref: "#/components/schemas/TaskUpdate"}
+            responses:
+                "200":
+                    description: Task updated
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    data: {$ref: "#/components/schemas/Task"}
+                "400": {$ref: "#/components/responses/BadRequest"}
+                "404": {$ref: "#/components/responses/NotFound"}
+    /api/v1/tasks/{id}/dod-check:
+        post:
+            tags: [DoD]
+            summary: Check task DoD compliance
+            parameters:
+                - {$ref: "#/components/parameters/idPath"}
+            responses:
+                "200":
+                    description: DoD check result
+    /api/v1/tasks/{id}/dod-override:
+        post:
+            tags: [DoD]
+            summary: Override DoD for task
+            parameters:
+                - {$ref: "#/components/parameters/idPath"}
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            required: [reason]
+                            properties:
+                                reason: {type: string}
+            responses:
+                "200":
+                    description: DoD overridden
+    # ──────────────────────────────────────────────
+    # Endeavours
+    # ──────────────────────────────────────────────
+    /api/v1/endeavours:
+        post:
+            tags: [Endeavours]
+            summary: Create endeavour
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema: {$ref: "#/components/schemas/EndeavourCreate"}
+            responses:
+                "201":
+                    description: Endeavour created
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    data: {$ref: "#/components/schemas/Endeavour"}
+        get:
+            tags: [Endeavours]
+            summary: List endeavours
+            parameters:
+                - {$ref: "#/components/parameters/limitParam"}
+                - {$ref: "#/components/parameters/offsetParam"}
+                - name: status
+                  in: query
+                  schema: {type: string}
+                - name: organization_id
+                  in: query
+                  schema: {type: string}
+                - name: search
+                  in: query
+                  schema: {type: string}
+            responses:
+                "200":
+                    description: Endeavour list
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    data:
+                                        type: array
+                                        items: {$ref: "#/components/schemas/Endeavour"}
+                                    meta: {$ref: "#/components/schemas/ListMeta"}
+    /api/v1/endeavours/{id}:
+        get:
+            tags: [Endeavours]
+            summary: Get endeavour
+            parameters:
+                - {$ref: "#/components/parameters/idPath"}
+            responses:
+                "200":
+                    description: Endeavour details
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    data: {$ref: "#/components/schemas/Endeavour"}
+                "404": {$ref: "#/components/responses/NotFound"}
+        patch:
+            tags: [Endeavours]
+            summary: Update endeavour
+            parameters:
+                - {$ref: "#/components/parameters/idPath"}
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema: {$ref: "#/components/schemas/EndeavourUpdate"}
+            responses:
+                "200":
+                    description: Endeavour updated
+    /api/v1/endeavours/{id}/archive:
+        get:
+            tags: [Endeavours]
+            summary: Preview archive impact
+            parameters:
+                - {$ref: "#/components/parameters/idPath"}
+            responses:
+                "200":
+                    description: Archive impact summary
+        post:
+            tags: [Endeavours]
+            summary: Archive endeavour
+            parameters:
+                - {$ref: "#/components/parameters/idPath"}
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                reason: {type: string}
+            responses:
+                "200":
+                    description: Endeavour archived
+    /api/v1/endeavours/{id}/export:
+        get:
+            tags: [Endeavours]
+            summary: Export endeavour data
+            parameters:
+                - {$ref: "#/components/parameters/idPath"}
+            responses:
+                "200":
+                    description: Full endeavour export (JSON)
+    /api/v1/endeavours/{id}/dod-policy:
+        post:
+            tags: [DoD]
+            summary: Assign DoD policy to endeavour
+            parameters:
+                - {$ref: "#/components/parameters/idPath"}
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            required: [policy_id]
+                            properties:
+                                policy_id: {type: string}
+            responses:
+                "200":
+                    description: Policy assigned
+        delete:
+            tags: [DoD]
+            summary: Unassign DoD policy from endeavour
+            parameters:
+                - {$ref: "#/components/parameters/idPath"}
+            responses:
+                "200":
+                    description: Policy unassigned
+    /api/v1/endeavours/{id}/dod-status:
+        get:
+            tags: [DoD]
+            summary: Get endeavour DoD status
+            parameters:
+                - {$ref: "#/components/parameters/idPath"}
+            responses:
+                "200":
+                    description: DoD compliance status
+    # ──────────────────────────────────────────────
+    # Organizations
+    # ──────────────────────────────────────────────
+    /api/v1/organizations:
+        post:
+            tags: [Organizations]
+            summary: Create organization
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema: {$ref: "#/components/schemas/OrganizationCreate"}
+            responses:
+                "201":
+                    description: Organization created
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    data: {$ref: "#/components/schemas/Organization"}
+        get:
+            tags: [Organizations]
+            summary: List organizations
+            parameters:
+                - {$ref: "#/components/parameters/limitParam"}
+                - {$ref: "#/components/parameters/offsetParam"}
+                - name: search
+                  in: query
+                  schema: {type: string}
+            responses:
+                "200":
+                    description: Organization list
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    data:
+                                        type: array
+                                        items: {$ref: "#/components/schemas/Organization"}
+                                    meta: {$ref: "#/components/schemas/ListMeta"}
+    /api/v1/organizations/{id}:
+        get:
+            tags: [Organizations]
+            summary: Get organization
+            parameters:
+                - {$ref: "#/components/parameters/idPath"}
+            responses:
+                "200":
+                    description: Organization details
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    data: {$ref: "#/components/schemas/Organization"}
+        patch:
+            tags: [Organizations]
+            summary: Update organization
+            parameters:
+                - {$ref: "#/components/parameters/idPath"}
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema: {$ref: "#/components/schemas/OrganizationUpdate"}
+            responses:
+                "200":
+                    description: Organization updated
+    /api/v1/organizations/{id}/archive:
+        get:
+            tags: [Organizations]
+            summary: Preview archive impact
+            parameters:
+                - {$ref: "#/components/parameters/idPath"}
+            responses:
+                "200":
+                    description: Archive impact summary
+        post:
+            tags: [Organizations]
+            summary: Archive organization
+            parameters:
+                - {$ref: "#/components/parameters/idPath"}
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                reason: {type: string}
+            responses:
+                "200":
+                    description: Organization archived
+    /api/v1/organizations/{id}/resources:
+        post:
+            tags: [Organizations]
+            summary: Add resource to organization
+            parameters:
+                - {$ref: "#/components/parameters/idPath"}
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            required: [resource_id]
+                            properties:
+                                resource_id: {type: string}
+                                role: {type: string}
+            responses:
+                "200":
+                    description: Resource added
+    /api/v1/organizations/{id}/endeavours:
+        post:
+            tags: [Organizations]
+            summary: Add endeavour to organization
+            parameters:
+                - {$ref: "#/components/parameters/idPath"}
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            required: [endeavour_id]
+                            properties:
+                                endeavour_id: {type: string}
+            responses:
+                "200":
+                    description: Endeavour added
+    /api/v1/organizations/{id}/export:
+        get:
+            tags: [Organizations]
+            summary: Export organization data
+            parameters:
+                - {$ref: "#/components/parameters/idPath"}
+            responses:
+                "200":
+                    description: Full organization export (JSON)
+    /api/v1/organizations/{id}/alert-terms:
+        get:
+            tags: [Organizations]
+            summary: List alert terms
+            parameters:
+                - {$ref: "#/components/parameters/idPath"}
+            responses:
+                "200":
+                    description: Alert terms list
+        put:
+            tags: [Organizations]
+            summary: Update alert terms
+            parameters:
+                - {$ref: "#/components/parameters/idPath"}
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                terms:
+                                    type: array
+                                    items:
+                                        type: object
+                                        properties:
+                                            term: {type: string}
+                                            weight: {type: integer}
+            responses:
+                "200":
+                    description: Alert terms updated
+    # ──────────────────────────────────────────────
+    # Demands
+    # ──────────────────────────────────────────────
+    /api/v1/demands:
+        post:
+            tags: [Demands]
+            summary: Create demand
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema: {$ref: "#/components/schemas/DemandCreate"}
+            responses:
+                "201":
+                    description: Demand created
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    data: {$ref: "#/components/schemas/Demand"}
+        get:
+            tags: [Demands]
+            summary: List demands
+            parameters:
+                - {$ref: "#/components/parameters/limitParam"}
+                - {$ref: "#/components/parameters/offsetParam"}
+                - name: status
+                  in: query
+                  schema: {type: string}
+                - name: endeavour_id
+                  in: query
+                  schema: {type: string}
+                - name: type
+                  in: query
+                  schema: {type: string}
+                - name: priority
+                  in: query
+                  schema: {type: string}
+                - name: search
+                  in: query
+                  schema: {type: string}
+            responses:
+                "200":
+                    description: Demand list
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    data:
+                                        type: array
+                                        items: {$ref: "#/components/schemas/Demand"}
+                                    meta: {$ref: "#/components/schemas/ListMeta"}
+    /api/v1/demands/{id}:
+        get:
+            tags: [Demands]
+            summary: Get demand
+            parameters:
+                - {$ref: "#/components/parameters/idPath"}
+            responses:
+                "200":
+                    description: Demand details
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    data: {$ref: "#/components/schemas/Demand"}
+        patch:
+            tags: [Demands]
+            summary: Update demand
+            parameters:
+                - {$ref: "#/components/parameters/idPath"}
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema: {$ref: "#/components/schemas/DemandUpdate"}
+            responses:
+                "200":
+                    description: Demand updated
+    # ──────────────────────────────────────────────
+    # Resources
+    # ──────────────────────────────────────────────
+    /api/v1/resources:
+        post:
+            tags: [Resources]
+            summary: Create resource
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema: {$ref: "#/components/schemas/ResourceCreate"}
+            responses:
+                "201":
+                    description: Resource created
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    data: {$ref: "#/components/schemas/Resource"}
+        get:
+            tags: [Resources]
+            summary: List resources
+            parameters:
+                - {$ref: "#/components/parameters/limitParam"}
+                - {$ref: "#/components/parameters/offsetParam"}
+                - name: type
+                  in: query
+                  schema: {type: string}
+                - name: endeavour_id
+                  in: query
+                  schema: {type: string}
+                - name: organization_id
+                  in: query
+                  schema: {type: string}
+                - name: search
+                  in: query
+                  schema: {type: string}
+            responses:
+                "200":
+                    description: Resource list
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    data:
+                                        type: array
+                                        items: {$ref: "#/components/schemas/Resource"}
+                                    meta: {$ref: "#/components/schemas/ListMeta"}
+    /api/v1/resources/{id}:
+        get:
+            tags: [Resources]
+            summary: Get resource
+            parameters:
+                - {$ref: "#/components/parameters/idPath"}
+            responses:
+                "200":
+                    description: Resource details
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    data: {$ref: "#/components/schemas/Resource"}
+        patch:
+            tags: [Resources]
+            summary: Update resource
+            parameters:
+                - {$ref: "#/components/parameters/idPath"}
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema: {$ref: "#/components/schemas/ResourceUpdate"}
+            responses:
+                "200":
+                    description: Resource updated
+        delete:
+            tags: [Resources]
+            summary: Delete resource
+            parameters:
+                - {$ref: "#/components/parameters/idPath"}
+            responses:
+                "200":
+                    description: Resource deleted
+    # ──────────────────────────────────────────────
+    # Artifacts
+    # ──────────────────────────────────────────────
+    /api/v1/artifacts:
+        post:
+            tags: [Artifacts]
+            summary: Create artifact
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema: {$ref: "#/components/schemas/ArtifactCreate"}
+            responses:
+                "201":
+                    description: Artifact created
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    data: {$ref: "#/components/schemas/Artifact"}
+        get:
+            tags: [Artifacts]
+            summary: List artifacts
+            parameters:
+                - {$ref: "#/components/parameters/limitParam"}
+                - {$ref: "#/components/parameters/offsetParam"}
+                - name: endeavour_id
+                  in: query
+                  schema: {type: string}
+                - name: task_id
+                  in: query
+                  schema: {type: string}
+                - name: kind
+                  in: query
+                  schema: {type: string}
+                - name: search
+                  in: query
+                  schema: {type: string}
+            responses:
+                "200":
+                    description: Artifact list
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    data:
+                                        type: array
+                                        items: {$ref: "#/components/schemas/Artifact"}
+                                    meta: {$ref: "#/components/schemas/ListMeta"}
+    /api/v1/artifacts/{id}:
+        get:
+            tags: [Artifacts]
+            summary: Get artifact
+            parameters:
+                - {$ref: "#/components/parameters/idPath"}
+            responses:
+                "200":
+                    description: Artifact details
+        patch:
+            tags: [Artifacts]
+            summary: Update artifact
+            parameters:
+                - {$ref: "#/components/parameters/idPath"}
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema: {$ref: "#/components/schemas/ArtifactUpdate"}
+            responses:
+                "200":
+                    description: Artifact updated
+    # ──────────────────────────────────────────────
+    # Rituals
+    # ──────────────────────────────────────────────
+    /api/v1/rituals:
+        post:
+            tags: [Rituals]
+            summary: Create ritual
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema: {$ref: "#/components/schemas/RitualCreate"}
+            responses:
+                "201":
+                    description: Ritual created
+        get:
+            tags: [Rituals]
+            summary: List rituals
+            parameters:
+                - {$ref: "#/components/parameters/limitParam"}
+                - {$ref: "#/components/parameters/offsetParam"}
+                - name: endeavour_id
+                  in: query
+                  schema: {type: string}
+                - name: search
+                  in: query
+                  schema: {type: string}
+            responses:
+                "200":
+                    description: Ritual list
+    /api/v1/rituals/{id}:
+        get:
+            tags: [Rituals]
+            summary: Get ritual
+            parameters:
+                - {$ref: "#/components/parameters/idPath"}
+            responses:
+                "200":
+                    description: Ritual details
+        patch:
+            tags: [Rituals]
+            summary: Update ritual
+            parameters:
+                - {$ref: "#/components/parameters/idPath"}
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema: {$ref: "#/components/schemas/RitualUpdate"}
+            responses:
+                "200":
+                    description: Ritual updated
+    /api/v1/rituals/{id}/fork:
+        post:
+            tags: [Rituals]
+            summary: Fork ritual (create new version)
+            parameters:
+                - {$ref: "#/components/parameters/idPath"}
+            responses:
+                "201":
+                    description: Ritual forked
+    /api/v1/rituals/{id}/lineage:
+        get:
+            tags: [Rituals]
+            summary: Get ritual version lineage
+            parameters:
+                - {$ref: "#/components/parameters/idPath"}
+            responses:
+                "200":
+                    description: Lineage chain
+    # ──────────────────────────────────────────────
+    # Ritual Runs
+    # ──────────────────────────────────────────────
+    /api/v1/ritual-runs:
+        post:
+            tags: [RitualRuns]
+            summary: Create ritual run
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema: {$ref: "#/components/schemas/RitualRunCreate"}
+            responses:
+                "201":
+                    description: Ritual run created
+        get:
+            tags: [RitualRuns]
+            summary: List ritual runs
+            parameters:
+                - {$ref: "#/components/parameters/limitParam"}
+                - {$ref: "#/components/parameters/offsetParam"}
+                - name: ritual_id
+                  in: query
+                  schema: {type: string}
+                - name: status
+                  in: query
+                  schema: {type: string}
+            responses:
+                "200":
+                    description: Ritual run list
+    /api/v1/ritual-runs/{id}:
+        get:
+            tags: [RitualRuns]
+            summary: Get ritual run
+            parameters:
+                - {$ref: "#/components/parameters/idPath"}
+            responses:
+                "200":
+                    description: Ritual run details
+        patch:
+            tags: [RitualRuns]
+            summary: Update ritual run
+            parameters:
+                - {$ref: "#/components/parameters/idPath"}
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema: {$ref: "#/components/schemas/RitualRunUpdate"}
+            responses:
+                "200":
+                    description: Ritual run updated
+    # ──────────────────────────────────────────────
+    # Comments
+    # ──────────────────────────────────────────────
+    /api/v1/comments:
+        post:
+            tags: [Comments]
+            summary: Create comment
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema: {$ref: "#/components/schemas/CommentCreate"}
+            responses:
+                "201":
+                    description: Comment created
+        get:
+            tags: [Comments]
+            summary: List comments
+            parameters:
+                - {$ref: "#/components/parameters/limitParam"}
+                - {$ref: "#/components/parameters/offsetParam"}
+                - name: entity_type
+                  in: query
+                  schema: {type: string}
+                - name: entity_id
+                  in: query
+                  schema: {type: string}
+            responses:
+                "200":
+                    description: Comment list
+    /api/v1/comments/{id}:
+        get:
+            tags: [Comments]
+            summary: Get comment
+            parameters:
+                - {$ref: "#/components/parameters/idPath"}
+            responses:
+                "200":
+                    description: Comment details
+        patch:
+            tags: [Comments]
+            summary: Update comment
+            parameters:
+                - {$ref: "#/components/parameters/idPath"}
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema: {$ref: "#/components/schemas/CommentUpdate"}
+            responses:
+                "200":
+                    description: Comment updated
+        delete:
+            tags: [Comments]
+            summary: Delete comment (soft delete)
+            parameters:
+                - {$ref: "#/components/parameters/idPath"}
+            responses:
+                "200":
+                    description: Comment deleted
+    # ──────────────────────────────────────────────
+    # Approvals
+    # ──────────────────────────────────────────────
+    /api/v1/approvals:
+        post:
+            tags: [Approvals]
+            summary: Create approval
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema: {$ref: "#/components/schemas/ApprovalCreate"}
+            responses:
+                "201":
+                    description: Approval created
+        get:
+            tags: [Approvals]
+            summary: List approvals
+            parameters:
+                - {$ref: "#/components/parameters/limitParam"}
+                - {$ref: "#/components/parameters/offsetParam"}
+                - name: entity_type
+                  in: query
+                  schema: {type: string}
+                - name: entity_id
+                  in: query
+                  schema: {type: string}
+            responses:
+                "200":
+                    description: Approval list
+    /api/v1/approvals/{id}:
+        get:
+            tags: [Approvals]
+            summary: Get approval
+            parameters:
+                - {$ref: "#/components/parameters/idPath"}
+            responses:
+                "200":
+                    description: Approval details
+    # ──────────────────────────────────────────────
+    # DoD Policies
+    # ──────────────────────────────────────────────
+    /api/v1/dod-policies:
+        post:
+            tags: [DoD]
+            summary: Create DoD policy
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema: {$ref: "#/components/schemas/DodPolicyCreate"}
+            responses:
+                "201":
+                    description: Policy created
+        get:
+            tags: [DoD]
+            summary: List DoD policies
+            parameters:
+                - {$ref: "#/components/parameters/limitParam"}
+                - {$ref: "#/components/parameters/offsetParam"}
+                - name: scope
+                  in: query
+                  schema: {type: string}
+                - name: search
+                  in: query
+                  schema: {type: string}
+            responses:
+                "200":
+                    description: Policy list
+    /api/v1/dod-policies/{id}:
+        get:
+            tags: [DoD]
+            summary: Get DoD policy
+            parameters:
+                - {$ref: "#/components/parameters/idPath"}
+            responses:
+                "200":
+                    description: Policy details
+        patch:
+            tags: [DoD]
+            summary: Update DoD policy
+            parameters:
+                - {$ref: "#/components/parameters/idPath"}
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema: {$ref: "#/components/schemas/DodPolicyUpdate"}
+            responses:
+                "200":
+                    description: Policy updated
+    /api/v1/dod-policies/{id}/versions:
+        post:
+            tags: [DoD]
+            summary: Create new policy version
+            parameters:
+                - {$ref: "#/components/parameters/idPath"}
+            responses:
+                "201":
+                    description: New version created
+    /api/v1/dod-policies/{id}/lineage:
+        get:
+            tags: [DoD]
+            summary: Get policy version lineage
+            parameters:
+                - {$ref: "#/components/parameters/idPath"}
+            responses:
+                "200":
+                    description: Lineage chain
+    /api/v1/dod-endorsements:
+        post:
+            tags: [DoD]
+            summary: Create endorsement
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            required: [policy_id, endeavour_id]
+                            properties:
+                                policy_id: {type: string}
+                                endeavour_id: {type: string}
+            responses:
+                "201":
+                    description: Endorsement created
+        get:
+            tags: [DoD]
+            summary: List endorsements
+            parameters:
+                - {$ref: "#/components/parameters/limitParam"}
+                - {$ref: "#/components/parameters/offsetParam"}
+                - name: endeavour_id
+                  in: query
+                  schema: {type: string}
+                - name: policy_id
+                  in: query
+                  schema: {type: string}
+            responses:
+                "200":
+                    description: Endorsement list
+    # ──────────────────────────────────────────────
+    # Messages
+    # ──────────────────────────────────────────────
+    /api/v1/messages:
+        post:
+            tags: [Messages]
+            summary: Send message
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema: {$ref: "#/components/schemas/MessageSend"}
+            responses:
+                "201":
+                    description: Message sent
+        get:
+            tags: [Messages]
+            summary: List inbox
+            parameters:
+                - {$ref: "#/components/parameters/limitParam"}
+                - {$ref: "#/components/parameters/offsetParam"}
+                - name: unread
+                  in: query
+                  schema: {type: string, enum: ["true"]}
+            responses:
+                "200":
+                    description: Inbox messages
+    /api/v1/messages/{id}:
+        get:
+            tags: [Messages]
+            summary: Get message
+            parameters:
+                - {$ref: "#/components/parameters/idPath"}
+            responses:
+                "200":
+                    description: Message details
+        patch:
+            tags: [Messages]
+            summary: Mark message as read
+            parameters:
+                - {$ref: "#/components/parameters/idPath"}
+            responses:
+                "200":
+                    description: Message marked read
+    /api/v1/messages/{id}/reply:
+        post:
+            tags: [Messages]
+            summary: Reply to message
+            parameters:
+                - {$ref: "#/components/parameters/idPath"}
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            required: [content]
+                            properties:
+                                content: {type: string}
+                                metadata: {$ref: "#/components/schemas/Metadata"}
+            responses:
+                "201":
+                    description: Reply sent
+    /api/v1/messages/{id}/thread:
+        get:
+            tags: [Messages]
+            summary: Get message thread
+            parameters:
+                - {$ref: "#/components/parameters/idPath"}
+            responses:
+                "200":
+                    description: Thread messages
+    # ──────────────────────────────────────────────
+    # Relations
+    # ──────────────────────────────────────────────
+    /api/v1/relations:
+        post:
+            tags: [Relations]
+            summary: Create relation
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema: {$ref: "#/components/schemas/RelationCreate"}
+            responses:
+                "201":
+                    description: Relation created
+        get:
+            tags: [Relations]
+            summary: List relations
+            parameters:
+                - {$ref: "#/components/parameters/limitParam"}
+                - {$ref: "#/components/parameters/offsetParam"}
+                - name: entity_type
+                  in: query
+                  schema: {type: string}
+                - name: entity_id
+                  in: query
+                  schema: {type: string}
+            responses:
+                "200":
+                    description: Relation list
+    /api/v1/relations/{id}:
+        delete:
+            tags: [Relations]
+            summary: Delete relation
+            parameters:
+                - {$ref: "#/components/parameters/idPath"}
+            responses:
+                "200":
+                    description: Relation deleted
+    # ──────────────────────────────────────────────
+    # Users
+    # ──────────────────────────────────────────────
+    /api/v1/users:
+        post:
+            tags: [Users]
+            summary: Create user (admin)
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema: {$ref: "#/components/schemas/UserCreate"}
+            responses:
+                "201":
+                    description: User created
+        get:
+            tags: [Users]
+            summary: List users (admin)
+            parameters:
+                - {$ref: "#/components/parameters/limitParam"}
+                - {$ref: "#/components/parameters/offsetParam"}
+                - name: status
+                  in: query
+                  schema: {type: string}
+                - name: user_type
+                  in: query
+                  schema: {type: string}
+                - name: search
+                  in: query
+                  schema: {type: string}
+            responses:
+                "200":
+                    description: User list
+    /api/v1/users/{id}:
+        get:
+            tags: [Users]
+            summary: Get user
+            parameters:
+                - {$ref: "#/components/parameters/idPath"}
+            responses:
+                "200":
+                    description: User details
+        patch:
+            tags: [Users]
+            summary: Update user
+            parameters:
+                - {$ref: "#/components/parameters/idPath"}
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema: {$ref: "#/components/schemas/UserUpdate"}
+            responses:
+                "200":
+                    description: User updated
+    /api/v1/users/{id}/endeavours:
+        post:
+            tags: [Users]
+            summary: Add user to endeavour
+            parameters:
+                - {$ref: "#/components/parameters/idPath"}
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            required: [endeavour_id, role]
+                            properties:
+                                endeavour_id: {type: string}
+                                role: {type: string}
+            responses:
+                "200":
+                    description: User added to endeavour
+    # ──────────────────────────────────────────────
+    # Templates
+    # ──────────────────────────────────────────────
+    /api/v1/templates:
+        post:
+            tags: [Templates]
+            summary: Create template
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema: {$ref: "#/components/schemas/TemplateCreate"}
+            responses:
+                "201":
+                    description: Template created
+        get:
+            tags: [Templates]
+            summary: List templates
+            parameters:
+                - {$ref: "#/components/parameters/limitParam"}
+                - {$ref: "#/components/parameters/offsetParam"}
+                - name: scope
+                  in: query
+                  schema: {type: string}
+                - name: search
+                  in: query
+                  schema: {type: string}
+            responses:
+                "200":
+                    description: Template list
+    /api/v1/templates/{id}:
+        get:
+            tags: [Templates]
+            summary: Get template
+            parameters:
+                - {$ref: "#/components/parameters/idPath"}
+            responses:
+                "200":
+                    description: Template details
+        patch:
+            tags: [Templates]
+            summary: Update template
+            parameters:
+                - {$ref: "#/components/parameters/idPath"}
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema: {$ref: "#/components/schemas/TemplateUpdate"}
+            responses:
+                "200":
+                    description: Template updated
+    /api/v1/templates/{id}/fork:
+        post:
+            tags: [Templates]
+            summary: Fork template
+            parameters:
+                - {$ref: "#/components/parameters/idPath"}
+            responses:
+                "201":
+                    description: Template forked
+    /api/v1/templates/{id}/lineage:
+        get:
+            tags: [Templates]
+            summary: Get template lineage
+            parameters:
+                - {$ref: "#/components/parameters/idPath"}
+            responses:
+                "200":
+                    description: Lineage chain
+    # ──────────────────────────────────────────────
+    # Reports
+    # ──────────────────────────────────────────────
+    /api/v1/reports/{scope}/{id}:
+        get:
+            tags: [Reports]
+            summary: Generate report
+            parameters:
+                - name: scope
+                  in: path
+                  required: true
+                  schema: {type: string, enum: [endeavour, organization]}
+                - {$ref: "#/components/parameters/idPath"}
+            responses:
+                "200":
+                    description: Generated report
+    /api/v1/reports/{scope}/{id}/email:
+        post:
+            tags: [Reports]
+            summary: Email report
+            parameters:
+                - name: scope
+                  in: path
+                  required: true
+                  schema: {type: string, enum: [endeavour, organization]}
+                - {$ref: "#/components/parameters/idPath"}
+            responses:
+                "200":
+                    description: Report emailed

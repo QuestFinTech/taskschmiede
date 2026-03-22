@@ -1,0 +1,16 @@
+build/
+run/
+website/docs/
+db-2-keep/
+audit/
+cowork/
+e2e-testing/
+.claude/
+.github/
+.playwright-mcp/
+*.db
+*.db-journal
+*.log
+.env
+config.yaml
+.git

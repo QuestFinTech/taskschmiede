@@ -1,0 +1,222 @@
+{{template "base" .}}
+{{define "content"}}
+{{template "nav" .}}
+
+<div class="main-content">
+    <div class="container">
+        <div class="page-header">
+            <h1>{{t .Lang "portal.admin_rituals.title"}}</h1>
+        </div>
+
+        {{if .Error}}
+        <div class="alert alert-error">{{.Error}}</div>
+        {{end}}
+
+        {{if .Success}}
+        <div class="alert alert-success">{{.Success}}</div>
+        {{end}}
+
+        {{if .Data}}
+        <!-- Filters -->
+        <div class="card mb-24-p-16-24">
+            <form method="GET" action="/admin/rituals" class="flex-gap-12-ai-end-wrap">
+                <div class="form-group mb-0-minw-200">
+                    <label for="filter_search">{{t .Lang "portal.admin_rituals.label_search"}}</label>
+                    <input type="text" id="filter_search" name="search" placeholder="{{t .Lang "common.placeholder.search"}}" value="{{index .Data "Search"}}">
+                </div>
+                <div class="form-group mb-0-minw-140">
+                    <label for="filter_category">{{t .Lang "portal.admin_rituals.label_category"}}</label>
+                    <select id="filter_category" name="category">
+                        {{$category := index .Data "Category"}}
+                        <option value="">{{t .Lang "common.all"}}</option>
+                        <option value="rituals" {{if eq $category "rituals"}}selected{{end}}>{{t .Lang "portal.admin_rituals.category_rituals"}}</option>
+                        <option value="reporting" {{if eq $category "reporting"}}selected{{end}}>{{t .Lang "portal.admin_rituals.category_reporting"}}</option>
+                    </select>
+                </div>
+                <div class="form-group mb-0-minw-140">
+                    <label for="filter_status">{{t .Lang "common.label.status"}}</label>
+                    <select id="filter_status" name="status">
+                        <option value="">{{t .Lang "common.all"}}</option>
+                        {{$status := index .Data "Status"}}
+                        <option value="active" {{if eq $status "active"}}selected{{end}}>{{t .Lang "status.active"}}</option>
+                        <option value="archived" {{if eq $status "archived"}}selected{{end}}>{{t .Lang "status.archived"}}</option>
+                    </select>
+                </div>
+                <div class="form-group mb-0-minw-130">
+                    <label for="filter_origin">{{t .Lang "portal.admin_rituals.label_origin"}}</label>
+                    <select id="filter_origin" name="origin">
+                        <option value="">{{t .Lang "common.all"}}</option>
+                        {{$origin := index .Data "Origin"}}
+                        <option value="system" {{if eq $origin "system"}}selected{{end}}>system</option>
+                        <option value="user" {{if eq $origin "user"}}selected{{end}}>user</option>
+                        <option value="forked" {{if eq $origin "forked"}}selected{{end}}>forked</option>
+                    </select>
+                </div>
+                <div class="form-group mb-0-minw-100">
+                    <label for="filter_lang">{{t .Lang "common.label.language"}}</label>
+                    <select id="filter_lang" name="lang">
+                        <option value="">{{t .Lang "common.all"}}</option>
+                        {{$filterLang := index .Data "FilterLang"}}
+                        <option value="en" {{if eq $filterLang "en"}}selected{{end}}>EN</option>
+                        <option value="de" {{if eq $filterLang "de"}}selected{{end}}>DE</option>
+                        <option value="fr" {{if eq $filterLang "fr"}}selected{{end}}>FR</option>
+                        <option value="es" {{if eq $filterLang "es"}}selected{{end}}>ES</option>
+                        <option value="it" {{if eq $filterLang "it"}}selected{{end}}>IT</option>
+                        <option value="ru" {{if eq $filterLang "ru"}}selected{{end}}>RU</option>
+                        <option value="zh" {{if eq $filterLang "zh"}}selected{{end}}>ZH</option>
+                        <option value="el" {{if eq $filterLang "el"}}selected{{end}}>EL</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn h-40">{{t .Lang "common.filter"}}</button>
+            </form>
+        </div>
+
+        {{$category := index .Data "Category"}}
+
+        <!-- Rituals Section -->
+        {{if or (eq $category "") (eq $category "rituals")}}
+        <div class="card mb-24">
+            <div class="card-header">
+                <h2 class="mb-0">{{t .Lang "portal.admin_rituals.section_all"}}</h2>
+                <span class="text-secondary fs-14">{{t .Lang "common.total" (index .Data "Total")}}</span>
+            </div>
+
+            {{$rituals := index .Data "Rituals"}}
+            {{$ritualLangs := index .Data "RitualLangs"}}
+            {{if $rituals}}
+            <div class="ofx-auto">
+            <table>
+                <thead>
+                    <tr>
+                        <th>{{t .Lang "portal.admin_rituals.col.name"}}</th>
+                        <th>{{t .Lang "portal.admin_rituals.col.origin"}}</th>
+                        <th>{{t .Lang "portal.admin_rituals.col.languages"}}</th>
+                        <th>{{t .Lang "portal.admin_rituals.col.status"}}</th>
+                        <th>{{t .Lang "portal.admin_rituals.col.enabled"}}</th>
+                        <th>{{t .Lang "portal.admin_rituals.col.created"}}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{range $rituals}}
+                    <tr>
+                        <td><a href="/admin/rituals/{{.ID}}"><strong>{{.Name}}</strong></a></td>
+                        <td>
+                            {{if eq .Origin "system"}}
+                                <span class="badge badge-info">system</span>
+                            {{else if eq .Origin "user"}}
+                                <span class="badge badge-active">user</span>
+                            {{else if eq .Origin "forked"}}
+                                <span class="badge badge-pending">forked</span>
+                            {{else}}
+                                <span class="badge badge-pending">{{.Origin}}</span>
+                            {{end}}
+                        </td>
+                        <td>
+                            {{$langs := index $ritualLangs .ID}}
+                            {{if $langs}}
+                                {{range $langs}}<span class="lang-badge">{{upper .}}</span>{{end}}
+                            {{else}}
+                                <span class="text-muted">--</span>
+                            {{end}}
+                        </td>
+                        <td>
+                            {{if eq .Status "active"}}
+                                <span class="badge badge-active">{{t $.Lang "status.active"}}</span>
+                            {{else}}
+                                <span class="badge badge-inactive">{{t $.Lang "status.archived"}}</span>
+                            {{end}}
+                        </td>
+                        <td>
+                            {{if .IsEnabled}}
+                                <span class="c-success">{{t $.Lang "common.yes"}}</span>
+                            {{else}}
+                                <span class="text-muted">{{t $.Lang "common.no"}}</span>
+                            {{end}}
+                        </td>
+                        <td class="fs-13-ws-nowrap">{{fmtDateTime .CreatedAt $.Timezone}}</td>
+                    </tr>
+                    {{end}}
+                </tbody>
+            </table>
+            </div>
+
+            <!-- Pagination -->
+            {{$search := index .Data "Search"}}
+            {{$status := index .Data "Status"}}
+            {{$origin := index .Data "Origin"}}
+            {{$cat := index .Data "Category"}}
+            <div class="flex-jc-between-mt-12-fs-12">
+                <span class="text-muted">
+                    {{t .Lang "common.showing_of" (len $rituals) (index .Data "Total")}}
+                </span>
+                <div class="flex-gap-8">
+                    {{if index .Data "HasPrev"}}
+                    <a href="/admin/rituals?offset=0&search={{$search}}&status={{$status}}&origin={{$origin}}&category={{$cat}}" class="btn btn-sm">{{t .Lang "common.first"}}</a>
+                    {{end}}
+                    {{if index .Data "HasNext"}}
+                    <a href="/admin/rituals?offset={{index .Data "NextOffset"}}&search={{$search}}&status={{$status}}&origin={{$origin}}&category={{$cat}}" class="btn btn-sm">{{t .Lang "common.next"}}</a>
+                    {{end}}
+                </div>
+            </div>
+            {{else}}
+            <div class="empty-state">
+                <p>{{t .Lang "portal.admin_rituals.no_rituals"}}</p>
+            </div>
+            {{end}}
+        </div>
+        {{end}}
+
+        <!-- Reporting Section -->
+        {{if or (eq $category "") (eq $category "reporting")}}
+        <div class="card">
+            <div class="card-header">
+                <h2 class="mb-0">{{t .Lang "portal.admin_rituals.section_reporting"}}</h2>
+                <span class="text-secondary fs-14">{{t .Lang "common.total" (index .Data "ReportTotal")}}</span>
+            </div>
+
+            {{$reports := index .Data "ReportTemplates"}}
+            {{if $reports}}
+            <div class="ofx-auto">
+            <table>
+                <thead>
+                    <tr>
+                        <th>{{t .Lang "portal.admin_rituals.col.name"}}</th>
+                        <th>{{t .Lang "portal.admin_rituals.col.scope"}}</th>
+                        <th>{{t .Lang "portal.admin_rituals.col.languages"}}</th>
+                        <th>{{t .Lang "portal.admin_rituals.col.version"}}</th>
+                        <th>{{t .Lang "portal.admin_rituals.col.status"}}</th>
+                        <th>{{t .Lang "portal.admin_rituals.col.created"}}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{range $reports}}
+                    <tr>
+                        <td><a href="/admin/templates/{{.ID}}"><strong>{{.Name}}</strong></a></td>
+                        <td><span class="badge badge-info">{{.Scope}}</span></td>
+                        <td><span class="lang-badge">{{upper .Lang}}</span></td>
+                        <td>v{{.Version}}</td>
+                        <td>
+                            {{if eq .Status "active"}}
+                                <span class="badge badge-active">{{t $.Lang "status.active"}}</span>
+                            {{else}}
+                                <span class="badge badge-inactive">{{t $.Lang "status.archived"}}</span>
+                            {{end}}
+                        </td>
+                        <td class="fs-13-ws-nowrap">{{fmtDateTime .CreatedAt $.Timezone}}</td>
+                    </tr>
+                    {{end}}
+                </tbody>
+            </table>
+            </div>
+            {{else}}
+            <div class="empty-state">
+                <p>{{t .Lang "portal.admin_rituals.no_templates"}}</p>
+            </div>
+            {{end}}
+        </div>
+        {{end}}
+
+        {{end}}
+    </div>
+</div>
+{{end}}

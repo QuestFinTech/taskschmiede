@@ -1,0 +1,175 @@
+{{define "nav"}}
+<nav class="nav">
+    <div class="nav-inner">
+        <div class="nav-left">
+            <a href="/dashboard" class="nav-brand">TASKSCHMIEDE <span class="op-50-fw-400">Portal</span></a>
+            <div class="nav-links">
+                <a href="/dashboard"{{if eq .CurrentPage "dashboard"}} class="active"{{end}}>{{t .Lang "portal.nav.dashboard"}}</a>
+                <div class="nav-dropdown-wrap">
+                    <button class="nav-menu-btn{{if or (eq .CurrentPage "tasks") (eq .CurrentPage "demands") (eq .CurrentPage "endeavours") (eq .CurrentPage "rituals")}} active{{end}}">{{t .Lang "portal.nav.work"}} <svg width="10" height="10" viewBox="0 0 12 12" fill="none"><path d="M3 5l3 3 3-3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+                    <div class="nav-dropdown nav-dropdown-menu">
+                        <a href="/tasks"{{if eq .CurrentPage "tasks"}} class="active"{{end}}>{{t .Lang "portal.nav.tasks"}}</a>
+                        <a href="/demands"{{if eq .CurrentPage "demands"}} class="active"{{end}}>{{t .Lang "portal.nav.demands"}}</a>
+                        <a href="/endeavours"{{if eq .CurrentPage "endeavours"}} class="active"{{end}}>{{t .Lang "portal.nav.endeavours"}}</a>
+                        <a href="/rituals"{{if eq .CurrentPage "rituals"}} class="active"{{end}}>{{t .Lang "portal.nav.rituals"}}</a>
+                    </div>
+                </div>
+                <div class="nav-dropdown-wrap">
+                    <button class="nav-menu-btn{{if or (eq .CurrentPage "agents") (eq .CurrentPage "organizations") (eq .CurrentPage "teams")}} active{{end}}">{{t .Lang "portal.nav.people"}} <svg width="10" height="10" viewBox="0 0 12 12" fill="none"><path d="M3 5l3 3 3-3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+                    <div class="nav-dropdown nav-dropdown-menu">
+                        <a href="/agents"{{if eq .CurrentPage "agents"}} class="active"{{end}}>{{t .Lang "portal.nav.agents"}}</a>
+                        <a href="/organizations"{{if eq .CurrentPage "organizations"}} class="active"{{end}}>{{t .Lang "portal.nav.organizations"}}</a>
+                        <a href="/teams"{{if eq .CurrentPage "teams"}} class="active"{{end}}>{{t .Lang "portal.nav.teams"}}</a>
+                    </div>
+                </div>
+                <a href="/messages"{{if eq .CurrentPage "messages"}} class="active"{{end}}>{{t .Lang "portal.nav.messages"}}</a>
+                {{if .IsEndeavourAdmin}}
+                <a href="/entity-changes"{{if eq .CurrentPage "entity_changes"}} class="active"{{end}}>{{t .Lang "portal.nav.activity_feed"}}</a>
+                {{end}}
+                {{if .IsAdmin}}
+                <div class="nav-dropdown-wrap">
+                    <button class="nav-menu-btn{{if or (eq .CurrentPage "admin_overview") (eq .CurrentPage "admin_users") (eq .CurrentPage "admin_resources") (eq .CurrentPage "admin_rituals") (eq .CurrentPage "admin_messages") (eq .CurrentPage "admin_content_guard") (eq .CurrentPage "admin_audit") (eq .CurrentPage "admin_settings") (eq .CurrentPage "admin_translations")}} active{{end}}">{{t .Lang "portal.nav.admin"}} <svg width="10" height="10" viewBox="0 0 12 12" fill="none"><path d="M3 5l3 3 3-3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+                    <div class="nav-dropdown nav-dropdown-menu">
+                        <a href="/admin/overview"{{if eq .CurrentPage "admin_overview"}} class="active"{{end}}>{{t .Lang "portal.nav.admin_overview"}}</a>
+                        <a href="/admin/users"{{if eq .CurrentPage "admin_users"}} class="active"{{end}}>{{t .Lang "portal.nav.admin_users"}}</a>
+                        <a href="/admin/resources"{{if eq .CurrentPage "admin_resources"}} class="active"{{end}}>{{t .Lang "portal.nav.admin_resources"}}</a>
+                        <a href="/admin/rituals"{{if eq .CurrentPage "admin_rituals"}} class="active"{{end}}>{{t .Lang "portal.nav.admin_rituals"}}</a>
+                        <a href="/admin/messages"{{if eq .CurrentPage "admin_messages"}} class="active"{{end}}>{{t .Lang "portal.nav.admin_messages"}}</a>
+                        <a href="/admin/content-guard"{{if eq .CurrentPage "admin_content_guard"}} class="active"{{end}}>{{t .Lang "portal.nav.admin_content_guard"}}</a>
+                        <a href="/admin/taskschmied"{{if eq .CurrentPage "admin_taskschmied"}} class="active"{{end}}>{{t .Lang "portal.nav.admin_taskschmied"}}</a>
+                        <div class="nav-dropdown-divider"></div>
+                        <a href="/admin/audit"{{if eq .CurrentPage "admin_audit"}} class="active"{{end}}>{{t .Lang "portal.nav.admin_audit"}}</a>
+                        <a href="/admin/settings"{{if eq .CurrentPage "admin_settings"}} class="active"{{end}}>{{t .Lang "portal.nav.admin_settings"}}</a>
+                        <a href="/admin/translations"{{if eq .CurrentPage "admin_translations"}} class="active"{{end}}>{{t .Lang "portal.nav.admin_translations"}}</a>
+                    </div>
+                </div>
+                {{end}}
+            </div>
+        </div>
+        <div class="nav-right">
+            <div class="nav-links">
+                {{if .ShowSupport}}<a href="#" id="supportToggleBtn">{{t .Lang "portal.nav.support"}}</a>{{end}}
+                {{if .ShowAbout}}<a href="/about"{{if eq .CurrentPage "about"}} class="active"{{end}}>{{t .Lang "portal.nav.about"}}</a>{{end}}
+            </div>
+            <div class="nav-user">
+                <button type="button" class="nav-user-btn{{if or (eq .CurrentPage "profile") (eq .CurrentPage "activity") (eq .CurrentPage "alerts") (eq .CurrentPage "usage")}} active{{end}}" id="userMenuBtn">
+                    {{if .User}}{{t .Lang "portal.nav.profile_menu" (firstName (index .User "name"))}}{{else}}{{t .Lang "common.account"}}{{end}}
+                    <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M3 5l3 3 3-3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </button>
+                <div class="nav-dropdown" id="userDropdown">
+                    <a href="/profile"{{if eq .CurrentPage "profile"}} class="active"{{end}}>{{t .Lang "portal.nav.profile"}}</a>
+                    <a href="/activity"{{if eq .CurrentPage "activity"}} class="active"{{end}}>{{t .Lang "portal.nav.activity"}}</a>
+                    <a href="/alerts"{{if eq .CurrentPage "alerts"}} class="active"{{end}}>{{t .Lang "portal.nav.alerts"}}{{if gt .AlertBadge 0}} <span class="nav-badge">{{.AlertBadge}}</span>{{end}}</a>
+                    <a href="/usage"{{if eq .CurrentPage "usage"}} class="active"{{end}}>{{t .Lang "portal.nav.usage"}}</a>
+                    <div class="nav-dropdown-divider"></div>
+                    <a href="/logout">{{t .Lang "common.sign_out"}}</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</nav>
+{{if gt .HighAlertCount 0}}
+<div class="alert-banner alert-banner-critical">
+    <span class="alert-banner-icon">!</span>
+    <span>{{tp .Lang "portal.banner.high_severity_alerts" .HighAlertCount}}</span>
+    <a href="/alerts" class="alert-banner-link">{{t .Lang "portal.banner.review_now"}}</a>
+</div>
+{{else if gt .AlertBadge 0}}
+<div class="alert-banner alert-banner-warning">
+    <span class="alert-banner-icon">!</span>
+    <span>{{tp .Lang "portal.banner.items_need_review" .AlertBadge}}</span>
+    <a href="/alerts" class="alert-banner-link">{{t .Lang "portal.banner.review_now"}}</a>
+</div>
+{{end}}
+<div class="support-panel" id="supportPanel">
+    <div class="support-panel-inner">
+        <div class="support-panel-header">
+            <h3>Portal -- questions, comments, problems</h3>
+            <button class="support-panel-close" id="supportCloseBtn" title="Close">&times;</button>
+        </div>
+        <div class="support-panel-context" id="supportContext">Page: <strong id="supportPageName"></strong></div>
+        <textarea id="supportMessage" rows="3" placeholder="Describe your question or issue"></textarea>
+        <div class="support-panel-actions">
+            <button class="btn btn-primary btn-sm" id="supportSubmitBtn">Submit</button>
+            <span id="supportResult"></span>
+        </div>
+    </div>
+</div>
+<script nonce="{{.Nonce}}">
+(function() {
+    var panel = document.getElementById('supportPanel');
+    var toggleBtn = document.getElementById('supportToggleBtn');
+    var closeBtn = document.getElementById('supportCloseBtn');
+    var submitBtn = document.getElementById('supportSubmitBtn');
+    var msgField = document.getElementById('supportMessage');
+    var resultEl = document.getElementById('supportResult');
+    var pageNameEl = document.getElementById('supportPageName');
+
+    if (!panel || !toggleBtn) return;
+
+    // Set the current page context.
+    var pageTitle = document.querySelector('.page-header h1');
+    pageNameEl.textContent = pageTitle ? pageTitle.textContent.trim() : document.title.replace(/ - Taskschmiede$/, '');
+
+    toggleBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        var isOpen = panel.classList.toggle('open');
+        if (isOpen) {
+            msgField.value = '';
+            resultEl.textContent = '';
+            resultEl.className = '';
+            submitBtn.disabled = false;
+            msgField.focus();
+        }
+    });
+
+    closeBtn.addEventListener('click', function() {
+        panel.classList.remove('open');
+    });
+
+    submitBtn.addEventListener('click', function() {
+        var msg = msgField.value.trim();
+        if (!msg) {
+            resultEl.textContent = 'Please enter a message.';
+            resultEl.className = 'support-panel-error';
+            return;
+        }
+        submitBtn.disabled = true;
+        resultEl.textContent = 'Submitting...';
+        resultEl.className = '';
+
+        var payload = {
+            topic: 'product',
+            name: '{{if .User}}{{index .User "name"}}{{end}}',
+            email: '{{if .User}}{{index .User "email"}}{{end}}',
+            subject: 'Portal: ' + pageNameEl.textContent,
+            message: msg,
+            source: 'portal'
+        };
+
+        var xhr = new XMLHttpRequest();
+        xhr.open('POST', '/support', true);
+        xhr.setRequestHeader('Content-Type', 'application/json');
+        xhr.onload = function() {
+            if (xhr.status === 201) {
+                var resp = JSON.parse(xhr.responseText);
+                resultEl.textContent = 'Submitted. Reference: ' + resp.case_id;
+                resultEl.className = 'support-panel-result';
+                msgField.value = '';
+                setTimeout(function() { panel.classList.remove('open'); }, 4000);
+            } else {
+                resultEl.textContent = 'Could not submit. Please try again.';
+                resultEl.className = 'support-panel-error';
+                submitBtn.disabled = false;
+            }
+        };
+        xhr.onerror = function() {
+            resultEl.textContent = 'Network error. Please try again.';
+            resultEl.className = 'support-panel-error';
+            submitBtn.disabled = false;
+        };
+        xhr.send(JSON.stringify(payload));
+    });
+})();
+</script>
+{{end}}

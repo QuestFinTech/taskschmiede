@@ -1,0 +1,10 @@
+{
+  "name": "taskschmiede-docs",
+  "private": true,
+  "description": "Taskschmiede documentation site dependencies",
+  "devDependencies": {
+    "autoprefixer": "^10.4.0",
+    "postcss": "^8.4.0",
+    "postcss-cli": "^11.0.0"
+  }
+}

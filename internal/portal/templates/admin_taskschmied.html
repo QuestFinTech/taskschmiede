@@ -1,0 +1,269 @@
+{{template "base" .}}
+{{define "content"}}
+{{template "nav" .}}
+
+<div class="main-content">
+    <div class="container">
+        <div class="page-header">
+            <h1>{{t .Lang "admin.taskschmied.title"}}</h1>
+        </div>
+
+        {{if .Error}}
+        <div class="alert alert-error">{{.Error}}</div>
+        {{end}}
+
+        {{if .Success}}
+        <div class="alert alert-success">{{.Success}}</div>
+        {{end}}
+
+        {{if .Data}}
+        {{$enabled := index .Data "Enabled"}}
+        {{if not $enabled}}
+        <div class="alert alert-info">{{t .Lang "admin.taskschmied.not_enabled"}}</div>
+        {{else}}
+
+        {{$cb := index .Data "CircuitBreaker"}}
+        {{if $cb}}
+        <!-- LLM Tier Status -->
+        <div class="card mb-24">
+            <div class="card-header">
+                <h2 class="mb-0">{{t .Lang "admin.taskschmied.circuit_breaker"}}</h2>
+                {{$state := index $cb "state"}}
+                {{if eq $state "closed"}}
+                    <span class="badge badge-active">{{$state}}</span>
+                {{else if eq $state "disabled"}}
+                    <span class="badge badge-inactive">{{$state}}</span>
+                {{else if eq $state "open"}}
+                    <span class="badge badge-inactive">{{$state}}</span>
+                {{else}}
+                    <span class="badge badge-pending">{{$state}}</span>
+                {{end}}
+            </div>
+            <table class="fs-14-mb-0">
+                <thead>
+                    <tr>
+                        <th>{{t .Lang "admin.taskschmied.col_tier"}}</th>
+                        <th>{{t .Lang "admin.taskschmied.col_model_name"}}</th>
+                        <th>{{t .Lang "admin.taskschmied.col_endpoint"}}</th>
+                        <th>{{t .Lang "admin.taskschmied.col_status_label"}}</th>
+                        <th>{{t .Lang "admin.taskschmied.col_invocations"}}</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>{{t .Lang "admin.taskschmied.primary_model"}}</strong></td>
+                        <td>{{index $cb "primary_provider"}}/{{index $cb "primary_model"}}</td>
+                        <td class="fs-12-c-secondary">{{index $cb "primary_url"}}</td>
+                        <td>
+                            {{$ps := index $cb "primary_status"}}
+                            {{if eq $ps "in operation"}}
+                                <span class="badge badge-active">{{$ps}}</span>
+                            {{else if eq $ps "disabled"}}
+                                <span class="badge badge-inactive">{{$ps}}</span>
+                            {{else if eq $ps "unavailable"}}
+                                <span class="badge badge-inactive">{{$ps}}</span>
+                            {{else}}
+                                <span class="badge badge-pending">{{$ps}}</span>
+                            {{end}}
+                        </td>
+                        <td>{{index $cb "total_primary"}}</td>
+                        <td>
+                            <form method="POST" action="/admin/taskschmied" class="d-inline">
+                                <input type="hidden" name="csrf_token" value="{{$.CSRFToken}}">
+                                <input type="hidden" name="action" value="toggle">
+                                <input type="hidden" name="target" value="primary">
+                                {{if eq $ps "disabled"}}
+                                <input type="hidden" name="disabled" value="false">
+                                <button type="submit" class="btn btn-sm btn-primary fs-11-p-2-8">Enable</button>
+                                {{else}}
+                                <input type="hidden" name="disabled" value="true">
+                                <button type="submit" class="btn btn-sm fs-11-p-2-8">Disable</button>
+                                {{end}}
+                            </form>
+                        </td>
+                    </tr>
+                    {{if index $cb "fallback_model"}}
+                    <tr>
+                        <td><strong>{{t .Lang "admin.taskschmied.fallback_model"}}</strong></td>
+                        <td>{{index $cb "fallback_provider"}}/{{index $cb "fallback_model"}}</td>
+                        <td class="fs-12-c-secondary">{{index $cb "fallback_url"}}</td>
+                        <td>
+                            {{$fs := index $cb "fallback_status"}}
+                            {{if eq $fs "in operation"}}
+                                <span class="badge badge-active">{{$fs}}</span>
+                            {{else if eq $fs "standing by"}}
+                                <span class="badge badge-info">{{$fs}}</span>
+                            {{else}}
+                                <span class="badge badge-inactive">{{$fs}}</span>
+                            {{end}}
+                        </td>
+                        <td>{{index $cb "total_fallback"}}</td>
+                        <td>
+                            <form method="POST" action="/admin/taskschmied" class="d-inline">
+                                <input type="hidden" name="csrf_token" value="{{$.CSRFToken}}">
+                                <input type="hidden" name="action" value="toggle">
+                                <input type="hidden" name="target" value="fallback">
+                                {{if eq $fs "disabled"}}
+                                <input type="hidden" name="disabled" value="false">
+                                <button type="submit" class="btn btn-sm btn-primary fs-11-p-2-8">Enable</button>
+                                {{else}}
+                                <input type="hidden" name="disabled" value="true">
+                                <button type="submit" class="btn btn-sm fs-11-p-2-8">Disable</button>
+                                {{end}}
+                            </form>
+                        </td>
+                    </tr>
+                    {{end}}
+                    <tr>
+                        <td><strong>{{t .Lang "admin.taskschmied.go_heuristics"}}</strong></td>
+                        <td class="c-text-secondary">Go heuristic scoring</td>
+                        <td class="fs-12-c-secondary">built-in</td>
+                        <td>
+                            {{$gs := index $cb "go_heuristics_status"}}
+                            {{if eq $gs "in operation"}}
+                                <span class="badge badge-active">{{$gs}}</span>
+                            {{else}}
+                                <span class="badge badge-info">{{$gs}}</span>
+                            {{end}}
+                        </td>
+                        <td class="c-text-secondary">always</td>
+                    </tr>
+                </tbody>
+            </table>
+            {{if index $cb "consecutive_failures"}}
+            <div class="detail-grid-divider">
+                <span class="text-secondary">{{t .Lang "admin.taskschmied.consecutive_failures"}}</span>
+                <span>{{index $cb "consecutive_failures"}}</span>
+                <span class="text-secondary">{{t .Lang "admin.taskschmied.total_failures"}}</span>
+                <span>{{index $cb "total_failures"}}</span>
+                {{if index $cb "last_success"}}
+                <span class="text-secondary">{{t .Lang "admin.taskschmied.last_success"}}</span>
+                <span>{{index $cb "last_success"}}</span>
+                {{end}}
+                {{if index $cb "cooldown_ends"}}
+                <span class="text-secondary">{{t .Lang "admin.taskschmied.cooldown_ends"}}</span>
+                <span>{{index $cb "cooldown_ends"}}</span>
+                {{end}}
+            </div>
+            {{end}}
+        </div>
+
+        <!-- Stats -->
+        <div class="two-col mb-24">
+            <div class="card mb-0">
+                <div class="card-header">
+                    <h2 class="mb-0">{{t .Lang "admin.taskschmied.run_stats"}}</h2>
+                </div>
+                <div class="stats-grid mb-0">
+                    <div class="stat-card">
+                        <div class="stat-value">{{index .Data "AllTotal"}}</div>
+                        <div class="stat-label">{{t .Lang "admin.taskschmied.stat_total"}}</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value text-success">{{index .Data "Succeeded"}}</div>
+                        <div class="stat-label">{{t .Lang "admin.taskschmied.stat_succeeded"}}</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value text-error">{{index .Data "Failed"}}</div>
+                        <div class="stat-label">{{t .Lang "admin.taskschmied.stat_failed"}}</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value text-secondary">{{index .Data "Skipped"}}</div>
+                        <div class="stat-label">{{t .Lang "admin.taskschmied.stat_skipped"}}</div>
+                    </div>
+                    <div class="stat-card">
+                        {{$avg := index .Data "AvgDurationMs"}}
+                        <div class="stat-value">{{if $avg}}{{$avg}}ms{{else}}-{{end}}</div>
+                        <div class="stat-label">{{t .Lang "admin.taskschmied.stat_avg_duration"}}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {{end}}
+
+        <!-- Run Log -->
+        <div class="card">
+            <div class="card-header">
+                <h2 class="mb-0">{{t .Lang "admin.taskschmied.run_log"}}</h2>
+                <span class="text-secondary fs-14">{{t .Lang "common.total" (index .Data "RunTotal")}}</span>
+            </div>
+
+            <!-- Status filter -->
+            <div class="mb-16-flex-gap-8">
+                {{$statusFilter := index .Data "StatusFilter"}}
+                <a href="/admin/taskschmied" class="btn btn-sm {{if eq $statusFilter ""}}btn-primary{{end}}">All</a>
+                <a href="/admin/taskschmied?status=succeeded" class="btn btn-sm {{if eq $statusFilter "succeeded"}}btn-primary{{end}}">Succeeded</a>
+                <a href="/admin/taskschmied?status=failed" class="btn btn-sm {{if eq $statusFilter "failed"}}btn-primary{{end}}">Failed</a>
+                <a href="/admin/taskschmied?status=skipped" class="btn btn-sm {{if eq $statusFilter "skipped"}}btn-primary{{end}}">Skipped</a>
+            </div>
+
+            {{$runs := index .Data "Runs"}}
+            {{if $runs}}
+            <div class="ofx-auto">
+            <table class="fs-13">
+                <thead>
+                    <tr>
+                        <th>{{t .Lang "admin.taskschmied.col_ritual"}}</th>
+                        <th>{{t .Lang "admin.taskschmied.col_endeavour"}}</th>
+                        <th>{{t .Lang "admin.taskschmied.col_status"}}</th>
+                        <th>{{t .Lang "admin.taskschmied.col_trigger"}}</th>
+                        <th>{{t .Lang "admin.taskschmied.col_client"}}</th>
+                        <th>{{t .Lang "admin.taskschmied.col_duration"}}</th>
+                        <th>{{t .Lang "admin.taskschmied.col_started"}}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{range $runs}}
+                    <tr>
+                        <td>{{.RitualName}}</td>
+                        <td>{{.EndeavourName}}</td>
+                        <td>
+                            {{if eq .Run.Status "succeeded"}}
+                                <span class="badge badge-active">{{.Run.Status}}</span>
+                            {{else if eq .Run.Status "failed"}}
+                                <span class="badge badge-inactive">{{.Run.Status}}</span>
+                            {{else if eq .Run.Status "skipped"}}
+                                <span class="badge badge-info">{{.Run.Status}}</span>
+                            {{else}}
+                                <span class="badge badge-pending">{{.Run.Status}}</span>
+                            {{end}}
+                        </td>
+                        <td>{{.Run.Trigger}}</td>
+                        <td>{{.Client}}</td>
+                        <td>{{if .DurationMs}}{{.DurationMs}}ms{{else}}-{{end}}</td>
+                        <td>{{.Run.CreatedAt}}</td>
+                    </tr>
+                    {{end}}
+                </tbody>
+            </table>
+            </div>
+
+            <!-- Pagination -->
+            {{$offset := index $.Data "Offset"}}
+            {{$limit := index $.Data "Limit"}}
+            {{$total := index $.Data "RunTotal"}}
+            {{if or (gt $offset 0) (gt $total $limit)}}
+            <div class="flex-jc-between-mt-16-fs-13">
+                {{if gt $offset 0}}
+                    <a href="/admin/taskschmied?offset={{sub $offset $limit}}{{if $statusFilter}}&status={{$statusFilter}}{{end}}" class="btn btn-sm">&larr; {{t .Lang "common.previous"}}</a>
+                {{else}}
+                    <span></span>
+                {{end}}
+                {{if gt $total (add $offset $limit)}}
+                    <a href="/admin/taskschmied?offset={{add $offset $limit}}{{if $statusFilter}}&status={{$statusFilter}}{{end}}" class="btn btn-sm">{{t .Lang "common.next"}} &rarr;</a>
+                {{end}}
+            </div>
+            {{end}}
+
+            {{else}}
+            <p class="text-secondary fs-14">{{t .Lang "admin.taskschmied.no_runs"}}</p>
+            {{end}}
+        </div>
+
+        {{end}}
+        {{end}}
+    </div>
+</div>
+
+{{end}}

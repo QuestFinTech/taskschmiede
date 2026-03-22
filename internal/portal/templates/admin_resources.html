@@ -1,0 +1,157 @@
+{{template "base" .}}
+{{define "content"}}
+{{template "nav" .}}
+
+<div class="main-content">
+    <div class="container">
+        <div class="page-header">
+            <h1>{{t .Lang "portal.admin_resources.title"}}</h1>
+        </div>
+
+        {{if .Error}}
+        <div class="alert alert-error">{{.Error}}</div>
+        {{end}}
+
+        {{if .Success}}
+        <div class="alert alert-success">{{.Success}}</div>
+        {{end}}
+
+        {{if .Data}}
+        <!-- Filters -->
+        <div class="card mb-24-p-16-24">
+            <form method="GET" action="/admin/resources" class="flex-gap-12-ai-end-wrap">
+                <div class="form-group mb-0-minw-200">
+                    <label for="filter_search">{{t .Lang "portal.admin_resources.label_search"}}</label>
+                    <input type="text" id="filter_search" name="search" placeholder="{{t .Lang "common.placeholder.search"}}" value="{{index .Data "Search"}}">
+                </div>
+                <div class="form-group mb-0-minw-140">
+                    <label for="filter_type">{{t .Lang "common.label.type"}}</label>
+                    <select id="filter_type" name="type">
+                        <option value="">{{t .Lang "common.all"}}</option>
+                        {{$rtype := index .Data "Type"}}
+                        <option value="human" {{if eq $rtype "human"}}selected{{end}}>human</option>
+                        <option value="agent" {{if eq $rtype "agent"}}selected{{end}}>agent</option>
+                        <option value="service" {{if eq $rtype "service"}}selected{{end}}>service</option>
+                        <option value="budget" {{if eq $rtype "budget"}}selected{{end}}>budget</option>
+                        <option value="team" {{if eq $rtype "team"}}selected{{end}}>team</option>
+                    </select>
+                </div>
+                <div class="form-group mb-0-minw-140">
+                    <label for="filter_status">{{t .Lang "common.label.status"}}</label>
+                    <select id="filter_status" name="status">
+                        <option value="">{{t .Lang "common.all"}}</option>
+                        {{$status := index .Data "Status"}}
+                        <option value="active" {{if eq $status "active"}}selected{{end}}>{{t .Lang "status.active"}}</option>
+                        <option value="inactive" {{if eq $status "inactive"}}selected{{end}}>{{t .Lang "status.inactive"}}</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn h-40">{{t .Lang "common.filter"}}</button>
+            </form>
+        </div>
+
+        <!-- Resources Table -->
+        <div class="card">
+            <div class="card-header">
+                <h2 class="mb-0">{{t .Lang "portal.admin_resources.section_all"}}</h2>
+                <span class="text-secondary fs-14">{{t .Lang "common.total" (index .Data "Total")}}</span>
+            </div>
+
+            {{$resources := index .Data "Resources"}}
+            {{if $resources}}
+            <div class="ofx-auto">
+            <table>
+                <thead>
+                    <tr>
+                        <th>{{t .Lang "portal.admin_resources.col.name"}}</th>
+                        <th>{{t .Lang "portal.admin_resources.col.type"}}</th>
+                        <th>{{t .Lang "portal.admin_resources.col.status"}}</th>
+                        <th>{{t .Lang "portal.admin_resources.col.capacity"}}</th>
+                        <th>{{t .Lang "portal.admin_resources.col.skills"}}</th>
+                        <th>{{t .Lang "portal.admin_resources.col.created"}}</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{range $resources}}
+                    <tr>
+                        <td><a href="/admin/resources/{{.ID}}"><strong>{{.Name}}</strong></a></td>
+                        <td>
+                            {{if eq .Type "human"}}
+                                <span class="badge badge-active">human</span>
+                            {{else if eq .Type "agent"}}
+                                <span class="badge badge-info">agent</span>
+                            {{else if eq .Type "service"}}
+                                <span class="badge badge-pending">service</span>
+                            {{else if eq .Type "budget"}}
+                                <span class="badge badge-inactive">budget</span>
+                            {{else if eq .Type "team"}}
+                                <span class="badge badge-info">team</span>
+                            {{else}}
+                                <span class="badge badge-pending">{{.Type}}</span>
+                            {{end}}
+                        </td>
+                        <td>
+                            {{if eq .Status "active"}}
+                                <span class="badge badge-active">{{t $.Lang "status.active"}}</span>
+                            {{else}}
+                                <span class="badge badge-inactive">{{t $.Lang "status.inactive"}}</span>
+                            {{end}}
+                        </td>
+                        <td class="text-muted fs-13">
+                            {{if .CapacityModel}}{{.CapacityModel}}{{else}}-{{end}}
+                        </td>
+                        <td class="text-muted fs-13-truncate-200">
+                            {{if .Skills}}{{range $i, $s := .Skills}}{{if $i}}, {{end}}{{$s}}{{end}}{{else}}-{{end}}
+                        </td>
+                        <td class="fs-13-ws-nowrap">{{fmtDateTime .CreatedAt $.Timezone}}</td>
+                        <td>
+                            {{if or (eq .Status "active") (eq .Status "inactive")}}
+                            <form method="POST" action="/admin/resources" class="d-inline">
+                                <input type="hidden" name="csrf_token" value="{{$.CSRFToken}}">
+                                <input type="hidden" name="action" value="toggle_status">
+                                <input type="hidden" name="resource_id" value="{{.ID}}">
+                                <input type="hidden" name="search" value="{{index $.Data "Search"}}">
+                                <input type="hidden" name="filter_type" value="{{index $.Data "Type"}}">
+                                <input type="hidden" name="filter_status" value="{{index $.Data "Status"}}">
+                                <input type="hidden" name="offset" value="{{index $.Data "Offset"}}">
+                                {{if eq .Status "active"}}
+                                <button type="submit" class="btn btn-sm btn-danger">{{t $.Lang "portal.admin_resources.action_deactivate"}}</button>
+                                {{else}}
+                                <button type="submit" class="btn btn-sm btn-primary">{{t $.Lang "portal.admin_resources.action_activate"}}</button>
+                                {{end}}
+                            </form>
+                            {{end}}
+                        </td>
+                    </tr>
+                    {{end}}
+                </tbody>
+            </table>
+            </div>
+
+            <!-- Pagination -->
+            {{$search := index .Data "Search"}}
+            {{$rtype := index .Data "Type"}}
+            {{$status := index .Data "Status"}}
+            <div class="flex-jc-between-mt-12-fs-12">
+                <span class="text-muted">
+                    {{t .Lang "common.showing_of" (len $resources) (index .Data "Total")}}
+                </span>
+                <div class="flex-gap-8">
+                    {{if index .Data "HasPrev"}}
+                    <a href="/admin/resources?offset=0&search={{$search}}&type={{$rtype}}&status={{$status}}" class="btn btn-sm">{{t .Lang "common.first"}}</a>
+                    {{end}}
+                    {{if index .Data "HasNext"}}
+                    <a href="/admin/resources?offset={{index .Data "NextOffset"}}&search={{$search}}&type={{$rtype}}&status={{$status}}" class="btn btn-sm">{{t .Lang "common.next"}}</a>
+                    {{end}}
+                </div>
+            </div>
+            {{else}}
+            <div class="empty-state">
+                <p>{{t .Lang "portal.admin_resources.no_resources"}}</p>
+            </div>
+            {{end}}
+        </div>
+        {{end}}
+    </div>
+</div>
+{{end}}

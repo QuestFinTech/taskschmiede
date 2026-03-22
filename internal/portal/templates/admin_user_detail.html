@@ -1,0 +1,89 @@
+{{template "base" .}}
+{{define "content"}}
+{{template "nav" .}}
+
+<div class="main-content">
+    <div class="container">
+        <div class="page-header">
+            <div>
+                <div class="mb-4">
+                    <a href="/admin/users" class="fs-13-c-secondary-no-underline">&larr; {{t .Lang "portal.admin_user_detail.back_to_users"}}</a>
+                </div>
+                <h1>{{if .Data}}{{index .Data "UserName"}}{{end}}</h1>
+            </div>
+        </div>
+
+        {{if .Error}}
+        <div class="alert alert-error">{{.Error}}</div>
+        {{end}}
+
+        {{if .Success}}
+        <div class="alert alert-success">{{.Success}}</div>
+        {{end}}
+
+        {{if .Data}}
+        {{$user := index .Data "UserData"}}
+        {{if $user}}
+
+        <div class="card">
+            <div class="card-header">
+                <h2 class="mb-0">{{t .Lang "portal.admin_user_detail.section_details"}}</h2>
+                {{if eq $user.Status "active"}}
+                    <span class="badge badge-active">{{t .Lang "status.active"}}</span>
+                {{else}}
+                    <span class="badge badge-inactive">{{t .Lang "status.inactive"}}</span>
+                {{end}}
+            </div>
+            <div class="grid-auto-1fr-gap-8-16-fs-14">
+                <span class="text-secondary">ID</span>
+                <span class="ff-mono-fs-13">{{$user.ID}}</span>
+                <span class="text-secondary">{{t .Lang "common.label.name"}}</span>
+                <span><strong>{{$user.Name}}</strong></span>
+                <span class="text-secondary">{{t .Lang "common.label.email"}}</span>
+                <span>{{$user.Email}}</span>
+                <span class="text-secondary">{{t .Lang "portal.admin_user_detail.label_user_type"}}</span>
+                <span>
+                    {{if eq $user.UserType "admin"}}
+                        <span class="badge badge-info">admin</span>
+                    {{else if eq $user.UserType "agent"}}
+                        <span class="badge badge-pending">agent</span>
+                    {{else}}
+                        <span class="badge badge-active">human</span>
+                    {{end}}
+                </span>
+                <span class="text-secondary">{{t .Lang "portal.admin_user_detail.label_tier"}}</span>
+                <span>Tier {{$user.Tier}}{{if $user.TierName}} ({{$user.TierName}}){{end}}</span>
+                {{if $user.ResourceID}}
+                <span class="text-secondary">{{t .Lang "portal.admin_user_detail.label_resource_id"}}</span>
+                <span class="ff-mono-fs-13">{{$user.ResourceID}}</span>
+                {{end}}
+                {{if $user.Lang}}
+                <span class="text-secondary">{{t .Lang "common.label.language"}}</span>
+                <span>{{$user.Lang}}</span>
+                {{end}}
+                <span class="text-secondary">{{t .Lang "common.label.created"}}</span>
+                <span>{{fmtDateTime $user.CreatedAt $.Timezone}}</span>
+                <span class="text-secondary">{{t .Lang "common.label.updated"}}</span>
+                <span>{{fmtDateTime $user.UpdatedAt $.Timezone}}</span>
+            </div>
+
+            {{if or (eq $user.Status "active") (eq $user.Status "inactive")}}
+            <div class="section-divider">
+                <form method="POST" action="/admin/users/{{$user.ID}}">
+                    <input type="hidden" name="csrf_token" value="{{$.CSRFToken}}">
+                    <input type="hidden" name="action" value="toggle_status">
+                    {{if eq $user.Status "active"}}
+                    <button type="submit" class="btn btn-sm btn-danger">{{t .Lang "portal.admin_user_detail.action_deactivate"}}</button>
+                    {{else}}
+                    <button type="submit" class="btn btn-sm btn-primary">{{t .Lang "portal.admin_user_detail.action_activate"}}</button>
+                    {{end}}
+                </form>
+            </div>
+            {{end}}
+        </div>
+
+        {{end}}
+        {{end}}
+    </div>
+</div>
+{{end}}

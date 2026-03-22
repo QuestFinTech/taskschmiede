@@ -1,0 +1,210 @@
+{{template "base" .}}
+{{define "content"}}
+{{template "nav" .}}
+
+<div class="main-content">
+    <div class="container">
+        <div class="page-header">
+            <div>
+                <div class="mb-4">
+                    <a href="/demands" class="fs-13-c-secondary-no-underline">&larr; {{t .Lang "portal.demand_detail.back_to_demands"}}</a>
+                </div>
+                <h1>{{if .Data}}{{index .Data "DemandTitle"}}{{end}}</h1>
+            </div>
+        </div>
+
+        {{if .Error}}
+        <div class="alert alert-error">{{.Error}}</div>
+        {{end}}
+
+        {{if .Success}}
+        <div class="alert alert-success">{{.Success}}</div>
+        {{end}}
+
+        {{if .Data}}
+        {{$demand := index .Data "Demand"}}
+        {{if $demand}}
+
+        <div class="flex-gap-8-mb-16">
+            <a href="/reports/demand/{{$demand.ID}}" class="btn btn-sm">{{t .Lang "portal.reports.view"}}</a>
+            <a href="/reports/demand/{{$demand.ID}}?format=download" class="btn btn-sm">{{t .Lang "portal.reports.download"}}</a>
+            <form method="POST" action="/reports/demand/{{$demand.ID}}" class="d-inline">
+                <input type="hidden" name="csrf_token" value="{{$.CSRFToken}}">
+                <input type="hidden" name="action" value="email">
+                <button type="submit" class="btn btn-sm">{{t .Lang "portal.reports.email"}}</button>
+            </form>
+        </div>
+
+        <div class="two-col mb-24">
+            <!-- Detail Grid -->
+            <div class="card mb-0">
+                <div class="card-header">
+                    <h2 class="mb-0">{{t .Lang "portal.demand_detail.section_details"}}</h2>
+                    {{if eq $demand.Status "draft"}}
+                        <span class="badge bg-muted">{{t .Lang "status.draft"}}</span>
+                    {{else if eq $demand.Status "open"}}
+                        <span class="badge badge-info">{{t .Lang "status.open"}}</span>
+                    {{else if eq $demand.Status "in_progress"}}
+                        <span class="badge badge-pending">{{t .Lang "status.in_progress"}}</span>
+                    {{else if eq $demand.Status "fulfilled"}}
+                        <span class="badge badge-active">{{t .Lang "status.fulfilled"}}</span>
+                    {{else if eq $demand.Status "canceled"}}
+                        <span class="badge badge-inactive">{{t .Lang "status.canceled"}}</span>
+                    {{else}}
+                        <span class="badge badge-pending">{{$demand.Status}}</span>
+                    {{end}}
+                </div>
+                <div class="grid-auto-1fr-gap-8-16-fs-14">
+                    <span class="text-secondary">ID</span>
+                    <span class="ff-mono-fs-13">{{$demand.ID}}</span>
+                    <span class="text-secondary">{{t .Lang "common.label.type"}}</span>
+                    <span><span class="badge badge-pending">{{$demand.Type}}</span></span>
+                    <span class="text-secondary">{{t .Lang "portal.demand_detail.label_priority"}}</span>
+                    <span>
+                        {{if eq $demand.Priority "critical"}}
+                            <span class="badge badge-inactive">{{t .Lang "priority.critical"}}</span>
+                        {{else if eq $demand.Priority "high"}}
+                            <span class="badge badge-inactive">{{t .Lang "priority.high"}}</span>
+                        {{else if eq $demand.Priority "medium"}}
+                            <span class="badge badge-pending">{{t .Lang "priority.medium"}}</span>
+                        {{else}}
+                            <span class="badge badge-pending">{{t .Lang "priority.low"}}</span>
+                        {{end}}
+                    </span>
+                    {{if $demand.Description}}
+                    <span class="text-secondary">{{t .Lang "portal.demand_detail.label_description"}}</span>
+                    <div class="md-content" data-md>{{$demand.Description}}</div>
+                    {{end}}
+                    <span class="text-secondary">{{t .Lang "portal.demand_detail.label_endeavour"}}</span>
+                    <span>{{if $demand.EndeavourID}}<a href="/endeavours/{{$demand.EndeavourID}}">{{if $demand.EndeavourName}}{{$demand.EndeavourName}}{{else}}{{$demand.EndeavourID}}{{end}}</a>{{else}}-{{end}}</span>
+                    <span class="text-secondary">{{t .Lang "portal.demand_detail.label_creator"}}</span>
+                    <span>{{if $demand.CreatorName}}{{$demand.CreatorName}}{{else if $demand.CreatorID}}{{$demand.CreatorID}}{{else}}-{{end}}</span>
+                    <span class="text-secondary">{{t .Lang "portal.demand_detail.label_owner"}}</span>
+                    <span>{{if $demand.OwnerName}}{{$demand.OwnerName}}{{else if $demand.OwnerID}}{{$demand.OwnerID}}{{else}}-{{end}}</span>
+                    {{if $demand.DueDate}}
+                    <span class="text-secondary">{{t .Lang "portal.demand_detail.label_due_date"}}</span>
+                    <span>{{fmtDate $demand.DueDate $.Timezone}}</span>
+                    {{end}}
+                    {{if $demand.CanceledReason}}
+                    <span class="text-secondary">{{t .Lang "portal.demand_detail.label_cancel_reason"}}</span>
+                    <span class="c-error">{{$demand.CanceledReason}}</span>
+                    {{end}}
+                    <span class="text-secondary">{{t .Lang "common.label.created"}}</span>
+                    <span>{{fmtDateTime $demand.CreatedAt $.Timezone}}</span>
+                    <span class="text-secondary">{{t .Lang "common.label.updated"}}</span>
+                    <span>{{fmtDateTime $demand.UpdatedAt $.Timezone}}</span>
+                </div>
+            </div>
+
+            <!-- Update Form -->
+            <div class="card mb-0">
+                <div class="card-header">
+                    <h2 class="mb-0">{{t .Lang "portal.demand_detail.section_update"}}</h2>
+                </div>
+                {{if and (ne $demand.Status "canceled") (ne $demand.Status "fulfilled")}}
+                <form method="POST" action="/demands/{{$demand.ID}}">
+                    <input type="hidden" name="csrf_token" value="{{$.CSRFToken}}">
+                    <input type="hidden" name="action" value="update">
+                    <div class="form-group">
+                        <label for="edit_status">{{t .Lang "common.label.status"}}</label>
+                        <select id="edit_status" name="status">
+                            <option value="draft" {{if eq $demand.Status "draft"}}selected{{end}}>{{t .Lang "status.draft"}}</option>
+                            <option value="open" {{if eq $demand.Status "open"}}selected{{end}}>{{t .Lang "status.open"}}</option>
+                            <option value="in_progress" {{if eq $demand.Status "in_progress"}}selected{{end}}>{{t .Lang "status.in_progress"}}</option>
+                            <option value="fulfilled" {{if eq $demand.Status "fulfilled"}}selected{{end}}>{{t .Lang "status.fulfilled"}}</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit_priority">{{t .Lang "portal.demand_detail.label_priority"}}</label>
+                        <select id="edit_priority" name="priority">
+                            <option value="low" {{if eq $demand.Priority "low"}}selected{{end}}>{{t .Lang "priority.low"}}</option>
+                            <option value="medium" {{if eq $demand.Priority "medium"}}selected{{end}}>{{t .Lang "priority.medium"}}</option>
+                            <option value="high" {{if eq $demand.Priority "high"}}selected{{end}}>{{t .Lang "priority.high"}}</option>
+                            <option value="critical" {{if eq $demand.Priority "critical"}}selected{{end}}>{{t .Lang "priority.critical"}}</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit_owner">{{t .Lang "portal.demand_detail.label_owner"}}</label>
+                        <select id="edit_owner" name="owner_id">
+                            <option value="">-</option>
+                            {{$resources := index $.Data "Resources"}}
+                            {{if $resources}}
+                                {{range $resources}}
+                                <option value="{{.ID}}" {{if eq .ID $demand.OwnerID}}selected{{end}}>{{.Name}} ({{.Type}})</option>
+                                {{end}}
+                            {{end}}
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary">{{t .Lang "common.save_changes"}}</button>
+                </form>
+
+                <!-- Cancel Section -->
+                <div class="section-divider-24">
+                    <h3 class="c-error-mb-12">{{t .Lang "portal.demand_detail.cancel_title"}}</h3>
+                    <form method="POST" action="/demands/{{$demand.ID}}">
+                        <input type="hidden" name="csrf_token" value="{{$.CSRFToken}}">
+                        <input type="hidden" name="action" value="cancel">
+                        <div class="form-group">
+                            <label for="cancel_reason">{{t .Lang "portal.demand_detail.label_cancel_reason"}}</label>
+                            <textarea id="cancel_reason" name="reason" rows="2" required placeholder="{{t .Lang "portal.demand_detail.placeholder_cancel_reason"}}"></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-danger btn-sm">{{t .Lang "portal.demand_detail.action_cancel"}}</button>
+                    </form>
+                </div>
+                {{else}}
+                <p class="text-muted fs-14">{{t .Lang "portal.demand_detail.no_updates_available"}}</p>
+                {{end}}
+            </div>
+        </div>
+
+        <!-- Linked Tasks -->
+        {{$linkedTasks := index .Data "LinkedTasks"}}
+        <div class="card">
+            <div class="card-header">
+                <h2 class="mb-0">{{t .Lang "portal.demand_detail.section_linked_tasks"}}</h2>
+            </div>
+            {{if $linkedTasks}}
+            <div class="ofx-auto">
+            <table>
+                <thead>
+                    <tr>
+                        <th>{{t .Lang "portal.demand_detail.col.title"}}</th>
+                        <th>{{t .Lang "portal.demand_detail.col.status"}}</th>
+                        <th>{{t .Lang "portal.demand_detail.col.assignee"}}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{range $linkedTasks}}
+                    <tr>
+                        <td><a href="/tasks/{{.ID}}"><strong>{{.Title}}</strong></a></td>
+                        <td>
+                            {{if eq .Status "planned"}}
+                                <span class="badge badge-pending">{{t $.Lang "status.planned"}}</span>
+                            {{else if eq .Status "active"}}
+                                <span class="badge badge-info">{{t $.Lang "status.active"}}</span>
+                            {{else if eq .Status "done"}}
+                                <span class="badge badge-active">{{t $.Lang "status.done"}}</span>
+                            {{else if eq .Status "canceled"}}
+                                <span class="badge badge-inactive">{{t $.Lang "status.canceled"}}</span>
+                            {{else}}
+                                <span class="badge badge-pending">{{.Status}}</span>
+                            {{end}}
+                        </td>
+                        <td class="text-muted">{{if .AssigneeName}}{{.AssigneeName}}{{else if .AssigneeID}}{{.AssigneeID}}{{else}}-{{end}}</td>
+                    </tr>
+                    {{end}}
+                </tbody>
+            </table>
+            </div>
+            {{else}}
+            <div class="empty-state p-24">
+                <p class="text-muted">{{t .Lang "portal.demand_detail.no_linked_tasks"}}</p>
+            </div>
+            {{end}}
+        </div>
+
+        {{end}}
+        {{end}}
+    </div>
+</div>
+{{end}}

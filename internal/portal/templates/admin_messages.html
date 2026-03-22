@@ -1,0 +1,123 @@
+{{template "base" .}}
+{{define "content"}}
+{{template "nav" .}}
+
+<div class="main-content">
+    <div class="container">
+        <div class="page-header">
+            <h1>{{t .Lang "portal.admin_messages.title"}}</h1>
+        </div>
+
+        {{if .Error}}
+        <div class="alert alert-error">{{.Error}}</div>
+        {{end}}
+
+        {{if .Data}}
+        <!-- Filters -->
+        <div class="card mb-24-p-16-24">
+            <form method="GET" action="/admin/messages" class="flex-gap-12-wrap-ai-end">
+                <div class="form-group mb-0-minw-130">
+                    <label for="status">{{t .Lang "common.label.status"}}</label>
+                    <select id="status" name="status">
+                        <option value="">{{t .Lang "common.all"}}</option>
+                        {{$status := index .Data "Status"}}
+                        <option value="pending" {{if eq $status "pending"}}selected{{end}}>{{t .Lang "status.pending"}}</option>
+                        <option value="delivered" {{if eq $status "delivered"}}selected{{end}}>{{t .Lang "status.delivered"}}</option>
+                        <option value="read" {{if eq $status "read"}}selected{{end}}>{{t .Lang "status.read"}}</option>
+                    </select>
+                </div>
+                <div class="form-group mb-0-minw-120">
+                    <label for="intent">{{t .Lang "portal.admin_messages.label_intent"}}</label>
+                    <select id="intent" name="intent">
+                        <option value="">{{t .Lang "common.all"}}</option>
+                        {{$intent := index .Data "Intent"}}
+                        <option value="info" {{if eq $intent "info"}}selected{{end}}>{{t .Lang "intent.info"}}</option>
+                        <option value="question" {{if eq $intent "question"}}selected{{end}}>{{t .Lang "intent.question"}}</option>
+                        <option value="action" {{if eq $intent "action"}}selected{{end}}>{{t .Lang "intent.action"}}</option>
+                        <option value="alert" {{if eq $intent "alert"}}selected{{end}}>{{t .Lang "intent.alert"}}</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn h-40">{{t .Lang "common.filter"}}</button>
+                <a href="/admin/messages" class="btn h-40-c-secondary">{{t .Lang "common.clear"}}</a>
+            </form>
+        </div>
+
+        <!-- Messages Table -->
+        <div class="card">
+            <div class="card-header">
+                <h2 class="mb-0">{{t .Lang "portal.admin_messages.section_all"}}</h2>
+                <span class="text-secondary fs-14">{{t .Lang "common.total" (index .Data "Total")}}</span>
+            </div>
+
+            {{$messages := index .Data "Messages"}}
+            {{if $messages}}
+            <div class="ofx-auto">
+            <table>
+                <thead>
+                    <tr>
+                        <th>{{t .Lang "portal.admin_messages.col.from"}}</th>
+                        <th>{{t .Lang "portal.admin_messages.col.subject"}}</th>
+                        <th>{{t .Lang "portal.admin_messages.col.intent"}}</th>
+                        <th>{{t .Lang "portal.admin_messages.col.status"}}</th>
+                        <th>{{t .Lang "portal.admin_messages.col.received"}}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{range $messages}}
+                    <tr{{if ne .Status "read"}} class="fw-500"{{end}}>
+                        <td class="fs-14">{{if .SenderName}}{{.SenderName}}{{else}}{{.SenderID}}{{end}}</td>
+                        <td><a href="/messages/{{.ID}}">{{.Subject}}</a></td>
+                        <td>
+                            {{if eq .Intent "alert"}}
+                                <span class="badge badge-inactive">{{t $.Lang "intent.alert"}}</span>
+                            {{else if eq .Intent "action"}}
+                                <span class="badge badge-info">{{t $.Lang "intent.action"}}</span>
+                            {{else if eq .Intent "question"}}
+                                <span class="badge badge-pending">{{t $.Lang "intent.question"}}</span>
+                            {{else}}
+                                <span class="badge badge-active">{{t $.Lang "intent.info"}}</span>
+                            {{end}}
+                        </td>
+                        <td>
+                            {{if eq .Status "read"}}
+                                <span class="text-muted fs-13">{{t $.Lang "status.read"}}</span>
+                            {{else if eq .Status "delivered"}}
+                                <span class="badge badge-pending">{{t $.Lang "status.new"}}</span>
+                            {{else}}
+                                <span class="badge badge-pending">{{.Status}}</span>
+                            {{end}}
+                        </td>
+                        <td class="fs-13-ws-nowrap">{{fmtDateTime .CreatedAt $.Timezone}}</td>
+                    </tr>
+                    {{end}}
+                </tbody>
+            </table>
+            </div>
+
+            {{$total := index .Data "Total"}}
+            {{$limit := index .Data "Limit"}}
+            {{$offset := index .Data "Offset"}}
+            {{if gt $total $limit}}
+            <div class="card-footer">
+                <span>{{t .Lang "common.showing_of" (len $messages) $total}}</span>
+                <div class="flex-gap-8">
+                    {{if gt $offset 0}}
+                    <a href="/admin/messages?offset=0{{if $status}}&status={{$status}}{{end}}{{if $intent}}&intent={{$intent}}{{end}}" class="btn btn-sm">{{t .Lang "common.first"}}</a>
+                    {{end}}
+                    {{if gt $total (add $offset $limit)}}
+                    <a href="/admin/messages?offset={{add $offset $limit}}{{if $status}}&status={{$status}}{{end}}{{if $intent}}&intent={{$intent}}{{end}}" class="btn btn-sm">{{t .Lang "common.next"}}</a>
+                    {{end}}
+                </div>
+            </div>
+            {{end}}
+
+            {{else}}
+            <div class="empty-state p-24">
+                <p class="text-muted">{{t .Lang "portal.admin_messages.no_messages"}}</p>
+            </div>
+            {{end}}
+        </div>
+        {{end}}
+    </div>
+</div>
+{{end}}

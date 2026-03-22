@@ -1,0 +1,211 @@
+{{template "base" .}}
+{{define "content"}}
+{{template "nav" .}}
+
+<div class="main-content">
+    <div class="container">
+        <div class="page-header">
+            <div>
+                <div class="mb-4">
+                    <a href="/tasks" class="fs-13-c-secondary-no-underline">&larr; {{t .Lang "portal.task_detail.back_to_tasks"}}</a>
+                </div>
+                <h1>{{if .Data}}{{index .Data "TaskTitle"}}{{end}}</h1>
+            </div>
+        </div>
+
+        {{if .Error}}
+        <div class="alert alert-error">{{.Error}}</div>
+        {{end}}
+
+        {{if .Success}}
+        <div class="alert alert-success">{{.Success}}</div>
+        {{end}}
+
+        {{if .Data}}
+        {{$task := index .Data "Task"}}
+        {{if $task}}
+
+        <div class="flex-gap-8-mb-16">
+            <a href="/reports/task/{{$task.ID}}" class="btn btn-sm">{{t .Lang "portal.reports.view"}}</a>
+            <a href="/reports/task/{{$task.ID}}?format=download" class="btn btn-sm">{{t .Lang "portal.reports.download"}}</a>
+            <form method="POST" action="/reports/task/{{$task.ID}}" class="d-inline">
+                <input type="hidden" name="csrf_token" value="{{$.CSRFToken}}">
+                <input type="hidden" name="action" value="email">
+                <button type="submit" class="btn btn-sm">{{t .Lang "portal.reports.email"}}</button>
+            </form>
+        </div>
+
+        <div class="two-col mb-24">
+            <div class="card mb-0">
+                <div class="card-header">
+                    <h2 class="mb-0">{{t .Lang "portal.task_detail.section_details"}}</h2>
+                    {{if eq $task.Status "planned"}}
+                        <span class="badge badge-pending">{{t .Lang "status.planned"}}</span>
+                    {{else if eq $task.Status "active"}}
+                        <span class="badge badge-info">{{t .Lang "status.active"}}</span>
+                    {{else if eq $task.Status "done"}}
+                        <span class="badge badge-active">{{t .Lang "status.done"}}</span>
+                    {{else if eq $task.Status "canceled"}}
+                        <span class="badge badge-inactive">{{t .Lang "status.canceled"}}</span>
+                    {{else}}
+                        <span class="badge badge-pending">{{$task.Status}}</span>
+                    {{end}}
+                </div>
+                <div class="grid-auto-1fr-gap-8-16-fs-14">
+                    <span class="text-secondary">{{t .Lang "portal.task_detail.label_description"}}</span>
+                    <div class="md-content" data-md>{{$task.Description}}</div>
+                    <span class="text-secondary">{{t .Lang "portal.task_detail.label_assignee"}}</span>
+                    <span>{{if $task.AssigneeName}}{{$task.AssigneeName}}{{else if $task.AssigneeID}}{{$task.AssigneeID}}{{else}}-{{end}}</span>
+                    <span class="text-secondary">{{t .Lang "portal.task_detail.label_creator"}}</span>
+                    <span>{{if $task.CreatorName}}{{$task.CreatorName}}{{else if $task.CreatorID}}{{$task.CreatorID}}{{else}}-{{end}}</span>
+                    <span class="text-secondary">{{t .Lang "portal.task_detail.label_owner"}}</span>
+                    <span>{{if $task.OwnerName}}{{$task.OwnerName}}{{else if $task.OwnerID}}{{$task.OwnerID}}{{else}}-{{end}}</span>
+                    {{if $task.EndeavourID}}
+                    <span class="text-secondary">{{t .Lang "portal.task_detail.label_endeavour"}}</span>
+                    <span><a href="/endeavours/{{$task.EndeavourID}}">{{if $task.EndeavourName}}{{$task.EndeavourName}}{{else}}{{$task.EndeavourID}}{{end}}</a></span>
+                    {{end}}
+                    {{if $task.DemandID}}
+                    <span class="text-secondary">{{t .Lang "portal.task_detail.label_demand"}}</span>
+                    <span><a href="/demands/{{$task.DemandID}}">{{$task.DemandID}}</a></span>
+                    {{end}}
+                    <span class="text-secondary">{{t .Lang "portal.task_detail.label_estimate"}}</span>
+                    <span>{{if $task.Estimate}}{{fmtFloat "%.1f" $task.Estimate}}h{{else}}-{{end}}</span>
+                    <span class="text-secondary">{{t .Lang "portal.task_detail.label_actual"}}</span>
+                    <span>{{if $task.Actual}}{{fmtFloat "%.1f" $task.Actual}}h{{else}}-{{end}}</span>
+                    {{if $task.DueDate}}
+                    <span class="text-secondary">{{t .Lang "portal.task_detail.label_due_date"}}</span>
+                    <span>{{fmtDate $task.DueDate $.Timezone}}</span>
+                    {{end}}
+                    {{if $task.CanceledReason}}
+                    <span class="text-secondary">{{t .Lang "portal.task_detail.label_reason"}}</span>
+                    <span class="c-error">{{$task.CanceledReason}}</span>
+                    {{end}}
+                    <span class="text-secondary">{{t .Lang "portal.task_detail.label_created"}}</span>
+                    <span>{{fmtDateTime $task.CreatedAt $.Timezone}}</span>
+                    <span class="text-secondary">{{t .Lang "portal.task_detail.label_updated"}}</span>
+                    <span>{{fmtDateTime $task.UpdatedAt $.Timezone}}</span>
+                </div>
+
+                {{if or (eq $task.Status "planned") (eq $task.Status "active")}}
+                <div class="section-divider">
+                    <form method="POST" action="/tasks/{{$task.ID}}" class="d-inline">
+                        <input type="hidden" name="csrf_token" value="{{$.CSRFToken}}">
+                        <input type="hidden" name="action" value="update_status">
+                        {{if eq $task.Status "planned"}}
+                        <input type="hidden" name="status" value="active">
+                        <button type="submit" class="btn btn-sm btn-primary">{{t .Lang "portal.task_detail.action_activate"}}</button>
+                        {{else if eq $task.Status "active"}}
+                        <input type="hidden" name="status" value="done">
+                        <button type="submit" class="btn btn-sm btn-primary">{{t .Lang "portal.task_detail.action_complete"}}</button>
+                        {{end}}
+                    </form>
+                </div>
+                {{end}}
+            </div>
+
+            <!-- Update Form -->
+            <div class="card mb-0">
+                <div class="card-header">
+                    <h2 class="mb-0">{{t .Lang "portal.task_detail.section_update"}}</h2>
+                </div>
+                {{if and (ne $task.Status "canceled") (ne $task.Status "done")}}
+                <form method="POST" action="/tasks/{{$task.ID}}">
+                    <input type="hidden" name="csrf_token" value="{{$.CSRFToken}}">
+                    <input type="hidden" name="action" value="update">
+                    <div class="form-group">
+                        <label for="task_title">{{t .Lang "portal.task_detail.label_title"}}</label>
+                        <input type="text" id="task_title" name="title" value="{{$task.Title}}">
+                    </div>
+                    <div class="grid-2col-gap-16">
+                        <div class="form-group">
+                            <label for="task_assignee">{{t .Lang "portal.task_detail.label_assignee"}}</label>
+                            <select id="task_assignee" name="assignee_id">
+                                <option value="">-</option>
+                                {{$resources := index $.Data "Resources"}}
+                                {{if $resources}}
+                                    {{range $resources}}
+                                    <option value="{{.ID}}" {{if eq .ID $task.AssigneeID}}selected{{end}}>{{.Name}} ({{.Type}})</option>
+                                    {{end}}
+                                {{end}}
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="task_owner">{{t .Lang "portal.task_detail.label_owner"}}</label>
+                            <select id="task_owner" name="owner_id">
+                                <option value="">-</option>
+                                {{if $resources}}
+                                    {{range $resources}}
+                                    <option value="{{.ID}}" {{if eq .ID $task.OwnerID}}selected{{end}}>{{.Name}} ({{.Type}})</option>
+                                    {{end}}
+                                {{end}}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="grid-2col-gap-16">
+                        <div class="form-group">
+                            <label for="task_due_date">{{t .Lang "portal.task_detail.label_due_date"}}</label>
+                            <input type="date" id="task_due_date" name="due_date" {{if $task.DueDate}}value="{{truncDate $task.DueDate}}"{{end}}>
+                        </div>
+                    </div>
+                    <div class="grid-2col-gap-16">
+                        <div class="form-group">
+                            <label for="task_estimate">{{t .Lang "portal.task_detail.label_estimate"}} (h)</label>
+                            <input type="number" id="task_estimate" name="estimate" step="0.5" min="0"
+                                {{if $task.Estimate}}value="{{fmtFloat "%.1f" $task.Estimate}}"{{end}}>
+                        </div>
+                        <div class="form-group">
+                            <label for="task_actual">{{t .Lang "portal.task_detail.label_actual"}} (h)</label>
+                            <input type="number" id="task_actual" name="actual" step="0.5" min="0"
+                                {{if $task.Actual}}value="{{fmtFloat "%.1f" $task.Actual}}"{{end}}>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary">{{t .Lang "common.save_changes"}}</button>
+                </form>
+
+                <!-- Cancel Section -->
+                <div class="section-divider-24">
+                    <h3 class="c-error-mb-12">{{t .Lang "portal.task_detail.cancel_title"}}</h3>
+                    <form method="POST" action="/tasks/{{$task.ID}}">
+                        <input type="hidden" name="csrf_token" value="{{$.CSRFToken}}">
+                        <input type="hidden" name="action" value="cancel">
+                        <div class="form-group">
+                            <label for="cancel_reason">{{t .Lang "portal.task_detail.label_reason"}}</label>
+                            <input type="text" id="cancel_reason" name="reason" required placeholder="{{t .Lang "portal.task_detail.placeholder_cancel_reason"}}">
+                        </div>
+                        <button type="submit" class="btn btn-danger btn-sm">{{t .Lang "portal.task_detail.action_cancel"}}</button>
+                    </form>
+                </div>
+                {{else}}
+                <p class="text-muted fs-14">{{t .Lang "portal.task_detail.no_updates_available"}}</p>
+                {{end}}
+            </div>
+        </div>
+
+        <!-- Comments -->
+        <div class="card">
+            <div class="card-header">
+                <h2 class="mb-0">{{t .Lang "portal.task_detail.section_comments"}}</h2>
+            </div>
+            {{$comments := index .Data "Comments"}}
+            {{if $comments}}
+                {{range $comments}}
+                <div class="list-row">
+                    <div class="flex-jc-between-mb-6">
+                        <span class="fw-600-fs-14">{{if .AuthorName}}{{.AuthorName}}{{else}}{{.AuthorID}}{{end}}</span>
+                        <span class="fs-12-c-secondary">{{fmtDateTime .CreatedAt $.Timezone}}{{if .EditedAt}} ({{t $.Lang "common.edited"}}){{end}}</span>
+                    </div>
+                    <div class="md-content" data-md>{{.Content}}</div>
+                </div>
+                {{end}}
+            {{else}}
+            <div class="empty-state p-24">
+                <p class="text-muted">{{t .Lang "portal.task_detail.no_comments"}}</p>
+            </div>
+            {{end}}
+        </div>
+
+        {{end}}
+        {{end}}
+    </div>
+</div>
+{{end}}

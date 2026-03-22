@@ -1,0 +1,214 @@
+{{template "base" .}}
+{{define "content"}}
+{{template "nav" .}}
+
+<div class="main-content">
+    <div class="container">
+        <div class="page-header">
+            <h1>{{t .Lang "portal.activity_feed.title"}}</h1>
+        </div>
+
+        {{if .Error}}
+        <div class="alert alert-error">{{.Error}}</div>
+        {{end}}
+
+        {{if .Data}}
+        <!-- Filters -->
+        <div class="card mb-24">
+            <div class="card-header">
+                <h2 class="mb-0">{{t .Lang "portal.activity_feed.filter_title"}}</h2>
+            </div>
+            <form method="GET" action="/entity-changes" id="activityFilterForm" class="flex-gap-12-ai-end-wrap">
+                <div class="form-group mb-0-minw-140">
+                    <label for="filter_action">{{t .Lang "portal.activity_feed.label_action"}}</label>
+                    <select id="filter_action" name="action">
+                        <option value="">{{t .Lang "common.all"}}</option>
+                        {{$action := index .Data "Action"}}
+                        <option value="login" {{if eq $action "login"}}selected{{end}}>login</option>
+                        <option value="create" {{if eq $action "create"}}selected{{end}}>create</option>
+                        <option value="update" {{if eq $action "update"}}selected{{end}}>update</option>
+                        <option value="cancel" {{if eq $action "cancel"}}selected{{end}}>cancel</option>
+                        <option value="archive" {{if eq $action "archive"}}selected{{end}}>archive</option>
+                        <option value="delete" {{if eq $action "delete"}}selected{{end}}>delete</option>
+                    </select>
+                </div>
+                <div class="form-group mb-0-minw-140">
+                    <label for="filter_entity_type">{{t .Lang "portal.activity_feed.label_entity_type"}}</label>
+                    <select id="filter_entity_type" name="entity_type">
+                        <option value="">{{t .Lang "common.all"}}</option>
+                        {{$entityType := index .Data "EntityType"}}
+                        <option value="task" {{if eq $entityType "task"}}selected{{end}}>task</option>
+                        <option value="demand" {{if eq $entityType "demand"}}selected{{end}}>demand</option>
+                        <option value="endeavour" {{if eq $entityType "endeavour"}}selected{{end}}>endeavour</option>
+                        <option value="organization" {{if eq $entityType "organization"}}selected{{end}}>organization</option>
+                        <option value="resource" {{if eq $entityType "resource"}}selected{{end}}>resource</option>
+                    </select>
+                </div>
+                <div class="form-group mb-0-minw-180">
+                    <label for="filter_actor_id">{{t .Lang "portal.activity_feed.label_actor"}}</label>
+                    <input type="text" id="filter_actor_id" name="actor_id" placeholder="{{t .Lang "portal.activity_feed.placeholder_actor"}}" value="{{index .Data "ActorID"}}">
+                </div>
+                <div class="form-group mb-0-minw-100">
+                    <label for="filter_time_range">{{t .Lang "portal.activity_feed.time_range"}}</label>
+                    <select id="filter_time_range">
+                        <option value="0">{{t .Lang "portal.activity_feed.time_all"}}</option>
+                        <option value="1">1h</option>
+                        <option value="6">6h</option>
+                        <option value="12">12h</option>
+                        <option value="24">24h</option>
+                        <option value="168">7d</option>
+                        <option value="720">30d</option>
+                    </select>
+                </div>
+                <div class="form-group mb-0-minw-170">
+                    <label for="filter_start_time">{{t .Lang "portal.activity_feed.label_from"}}</label>
+                    <input type="datetime-local" id="filter_start_time" name="start_time" value="{{index .Data "StartTime"}}" class="h-40-bbox">
+                </div>
+                <div class="form-group mb-0-minw-170">
+                    <label for="filter_end_time">{{t .Lang "portal.activity_feed.label_to"}}</label>
+                    <input type="datetime-local" id="filter_end_time" name="end_time" value="{{index .Data "EndTime"}}" class="h-40-bbox">
+                </div>
+                <div class="form-group mb-0-w-72">
+                    <label for="filter_limit" class="ws-nowrap">{{t .Lang "portal.activity_feed.label_per_page"}}</label>
+                    <select id="filter_limit" name="limit" class="p-6-2-minw-0">
+                        {{$limit := index .Data "Limit"}}
+                        <option value="50" {{if eq $limit 50}}selected{{end}}>50</option>
+                        <option value="100" {{if eq $limit 100}}selected{{end}}>100</option>
+                        <option value="200" {{if eq $limit 200}}selected{{end}}>200</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn h-40">{{t .Lang "common.filter"}}</button>
+            </form>
+        </div>
+
+        <!-- Activity Table -->
+        <div class="card">
+            <div class="card-header">
+                <h2 class="mb-0">{{t .Lang "portal.activity_feed.section_entries"}} <span class="meta-text">({{index .Data "Total"}})</span></h2>
+                <div class="flex-ai-center-gap-12">
+                    <div class="nav-dropdown-wrap">
+                        <button class="btn btn-sm nav-menu-btn">{{t .Lang "portal.activity_feed.export"}} <svg width="10" height="10" viewBox="0 0 12 12" fill="none"><path d="M3 5l3 3 3-3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+                        <div class="nav-dropdown nav-dropdown-menu dropdown-right">
+                            <a href="/entity-changes?export=csv&action={{index .Data "Action"}}&entity_type={{index .Data "EntityType"}}&actor_id={{index .Data "ActorID"}}&start_time={{index .Data "StartTime"}}&end_time={{index .Data "EndTime"}}">CSV</a>
+                            <a href="/entity-changes?export=json&action={{index .Data "Action"}}&entity_type={{index .Data "EntityType"}}&actor_id={{index .Data "ActorID"}}&start_time={{index .Data "StartTime"}}&end_time={{index .Data "EndTime"}}">JSON</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {{$entries := index .Data "Entries"}}
+            {{$actorMap := index .Data "ActorMap"}}
+            {{$entityMap := index .Data "EntityMap"}}
+            {{$endeavourMap := index .Data "EndeavourMap"}}
+            {{if $entries}}
+            <div class="ofx-auto">
+            <table>
+                <thead>
+                    <tr>
+                        <th>{{t .Lang "portal.activity_feed.col.time"}}</th>
+                        <th>{{t .Lang "portal.activity_feed.col.actor"}}</th>
+                        <th>{{t .Lang "portal.activity_feed.col.type"}}</th>
+                        <th>{{t .Lang "portal.activity_feed.col.action"}}</th>
+                        <th>{{t .Lang "portal.activity_feed.col.details"}}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{range $entries}}
+                    <tr>
+                        <td class="ws-nowrap-fs-13">{{fmtDateTime .CreatedAt $.Timezone}}</td>
+                        <td class="truncate-150" title="{{.ActorID}}">
+                            {{if .ActorID}}
+                                {{$name := index $actorMap .ActorID}}
+                                {{if $name}}<strong>{{$name}}</strong>{{else}}{{.ActorID}}{{end}}
+                            {{else}}-{{end}}
+                        </td>
+                        <td>
+                            {{if eq .Type "login"}}<span class="badge badge-info">login</span>
+                            {{else}}<span class="badge badge-pending">{{.EntityType}}</span>
+                            {{end}}
+                        </td>
+                        <td>
+                            {{if eq .Action "create"}}<span class="badge badge-active">{{.Action}}</span>
+                            {{else if eq .Action "update"}}<span class="badge badge-pending">{{.Action}}</span>
+                            {{else if eq .Action "login_success"}}<span class="badge badge-active">{{.Summary}}</span>
+                            {{else if eq .Action "cancel"}}<span class="badge badge-inactive">{{.Action}}</span>
+                            {{else if eq .Action "archive"}}<span class="badge badge-inactive">{{.Action}}</span>
+                            {{else if eq .Action "delete"}}<span class="badge badge-inactive">{{.Action}}</span>
+                            {{else}}<span class="badge badge-pending">{{.Action}}</span>
+                            {{end}}
+                        </td>
+                        <td class="fs-13">
+                            {{if eq .Type "login"}}
+                                {{if .Source}}<span class="text-muted">{{.Source}}</span>{{end}}
+                            {{else}}
+                                {{$eName := index $entityMap .EntityID}}
+                                {{if $eName}}<strong title="{{.EntityID}}">{{$eName}}</strong>{{else if .EntityID}}<span class="text-muted" title="{{.EntityID}}">{{.EntityID}}</span>{{end}}
+                                {{if .EndeavourID}}
+                                    {{$edvName := index $endeavourMap .EndeavourID}}
+                                    {{if $edvName}}<span class="text-muted" title="{{.EndeavourID}}"> -- {{$edvName}}</span>{{end}}
+                                {{end}}
+                                {{if .Fields}}
+                                    <span class="ml-8">
+                                    {{$meta := .Metadata}}
+                                    {{range .Fields}}{{$v := metaVal $meta .}}{{if $v}}<span class="badge badge-pending fs-11-m-1">{{.}}: {{$v}}</span>{{else}}<span class="badge badge-pending fs-11-m-1">{{.}}</span>{{end}}{{end}}
+                                    </span>
+                                {{end}}
+                            {{end}}
+                        </td>
+                    </tr>
+                    {{end}}
+                </tbody>
+            </table>
+            </div>
+
+            <!-- Pagination -->
+            {{$action := index .Data "Action"}}
+            {{$entityType := index .Data "EntityType"}}
+            {{$actorID := index .Data "ActorID"}}
+            {{$startTime := index .Data "StartTime"}}
+            {{$endTime := index .Data "EndTime"}}
+            {{$limit := index .Data "Limit"}}
+            <div class="flex-jc-between-mt-12-fs-12">
+                <span class="text-muted">
+                    {{t .Lang "common.showing_of" (len $entries) (index .Data "Total")}}
+                </span>
+                <div class="flex-gap-8">
+                    {{if index .Data "HasPrev"}}
+                    <a href="/entity-changes?offset=0&action={{$action}}&entity_type={{$entityType}}&actor_id={{$actorID}}&start_time={{$startTime}}&end_time={{$endTime}}&limit={{$limit}}" class="btn btn-sm">{{t .Lang "common.first"}}</a>
+                    {{end}}
+                    {{if index .Data "HasNext"}}
+                    <a href="/entity-changes?offset={{index .Data "NextOffset"}}&action={{$action}}&entity_type={{$entityType}}&actor_id={{$actorID}}&start_time={{$startTime}}&end_time={{$endTime}}&limit={{$limit}}" class="btn btn-sm">{{t .Lang "common.next"}}</a>
+                    {{end}}
+                </div>
+            </div>
+            {{else}}
+            <div class="empty-state">
+                <p>{{t .Lang "portal.activity_feed.no_entries"}}</p>
+            </div>
+            {{end}}
+        </div>
+        {{end}}
+    </div>
+</div>
+
+<script nonce="{{.Nonce}}">
+(function() {
+    var startInput = document.getElementById('filter_start_time');
+    var endInput = document.getElementById('filter_end_time');
+    var rangeSelect = document.getElementById('filter_time_range');
+
+    rangeSelect.addEventListener('change', function() {
+        var hours = parseInt(this.value, 10);
+        if (hours === 0) {
+            startInput.value = '';
+            endInput.value = '';
+        } else {
+            var now = new Date();
+            var start = new Date(now.getTime() - hours * 60 * 60 * 1000);
+            endInput.value = now.toISOString().slice(0, 16);
+            startInput.value = start.toISOString().slice(0, 16);
+        }
+    });
+})();
+</script>
+{{end}}

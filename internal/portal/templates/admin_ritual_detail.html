@@ -1,0 +1,242 @@
+{{template "base" .}}
+{{define "content"}}
+{{template "nav" .}}
+
+<div class="main-content">
+    <div class="container">
+        <div class="page-header">
+            <div>
+                <div class="mb-4">
+                    <a href="/admin/rituals" class="fs-13-c-secondary-no-underline">&larr; {{t .Lang "portal.admin_ritual_detail.back_to_rituals"}}</a>
+                </div>
+                <h1>{{if .Data}}{{index .Data "RitualName"}}{{end}}</h1>
+            </div>
+        </div>
+
+        {{if .Error}}
+        <div class="alert alert-error">{{.Error}}</div>
+        {{end}}
+
+        {{if .Success}}
+        <div class="alert alert-success">{{.Success}}</div>
+        {{end}}
+
+        {{if .Data}}
+        {{$ritual := index .Data "RitualData"}}
+        {{if $ritual}}
+
+        {{$editing := index .Data "Editing"}}
+
+        {{if $editing}}
+        <!-- Edit Form -->
+        <div class="card mb-24">
+            <div class="card-header">
+                <h2 class="mb-0">{{t .Lang "portal.admin_ritual_detail.section_edit"}}</h2>
+            </div>
+            <form method="POST" action="/admin/rituals/{{$ritual.ID}}">
+                <input type="hidden" name="csrf_token" value="{{$.CSRFToken}}">
+                <input type="hidden" name="action" value="save">
+                <div class="form-group">
+                    <label for="edit_name">{{t .Lang "portal.admin_ritual_detail.label_name"}}</label>
+                    <input type="text" id="edit_name" name="name" value="{{$ritual.Name}}">
+                </div>
+                <div class="form-group">
+                    <label for="edit_description">{{t .Lang "portal.admin_ritual_detail.label_description"}}</label>
+                    <textarea id="edit_description" name="description" rows="3">{{$ritual.Description}}</textarea>
+                </div>
+                <div class="form-group maxw-200">
+                    <label for="edit_lang">{{t .Lang "portal.admin_ritual_detail.label_lang"}}</label>
+                    <input type="text" id="edit_lang" name="lang" value="{{$ritual.Lang}}" placeholder="en">
+                </div>
+                <div class="flex-gap-8-mt-16">
+                    <button type="submit" class="btn btn-primary">{{t .Lang "portal.admin_ritual_detail.action_save"}}</button>
+                    <a href="/admin/rituals/{{$ritual.ID}}" class="btn">{{t .Lang "portal.admin_ritual_detail.action_cancel_edit"}}</a>
+                </div>
+            </form>
+        </div>
+        {{end}}
+
+        <!-- Detail Grid -->
+        <div class="card mb-24">
+            <div class="card-header">
+                <h2 class="mb-0">{{t .Lang "portal.admin_ritual_detail.section_details"}}</h2>
+                <div class="flex-gap-8">
+                    {{if eq $ritual.Origin "system"}}
+                        <span class="badge badge-info">system</span>
+                    {{else if eq $ritual.Origin "user"}}
+                        <span class="badge badge-active">user</span>
+                    {{else if eq $ritual.Origin "forked"}}
+                        <span class="badge badge-pending">forked</span>
+                    {{else}}
+                        <span class="badge badge-pending">{{$ritual.Origin}}</span>
+                    {{end}}
+                    {{if eq $ritual.Status "active"}}
+                        <span class="badge badge-active">{{t .Lang "status.active"}}</span>
+                    {{else}}
+                        <span class="badge badge-inactive">{{t .Lang "status.archived"}}</span>
+                    {{end}}
+                </div>
+            </div>
+            <div class="grid-auto-1fr-gap-8-16-fs-14">
+                <span class="text-secondary">ID</span>
+                <span class="ff-mono-fs-13">{{$ritual.ID}}</span>
+                <span class="text-secondary">{{t .Lang "common.label.name"}}</span>
+                <span><strong>{{$ritual.Name}}</strong></span>
+                {{if $ritual.Description}}
+                <span class="text-secondary">{{t .Lang "portal.admin_ritual_detail.label_description"}}</span>
+                <span>{{$ritual.Description}}</span>
+                {{end}}
+                {{if $ritual.Lang}}
+                <span class="text-secondary">{{t .Lang "portal.admin_ritual_detail.label_lang"}}</span>
+                <span><span class="lang-badge">{{upper $ritual.Lang}}</span></span>
+                {{end}}
+                <span class="text-secondary">{{t .Lang "portal.admin_ritual_detail.label_enabled"}}</span>
+                <span>
+                    {{if $ritual.IsEnabled}}
+                        <span class="c-success">{{t .Lang "common.yes"}}</span>
+                    {{else}}
+                        <span class="text-muted">{{t .Lang "common.no"}}</span>
+                    {{end}}
+                </span>
+                {{if $ritual.Schedule}}
+                <span class="text-secondary">{{t .Lang "portal.admin_ritual_detail.label_schedule"}}</span>
+                <span>{{fmtSchedule $ritual.Schedule}}</span>
+                {{end}}
+                {{if $ritual.EndeavourID}}
+                <span class="text-secondary">{{t .Lang "portal.admin_ritual_detail.label_endeavour"}}</span>
+                <span><a href="/endeavours/{{$ritual.EndeavourID}}">{{$ritual.EndeavourID}}</a></span>
+                {{end}}
+                {{if $ritual.PredecessorID}}
+                <span class="text-secondary">{{t .Lang "portal.admin_ritual_detail.label_predecessor"}}</span>
+                <span><a href="/admin/rituals/{{$ritual.PredecessorID}}">{{$ritual.PredecessorID}}</a></span>
+                {{end}}
+                {{if $ritual.CreatedBy}}
+                <span class="text-secondary">{{t .Lang "portal.admin_ritual_detail.label_created_by"}}</span>
+                <span>{{$ritual.CreatedBy}}</span>
+                {{end}}
+                <span class="text-secondary">{{t .Lang "common.label.created"}}</span>
+                <span>{{fmtDateTime $ritual.CreatedAt $.Timezone}}</span>
+                <span class="text-secondary">{{t .Lang "common.label.updated"}}</span>
+                <span>{{fmtDateTime $ritual.UpdatedAt $.Timezone}}</span>
+            </div>
+
+            <!-- Actions -->
+            {{if eq $ritual.Status "active"}}
+            <div class="section-divider-flex-gap-8">
+                {{if not $editing}}
+                <form method="POST" action="/admin/rituals/{{$ritual.ID}}" class="d-inline">
+                    <input type="hidden" name="csrf_token" value="{{$.CSRFToken}}">
+                    <input type="hidden" name="action" value="edit">
+                    <button type="submit" class="btn btn-sm btn-primary">{{t .Lang "portal.admin_ritual_detail.action_edit"}}</button>
+                </form>
+                {{end}}
+                <form method="POST" action="/admin/rituals/{{$ritual.ID}}" class="d-inline">
+                    <input type="hidden" name="csrf_token" value="{{$.CSRFToken}}">
+                    <input type="hidden" name="action" value="toggle_enabled">
+                    {{if $ritual.IsEnabled}}
+                    <button type="submit" class="btn btn-sm">{{t .Lang "portal.admin_ritual_detail.action_disable"}}</button>
+                    {{else}}
+                    <button type="submit" class="btn btn-sm btn-primary">{{t .Lang "portal.admin_ritual_detail.action_enable"}}</button>
+                    {{end}}
+                </form>
+                <form method="POST" action="/admin/rituals/{{$ritual.ID}}" class="d-inline">
+                    <input type="hidden" name="csrf_token" value="{{$.CSRFToken}}">
+                    <input type="hidden" name="action" value="archive">
+                    <button type="submit" class="btn btn-sm btn-danger">{{t .Lang "portal.admin_ritual_detail.action_archive"}}</button>
+                </form>
+                <form method="POST" action="/admin/rituals/{{$ritual.ID}}" class="d-inline">
+                    <input type="hidden" name="csrf_token" value="{{$.CSRFToken}}">
+                    <input type="hidden" name="action" value="trigger_run">
+                    <button type="submit" class="btn btn-sm">{{t .Lang "portal.admin_ritual_detail.action_trigger_run"}}</button>
+                </form>
+            </div>
+            {{end}}
+        </div>
+
+        <!-- Prompt -->
+        {{if $ritual.Prompt}}
+        <div class="card mb-24">
+            <div class="card-header">
+                <h2 class="mb-0">{{t .Lang "portal.admin_ritual_detail.section_prompt"}}</h2>
+            </div>
+            <pre class="code-block">{{$ritual.Prompt}}</pre>
+        </div>
+        {{end}}
+
+        <!-- Lineage -->
+        {{$lineage := index .Data "Lineage"}}
+        {{if $lineage}}
+        <div class="card mb-24">
+            <div class="card-header">
+                <h2 class="mb-0">{{t .Lang "portal.admin_ritual_detail.section_lineage"}}</h2>
+            </div>
+            <div class="flex-gap-8-wrap-ai-center">
+                {{range $i, $r := $lineage}}
+                {{if $i}}<span class="text-muted">&rarr;</span>{{end}}
+                {{if eq $r.ID $ritual.ID}}
+                    <strong>{{$r.Name}}</strong>
+                {{else}}
+                    <a href="/admin/rituals/{{$r.ID}}">{{$r.Name}}</a>
+                {{end}}
+                {{end}}
+            </div>
+        </div>
+        {{end}}
+
+        <!-- Runs -->
+        {{$runs := index .Data "Runs"}}
+        <div class="card">
+            <div class="card-header">
+                <h2 class="mb-0">{{t .Lang "portal.admin_ritual_detail.section_runs"}}</h2>
+            </div>
+            {{if $runs}}
+            <div class="ofx-auto">
+            <table>
+                <thead>
+                    <tr>
+                        <th>{{t .Lang "portal.admin_ritual_detail.col.status"}}</th>
+                        <th>{{t .Lang "portal.admin_ritual_detail.col.trigger"}}</th>
+                        <th>{{t .Lang "portal.admin_ritual_detail.col.run_by"}}</th>
+                        <th>{{t .Lang "portal.admin_ritual_detail.col.started"}}</th>
+                        <th>{{t .Lang "portal.admin_ritual_detail.col.finished"}}</th>
+                        <th>{{t .Lang "portal.admin_ritual_detail.col.summary"}}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{range $runs}}
+                    <tr>
+                        <td>
+                            {{if eq .Status "running"}}
+                                <span class="badge badge-info">{{t $.Lang "status.running"}}</span>
+                            {{else if eq .Status "succeeded"}}
+                                <span class="badge badge-active">{{t $.Lang "status.succeeded"}}</span>
+                            {{else if eq .Status "failed"}}
+                                <span class="badge badge-inactive">{{t $.Lang "status.failed"}}</span>
+                            {{else if eq .Status "skipped"}}
+                                <span class="badge badge-pending">{{t $.Lang "status.skipped"}}</span>
+                            {{else}}
+                                <span class="badge badge-pending">{{.Status}}</span>
+                            {{end}}
+                        </td>
+                        <td>{{.Trigger}}</td>
+                        <td class="text-muted">{{if .RunBy}}{{.RunBy}}{{else}}-{{end}}</td>
+                        <td class="fs-13-ws-nowrap">{{if .StartedAt}}{{fmtDateTime .StartedAt $.Timezone}}{{else}}-{{end}}</td>
+                        <td class="fs-13-ws-nowrap">{{if .FinishedAt}}{{fmtDateTime .FinishedAt $.Timezone}}{{else}}-{{end}}</td>
+                        <td class="text-muted fs-14">{{if .ResultSummary}}{{.ResultSummary}}{{else}}-{{end}}</td>
+                    </tr>
+                    {{end}}
+                </tbody>
+            </table>
+            </div>
+            {{else}}
+            <div class="empty-state p-24">
+                <p class="text-muted">{{t .Lang "portal.admin_ritual_detail.no_runs"}}</p>
+            </div>
+            {{end}}
+        </div>
+
+        {{end}}
+        {{end}}
+    </div>
+</div>
+{{end}}

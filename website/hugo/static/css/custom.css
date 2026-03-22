@@ -1,0 +1,258 @@
+/* Taskschmiede documentation custom styles */
+/* Match fonts and colors from the product website (taskschmiede.dev) */
+
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap');
+
+:root {
+  --ts-text: #2d2d2d;
+  --ts-text-secondary: #5a5a5a;
+  --ts-border: #999;
+  --ts-border-light: #ddd;
+}
+
+body {
+  font-family: 'JetBrains Mono', monospace;
+  color: var(--ts-text);
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+
+a {
+  color: var(--ts-text);
+  text-decoration: underline;
+}
+
+a:hover {
+  color: var(--ts-text-secondary);
+}
+
+/* Navbar: match product website */
+.td-navbar {
+  border-bottom: 1px solid var(--ts-border-light) !important;
+  background-color: #fff !important;
+  min-height: 3.5rem !important;
+  padding: 0 1.5rem !important;
+}
+
+.td-navbar .navbar-nav {
+  gap: 1.5rem;
+}
+
+.td-navbar .navbar-nav .nav-link,
+.td-navbar .navbar-nav .nav-link span {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.85rem;
+  color: var(--ts-text-secondary) !important;
+  font-weight: 400;
+  text-decoration: none !important;
+  padding: 0 !important;
+}
+
+.td-navbar .navbar-nav .nav-link:hover,
+.td-navbar .navbar-nav .nav-link:hover span {
+  color: var(--ts-text) !important;
+}
+
+.td-navbar .navbar-nav .nav-link.active,
+.td-navbar .navbar-nav .nav-link.active span {
+  color: var(--ts-text) !important;
+  font-weight: 700;
+}
+
+.td-navbar .navbar-brand {
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: var(--ts-text) !important;
+  text-decoration: none !important;
+}
+
+.td-navbar .navbar-brand:hover {
+  color: var(--ts-text-secondary) !important;
+}
+
+code, pre {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.8rem;
+}
+
+/* Centered content container (only on pages without right TOC) */
+body.td-home .td-main > .container > .row > .col-12 {
+  max-width: 960px;
+  margin: 0 auto;
+}
+
+h1 {
+  font-size: 2rem;
+}
+
+h2 {
+  font-size: 1.2rem;
+}
+
+h3 {
+  font-size: 1rem;
+}
+
+/* Footer: match product and SaaS website layout */
+.ts-footer {
+  border-top: 1px solid var(--ts-border-light);
+  padding: 1.5rem;
+  margin-top: auto;
+}
+
+.ts-footer__inner {
+  max-width: 960px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.8rem;
+  color: var(--ts-text-secondary);
+}
+
+.ts-footer__inner > * {
+  flex: 1;
+}
+
+.ts-footer__coded {
+  text-align: right;
+  color: var(--ts-text-secondary);
+}
+
+.ts-footer p {
+  margin-bottom: 0;
+}
+
+@media (max-width: 768px) {
+  .ts-footer__inner {
+    flex-direction: column;
+    gap: 0.5rem;
+    text-align: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .ts-footer {
+    padding: 0.75rem;
+  }
+
+  .ts-footer__inner {
+    font-size: 0.7rem;
+  }
+}
+
+/* Hide Docsy sidebar search -- override is in body-end.html (must load after Bootstrap d-flex) */
+
+/* Homepage hero and content */
+.ts-homepage-hero {
+  position: relative;
+  text-align: center;
+}
+
+.ts-homepage-title {
+  margin-bottom: 0.5rem;
+}
+
+.ts-homepage-title h1 {
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin-bottom: 0.25rem;
+}
+
+.ts-homepage-tagline {
+  font-size: 1rem;
+  color: var(--ts-text-secondary);
+  font-style: italic;
+}
+
+.ts-homepage-content {
+  max-width: 640px;
+  margin: 0 auto;
+  text-align: left;
+}
+
+.ts-homepage-smith {
+  position: absolute;
+  right: 40px;
+  top: 80px;
+  height: 500px;
+  width: auto;
+  pointer-events: none;
+}
+
+@media (max-width: 991px) {
+  .ts-homepage-smith {
+    display: none;
+  }
+}
+
+/* Sidebar navigation: consistent submenu styling */
+.td-sidebar-nav ul.ul-1 > li .td-sidebar-link {
+  font-size: 0.75rem;
+}
+
+.td-sidebar-nav ul.ul-1 > li .td-sidebar-link span::before {
+  content: "\00B7\00A0";
+  color: var(--ts-text-secondary);
+}
+
+/* Widen content column to fill space between sidebar and TOC */
+@media (min-width: 768px) {
+  .td-main main[class*="col-"] {
+    flex: 1 1 0%;
+    max-width: none;
+    padding-right: 3rem;
+  }
+}
+
+/* Remove Docsy 80% max-width on all content elements -- text should fill the column */
+.td-content > * {
+  max-width: 100% !important;
+}
+
+/* Tables: full width, first columns shrink to content */
+.td-content table {
+  width: 100%;
+}
+
+.td-content table td:not(:last-child),
+.td-content table th:not(:last-child) {
+  white-space: nowrap;
+}
+
+/* Right-side table of contents: sticky, aligned with left sidebar */
+.td-sidebar-toc {
+  position: static !important;
+  padding-top: 0 !important;
+  margin-top: 0 !important;
+  align-self: stretch !important;
+  overflow-y: visible !important;
+  height: auto !important;
+  min-height: 100% !important;
+}
+
+.td-sidebar-toc .td-page-meta {
+  display: none;
+}
+
+.td-toc {
+  position: sticky;
+  top: 64px;
+  margin-top: 0;
+}
+
+.td-toc #TableOfContents a {
+  font-size: 0.75rem;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.td-toc #TableOfContents {
+  line-height: 1.5;
+}
+
+/* Align sidebar and TOC title borders to light gray */
+.td-sidebar-link.tree-root,
+.td-toc-title {
+  border-bottom-color: var(--ts-border-light) !important;
+}

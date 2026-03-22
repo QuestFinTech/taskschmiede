@@ -1,0 +1,154 @@
+{{template "base" .}}
+{{define "content"}}
+<div class="main-content center-page">
+    <div class="center-card card maxw-480">
+        {{if .Data}}{{if index .Data "SetupMode"}}
+        <div class="setup-steps flex-jc-center-gap-8-mb-24">
+            <span class="setup-step setup-step-active">1. {{t .Lang "portal.setup.step_account"}}</span>
+            <span class="setup-step">2. {{t .Lang "portal.setup.step_verify"}}</span>
+            <span class="setup-step">3. {{t .Lang "portal.setup.step_configure"}}</span>
+        </div>
+        {{end}}{{end}}
+
+        <div class="ta-center-mb-24">
+            {{if .Data}}{{if index .Data "SetupMode"}}
+            <h1>{{t .Lang "portal.setup.title"}}</h1>
+            <p class="text-secondary mb-0">{{t .Lang "portal.setup.subtitle"}}</p>
+            {{else}}
+            <h1>{{t .Lang "portal.register.title"}}</h1>
+            <p class="text-secondary mb-0">{{t .Lang "portal.register.subtitle"}}</p>
+            {{end}}{{else}}
+            <h1>{{t .Lang "portal.register.title"}}</h1>
+            <p class="text-secondary mb-0">{{t .Lang "portal.register.subtitle"}}</p>
+            {{end}}
+        </div>
+
+        {{if .Error}}
+        <div class="alert alert-error">{{.Error}}</div>
+        {{end}}
+
+        <form method="POST" action="/register{{if .Data}}{{if index .Data "SetupMode"}}?setup=1{{end}}{{end}}" id="reg-form">
+            <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
+
+            <div class="form-group">
+                <label for="account_type">{{t .Lang "portal.register.account_type"}}</label>
+                <select id="account_type" name="account_type">
+                    <option value="private" {{if .Data}}{{if eq (index .Data "AccountType") "private"}}selected{{end}}{{end}}>{{t .Lang "portal.register.account_private"}}</option>
+                    <option value="business" {{if .Data}}{{if eq (index .Data "AccountType") "business"}}selected{{end}}{{end}}>{{t .Lang "portal.register.account_business"}}</option>
+                </select>
+            </div>
+
+            <div class="flex-gap-12">
+                <div class="form-group flex-1">
+                    <label for="first_name">{{t .Lang "common.label.first_name"}} <span class="req">*</span></label>
+                    <input type="text" id="first_name" name="first_name" required autofocus placeholder="{{t .Lang "common.placeholder.first_name"}}" {{if .Data}}value="{{index .Data "FirstName"}}"{{end}}>
+                </div>
+                <div class="form-group flex-1">
+                    <label for="last_name">{{t .Lang "common.label.last_name"}} <span class="req">*</span></label>
+                    <input type="text" id="last_name" name="last_name" required placeholder="{{t .Lang "common.placeholder.last_name"}}" {{if .Data}}value="{{index .Data "LastName"}}"{{end}}>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="email">{{t .Lang "common.label.email"}} <span class="req">*</span></label>
+                <input type="email" id="email" name="email" required placeholder="{{t .Lang "common.placeholder.email"}}" {{if .Data}}value="{{index .Data "Email"}}"{{end}}>
+            </div>
+
+            <div id="business_group" class="d-none">
+                <div class="form-group">
+                    <label for="company_name">{{t .Lang "common.label.company_name"}} <span class="req">*</span></label>
+                    <input type="text" id="company_name" name="company_name" placeholder="{{t .Lang "common.placeholder.company_name"}}" {{if .Data}}value="{{index .Data "CompanyName"}}"{{end}}>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="password">{{t .Lang "common.label.password"}} <span class="req">*</span> <span class="label-hint">({{t .Lang "common.password_hint"}})</span></label>
+                <input type="password" id="password" name="password" required placeholder="{{t .Lang "common.placeholder.choose_password"}}">
+            </div>
+            <div class="form-group">
+                <label for="confirm_password">{{t .Lang "common.label.confirm_password"}} <span class="req">*</span></label>
+                <input type="password" id="confirm_password" name="confirm_password" required placeholder="{{t .Lang "common.placeholder.confirm_password"}}">
+            </div>
+            <div id="pw-error" class="alert alert-error d-none-alt"></div>
+
+            {{if .Languages}}
+            <div class="form-group">
+                <label for="lang">{{t .Lang "common.label.language"}}</label>
+                <select id="lang" name="lang">
+                    {{range .Languages}}
+                    <option value="{{.Code}}" {{if eq $.Lang .Code}}selected{{end}}>{{.NativeName}}</option>
+                    {{end}}
+                </select>
+            </div>
+            {{end}}
+
+            <button type="submit" class="btn btn-primary btn-block" id="reg-submit">{{t .Lang "portal.register.submit"}}</button>
+        </form>
+
+        {{if not .Data}}
+        <div class="section-divider-center">
+            {{t .Lang "portal.register.already_have_account"}} <a href="/login">{{t .Lang "portal.register.sign_in_link"}}</a>
+        </div>
+        {{else}}{{if not (index .Data "SetupMode")}}
+        <div class="section-divider-center">
+            {{t .Lang "portal.register.already_have_account"}} <a href="/login">{{t .Lang "portal.register.sign_in_link"}}</a>
+        </div>
+        {{end}}{{end}}
+    </div>
+</div>
+
+<style nonce="{{.Nonce}}">
+    .req { color: var(--error); font-weight: 400; }
+    .setup-steps { font-size: 13px; }
+    .setup-step {
+        padding: 4px 12px;
+        border-radius: 12px;
+        color: var(--text-muted);
+        background: var(--bg-grey);
+    }
+    .setup-step-active {
+        color: var(--primary);
+        background: #eff6ff;
+        font-weight: 600;
+    }
+    .setup-step-done {
+        color: var(--success);
+        background: #f0fdf4;
+    }
+</style>
+
+<script nonce="{{.Nonce}}">
+(function() {
+    var sel = document.getElementById('account_type');
+    var grp = document.getElementById('business_group');
+    var inp = document.getElementById('company_name');
+    function toggleBusiness() {
+        if (!sel || !grp) return;
+        var isBusiness = sel.value === 'business';
+        grp.classList.toggle('d-none', !isBusiness);
+        if (inp) {
+            if (isBusiness) { inp.setAttribute('required', ''); }
+            else { inp.removeAttribute('required'); }
+        }
+    }
+    if (sel) sel.addEventListener('change', toggleBusiness);
+    toggleBusiness();
+
+    var form = document.getElementById('reg-form');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            var pwErr = document.getElementById('pw-error');
+            pwErr.classList.add('d-none-alt');
+            var pw = document.getElementById('password').value;
+            var cpw = document.getElementById('confirm_password').value;
+            if (pw && cpw && pw !== cpw) {
+                pwErr.textContent = '{{t .Lang "errors.passwords_not_match"}}';
+                pwErr.classList.remove('d-none-alt');
+                document.getElementById('confirm_password').focus();
+                e.preventDefault();
+            }
+        });
+    }
+})();
+</script>
+{{end}}

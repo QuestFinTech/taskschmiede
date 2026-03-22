@@ -1,0 +1,121 @@
+{{template "base" .}}
+{{define "content"}}
+<div class="main-content center-page">
+    <div class="center-card card">
+        <div class="setup-steps flex-jc-center-gap-8-mb-24">
+            <span class="setup-step setup-step-done">1. {{t .Lang "portal.setup.step_account"}}</span>
+            <span class="setup-step setup-step-done">2. {{t .Lang "portal.setup.step_verify"}}</span>
+            <span class="setup-step setup-step-active">3. {{t .Lang "portal.setup.step_configure"}}</span>
+        </div>
+
+        <div class="ta-center-mb-24">
+            <h1>{{t .Lang "portal.setup_configure.title"}}</h1>
+            <p class="text-secondary mb-0">{{t .Lang "portal.setup_configure.subtitle"}}</p>
+        </div>
+
+        {{if .Error}}
+        <div class="alert alert-error">{{.Error}}</div>
+        {{end}}
+
+        <form method="POST" action="/setup">
+            <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
+
+            <div class="form-group">
+                <label for="timezone">{{t .Lang "portal.setup_configure.label_timezone"}}</label>
+                <select id="timezone" name="timezone" class="w-full">
+                    <option value="">-- {{t .Lang "portal.setup_configure.select_timezone"}} --</option>
+                    <optgroup label="Americas">
+                        <option value="America/New_York"{{if and .Data (eq (index .Data "Timezone") "America/New_York")}} selected{{end}}>America/New_York (EST/EDT)</option>
+                        <option value="America/Chicago"{{if and .Data (eq (index .Data "Timezone") "America/Chicago")}} selected{{end}}>America/Chicago (CST/CDT)</option>
+                        <option value="America/Denver"{{if and .Data (eq (index .Data "Timezone") "America/Denver")}} selected{{end}}>America/Denver (MST/MDT)</option>
+                        <option value="America/Los_Angeles"{{if and .Data (eq (index .Data "Timezone") "America/Los_Angeles")}} selected{{end}}>America/Los_Angeles (PST/PDT)</option>
+                        <option value="America/Anchorage"{{if and .Data (eq (index .Data "Timezone") "America/Anchorage")}} selected{{end}}>America/Anchorage (AKST/AKDT)</option>
+                        <option value="America/Sao_Paulo"{{if and .Data (eq (index .Data "Timezone") "America/Sao_Paulo")}} selected{{end}}>America/Sao_Paulo (BRT)</option>
+                        <option value="America/Argentina/Buenos_Aires"{{if and .Data (eq (index .Data "Timezone") "America/Argentina/Buenos_Aires")}} selected{{end}}>America/Buenos_Aires (ART)</option>
+                        <option value="America/Mexico_City"{{if and .Data (eq (index .Data "Timezone") "America/Mexico_City")}} selected{{end}}>America/Mexico_City (CST/CDT)</option>
+                        <option value="America/Toronto"{{if and .Data (eq (index .Data "Timezone") "America/Toronto")}} selected{{end}}>America/Toronto (EST/EDT)</option>
+                        <option value="America/Vancouver"{{if and .Data (eq (index .Data "Timezone") "America/Vancouver")}} selected{{end}}>America/Vancouver (PST/PDT)</option>
+                        <option value="Pacific/Honolulu"{{if and .Data (eq (index .Data "Timezone") "Pacific/Honolulu")}} selected{{end}}>Pacific/Honolulu (HST)</option>
+                    </optgroup>
+                    <optgroup label="Europe">
+                        <option value="Europe/London"{{if and .Data (eq (index .Data "Timezone") "Europe/London")}} selected{{end}}>Europe/London (GMT/BST)</option>
+                        <option value="Europe/Berlin"{{if and .Data (eq (index .Data "Timezone") "Europe/Berlin")}} selected{{end}}>Europe/Berlin (CET/CEST)</option>
+                        <option value="Europe/Paris"{{if and .Data (eq (index .Data "Timezone") "Europe/Paris")}} selected{{end}}>Europe/Paris (CET/CEST)</option>
+                        <option value="Europe/Amsterdam"{{if and .Data (eq (index .Data "Timezone") "Europe/Amsterdam")}} selected{{end}}>Europe/Amsterdam (CET/CEST)</option>
+                        <option value="Europe/Luxembourg"{{if and .Data (eq (index .Data "Timezone") "Europe/Luxembourg")}} selected{{end}}>Europe/Luxembourg (CET/CEST)</option>
+                        <option value="Europe/Zurich"{{if and .Data (eq (index .Data "Timezone") "Europe/Zurich")}} selected{{end}}>Europe/Zurich (CET/CEST)</option>
+                        <option value="Europe/Rome"{{if and .Data (eq (index .Data "Timezone") "Europe/Rome")}} selected{{end}}>Europe/Rome (CET/CEST)</option>
+                        <option value="Europe/Madrid"{{if and .Data (eq (index .Data "Timezone") "Europe/Madrid")}} selected{{end}}>Europe/Madrid (CET/CEST)</option>
+                        <option value="Europe/Stockholm"{{if and .Data (eq (index .Data "Timezone") "Europe/Stockholm")}} selected{{end}}>Europe/Stockholm (CET/CEST)</option>
+                        <option value="Europe/Warsaw"{{if and .Data (eq (index .Data "Timezone") "Europe/Warsaw")}} selected{{end}}>Europe/Warsaw (CET/CEST)</option>
+                        <option value="Europe/Moscow"{{if and .Data (eq (index .Data "Timezone") "Europe/Moscow")}} selected{{end}}>Europe/Moscow (MSK)</option>
+                        <option value="Europe/Athens"{{if and .Data (eq (index .Data "Timezone") "Europe/Athens")}} selected{{end}}>Europe/Athens (EET/EEST)</option>
+                        <option value="Europe/Helsinki"{{if and .Data (eq (index .Data "Timezone") "Europe/Helsinki")}} selected{{end}}>Europe/Helsinki (EET/EEST)</option>
+                        <option value="Europe/Istanbul"{{if and .Data (eq (index .Data "Timezone") "Europe/Istanbul")}} selected{{end}}>Europe/Istanbul (TRT)</option>
+                    </optgroup>
+                    <optgroup label="Asia / Pacific">
+                        <option value="Asia/Dubai"{{if and .Data (eq (index .Data "Timezone") "Asia/Dubai")}} selected{{end}}>Asia/Dubai (GST)</option>
+                        <option value="Asia/Kolkata"{{if and .Data (eq (index .Data "Timezone") "Asia/Kolkata")}} selected{{end}}>Asia/Kolkata (IST)</option>
+                        <option value="Asia/Bangkok"{{if and .Data (eq (index .Data "Timezone") "Asia/Bangkok")}} selected{{end}}>Asia/Bangkok (ICT)</option>
+                        <option value="Asia/Singapore"{{if and .Data (eq (index .Data "Timezone") "Asia/Singapore")}} selected{{end}}>Asia/Singapore (SGT)</option>
+                        <option value="Asia/Shanghai"{{if and .Data (eq (index .Data "Timezone") "Asia/Shanghai")}} selected{{end}}>Asia/Shanghai (CST)</option>
+                        <option value="Asia/Hong_Kong"{{if and .Data (eq (index .Data "Timezone") "Asia/Hong_Kong")}} selected{{end}}>Asia/Hong_Kong (HKT)</option>
+                        <option value="Asia/Tokyo"{{if and .Data (eq (index .Data "Timezone") "Asia/Tokyo")}} selected{{end}}>Asia/Tokyo (JST)</option>
+                        <option value="Asia/Seoul"{{if and .Data (eq (index .Data "Timezone") "Asia/Seoul")}} selected{{end}}>Asia/Seoul (KST)</option>
+                        <option value="Asia/Jakarta"{{if and .Data (eq (index .Data "Timezone") "Asia/Jakarta")}} selected{{end}}>Asia/Jakarta (WIB)</option>
+                    </optgroup>
+                    <optgroup label="Africa / Middle East">
+                        <option value="Africa/Cairo"{{if and .Data (eq (index .Data "Timezone") "Africa/Cairo")}} selected{{end}}>Africa/Cairo (EET)</option>
+                        <option value="Africa/Johannesburg"{{if and .Data (eq (index .Data "Timezone") "Africa/Johannesburg")}} selected{{end}}>Africa/Johannesburg (SAST)</option>
+                        <option value="Africa/Lagos"{{if and .Data (eq (index .Data "Timezone") "Africa/Lagos")}} selected{{end}}>Africa/Lagos (WAT)</option>
+                        <option value="Asia/Jerusalem"{{if and .Data (eq (index .Data "Timezone") "Asia/Jerusalem")}} selected{{end}}>Asia/Jerusalem (IST/IDT)</option>
+                    </optgroup>
+                    <optgroup label="Oceania">
+                        <option value="Australia/Sydney"{{if and .Data (eq (index .Data "Timezone") "Australia/Sydney")}} selected{{end}}>Australia/Sydney (AEST/AEDT)</option>
+                        <option value="Australia/Melbourne"{{if and .Data (eq (index .Data "Timezone") "Australia/Melbourne")}} selected{{end}}>Australia/Melbourne (AEST/AEDT)</option>
+                        <option value="Australia/Perth"{{if and .Data (eq (index .Data "Timezone") "Australia/Perth")}} selected{{end}}>Australia/Perth (AWST)</option>
+                        <option value="Pacific/Auckland"{{if and .Data (eq (index .Data "Timezone") "Pacific/Auckland")}} selected{{end}}>Pacific/Auckland (NZST/NZDT)</option>
+                    </optgroup>
+                    <optgroup label="UTC">
+                        <option value="UTC"{{if and .Data (eq (index .Data "Timezone") "UTC")}} selected{{end}}>UTC</option>
+                    </optgroup>
+                </select>
+                <p class="text-muted fs-12-mt-4">{{t .Lang "portal.setup_configure.timezone_hint"}}</p>
+            </div>
+
+            <div class="form-group">
+                <label for="default_language">{{t .Lang "portal.setup_configure.label_language"}}</label>
+                <select id="default_language" name="default_language" class="w-full">
+                    {{if .Data}}
+                    {{$sel := index .Data "DefaultLanguage"}}
+                    {{range .Data.Languages}}
+                    <option value="{{.Code}}"{{if eq .Code $sel}} selected{{end}}>{{.NativeName}} ({{.Name}})</option>
+                    {{end}}
+                    {{end}}
+                </select>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-block">{{t .Lang "portal.setup_configure.submit"}}</button>
+        </form>
+    </div>
+</div>
+
+<style nonce="{{.Nonce}}">
+.setup-steps { font-size: 13px; }
+.setup-step {
+    padding: 4px 12px;
+    border-radius: 12px;
+    color: var(--text-muted);
+    background: var(--bg-grey);
+}
+.setup-step-active {
+    color: var(--primary);
+    background: #eff6ff;
+    font-weight: 600;
+}
+.setup-step-done {
+    color: var(--success);
+    background: #f0fdf4;
+}
+</style>
+{{end}}

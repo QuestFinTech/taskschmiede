@@ -1,0 +1,128 @@
+{{template "base" .}}
+{{define "content"}}
+{{template "nav" .}}
+
+<div class="main-content">
+    <div class="container">
+        <div class="page-header">
+            <h1>{{t .Lang "portal.admin_audit.title"}}</h1>
+        </div>
+
+        {{if .Error}}
+        <div class="alert alert-error">{{.Error}}</div>
+        {{end}}
+
+        {{if .Data}}
+        <!-- Filters -->
+        <div class="card mb-24-p-16-24">
+            <form method="GET" action="/admin/audit" class="flex-gap-12-ai-end-wrap">
+                <div class="form-group mb-0-minw-180">
+                    <label for="filter_action">{{t .Lang "portal.admin_audit.label_action"}}</label>
+                    <input type="text" id="filter_action" name="action" placeholder="{{t .Lang "portal.admin_audit.placeholder_action"}}" value="{{index .Data "Action"}}">
+                </div>
+                <div class="form-group mb-0-minw-140">
+                    <label for="filter_source">{{t .Lang "portal.admin_audit.label_source"}}</label>
+                    <select id="filter_source" name="source">
+                        <option value="">{{t .Lang "common.all"}}</option>
+                        {{$source := index .Data "Source"}}
+                        <option value="mcp" {{if eq $source "mcp"}}selected{{end}}>MCP</option>
+                        <option value="api" {{if eq $source "api"}}selected{{end}}>API</option>
+                        <option value="console" {{if eq $source "console"}}selected{{end}}>Console</option>
+                        <option value="portal" {{if eq $source "portal"}}selected{{end}}>Portal</option>
+                        <option value="system" {{if eq $source "system"}}selected{{end}}>System</option>
+                    </select>
+                </div>
+                <div class="form-group mb-0-minw-180">
+                    <label for="filter_actor_id">{{t .Lang "portal.admin_audit.label_actor_id"}}</label>
+                    <input type="text" id="filter_actor_id" name="actor_id" placeholder="{{t .Lang "portal.admin_audit.placeholder_actor_id"}}" value="{{index .Data "ActorID"}}">
+                </div>
+                <div class="form-group mb-0-flex-ai-center-pt-20">
+                    <input type="checkbox" id="show_all" name="show_all" value="true" {{if index .Data "ShowAll"}}checked{{end}} class="w-auto">
+                    <label for="show_all" class="m-0-fs-13">{{t .Lang "portal.admin_audit.label_show_all"}}</label>
+                </div>
+                <button type="submit" class="btn h-40">{{t .Lang "common.filter"}}</button>
+            </form>
+        </div>
+
+        <!-- Audit Table -->
+        <div class="card">
+            <div class="card-header">
+                <h2 class="mb-0">{{t .Lang "portal.admin_audit.section_entries"}}</h2>
+                <span class="text-secondary fs-14">{{t .Lang "common.total" (index .Data "Total")}}</span>
+            </div>
+
+            {{$entries := index .Data "Entries"}}
+            {{$actorMap := index .Data "ActorMap"}}
+            {{if $entries}}
+            <div class="ofx-auto">
+            <table>
+                <thead>
+                    <tr>
+                        <th>{{t .Lang "portal.admin_audit.col.time"}}</th>
+                        <th>{{t .Lang "portal.admin_audit.col.actor"}}</th>
+                        <th>{{t .Lang "portal.admin_audit.col.action"}}</th>
+                        <th>{{t .Lang "portal.admin_audit.col.source"}}</th>
+                        <th>{{t .Lang "portal.admin_audit.col.ip"}}</th>
+                        <th>{{t .Lang "portal.admin_audit.col.status_code"}}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{range $entries}}
+                    <tr>
+                        <td class="ws-nowrap-fs-13">{{fmtDateTime .CreatedAt $.Timezone}}</td>
+                        <td class="truncate-150" title="{{.ActorID}}">
+                            {{if .ActorID}}
+                                {{$name := index $actorMap .ActorID}}
+                                {{if $name}}<strong>{{$name}}</strong>{{else}}{{.ActorID}}{{end}}
+                            {{else}}-{{end}}
+                        </td>
+                        <td>
+                            {{if eq .Action "security_alert"}}<span class="badge badge-inactive">{{.Action}}</span>
+                            {{else if eq .Action "login_failure"}}<span class="badge badge-inactive">{{.Action}}</span>
+                            {{else if eq .Action "rate_limit_hit"}}<span class="badge badge-inactive">{{.Action}}</span>
+                            {{else if eq .Action "permission_denied"}}<span class="badge badge-inactive">{{.Action}}</span>
+                            {{else if eq .Action "login_success"}}<span class="badge badge-active">{{.Action}}</span>
+                            {{else if eq .Action "user_verified"}}<span class="badge badge-active">{{.Action}}</span>
+                            {{else}}<span class="badge badge-pending">{{.Action}}</span>
+                            {{end}}
+                            {{if .Summary}}<span class="text-muted fs-13-mis-6">{{.Summary}}</span>{{end}}
+                        </td>
+                        <td>
+                            {{if .Source}}<span class="badge badge-pending">{{.Source}}</span>{{else}}-{{end}}
+                        </td>
+                        <td class="text-muted fs-13">{{if .IP}}{{.IP}}{{else}}-{{end}}</td>
+                        <td class="text-muted fs-13">{{if .StatusCode}}{{.StatusCode}}{{else}}-{{end}}</td>
+                    </tr>
+                    {{end}}
+                </tbody>
+            </table>
+            </div>
+
+            <!-- Pagination -->
+            {{$action := index .Data "Action"}}
+            {{$actorID := index .Data "ActorID"}}
+            {{$source := index .Data "Source"}}
+            {{$showAll := index .Data "ShowAll"}}
+            <div class="flex-jc-between-mt-12-fs-12">
+                <span class="text-muted">
+                    {{t .Lang "common.showing_of" (len $entries) (index .Data "Total")}}
+                </span>
+                <div class="flex-gap-8">
+                    {{if index .Data "HasPrev"}}
+                    <a href="/admin/audit?offset=0&action={{$action}}&actor_id={{$actorID}}&source={{$source}}{{if $showAll}}&show_all=true{{end}}" class="btn btn-sm">{{t .Lang "common.first"}}</a>
+                    {{end}}
+                    {{if index .Data "HasNext"}}
+                    <a href="/admin/audit?offset={{index .Data "NextOffset"}}&action={{$action}}&actor_id={{$actorID}}&source={{$source}}{{if $showAll}}&show_all=true{{end}}" class="btn btn-sm">{{t .Lang "common.next"}}</a>
+                    {{end}}
+                </div>
+            </div>
+            {{else}}
+            <div class="empty-state">
+                <p>{{t .Lang "portal.admin_audit.no_entries"}}</p>
+            </div>
+            {{end}}
+        </div>
+        {{end}}
+    </div>
+</div>
+{{end}}

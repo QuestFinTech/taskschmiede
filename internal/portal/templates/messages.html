@@ -1,0 +1,214 @@
+{{template "base" .}}
+{{define "content"}}
+{{template "nav" .}}
+
+<div class="main-content">
+    <div class="container">
+        <div class="page-header">
+            <h1>{{t .Lang "portal.messages.title"}}</h1>
+        </div>
+
+        {{if .Error}}
+        <div class="alert alert-error">{{.Error}}</div>
+        {{end}}
+
+        {{if .Success}}
+        <div class="alert alert-success">{{.Success}}</div>
+        {{end}}
+
+        {{if .Data}}
+        {{$view := index .Data "View"}}
+
+        {{if eq $view "thread"}}
+        <!-- Thread view -->
+        <div class="mb-4">
+            <a href="/messages" class="fs-13-c-secondary-no-underline">&larr; {{t .Lang "portal.messages.back_to_inbox"}}</a>
+        </div>
+
+        {{$thread := index .Data "Thread"}}
+        {{$msgID := index .Data "MessageID"}}
+
+        <div class="card mb-24">
+            <div class="card-header">
+                <h2 class="mb-0">{{t .Lang "portal.messages.section_thread"}}</h2>
+            </div>
+
+            {{if $thread}}
+            <div class="flex-col-gap-16">
+                {{range $thread}}
+                <div class="aside-note">
+                    <div class="flex-jc-between-mb-8">
+                        <strong class="fs-14">{{if .SenderName}}{{.SenderName}}{{else}}{{.SenderID}}{{end}}</strong>
+                        <span class="fs-12-c-muted">{{fmtDateTime .CreatedAt $.Timezone}}</span>
+                    </div>
+                    {{if .Subject}}<div class="fs-13-c-secondary-mb-4">{{.Subject}}</div>{{end}}
+                    <div class="md-content" data-md>{{.Content}}</div>
+                </div>
+                {{end}}
+            </div>
+            {{else}}
+            <div class="empty-state p-24">
+                <p class="text-muted">{{t .Lang "portal.messages.no_thread_messages"}}</p>
+            </div>
+            {{end}}
+
+            <!-- Reply form -->
+            <div class="section-divider-16">
+                <form method="POST" action="/messages">
+                    <input type="hidden" name="csrf_token" value="{{$.CSRFToken}}">
+                    <input type="hidden" name="action" value="reply">
+                    <input type="hidden" name="message_id" value="{{$msgID}}">
+                    <div class="form-group">
+                        <label for="reply_content">{{t .Lang "portal.messages.label_reply"}}</label>
+                        <textarea id="reply_content" name="content" rows="3" placeholder="{{t .Lang "portal.messages.placeholder_reply"}}" class="w-full-resize-v"></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary">{{t .Lang "portal.messages.send_reply"}}</button>
+                </form>
+            </div>
+        </div>
+
+        {{else}}
+        <!-- Inbox view -->
+
+        <!-- Compose form -->
+        <div class="card mb-24">
+            <div class="card-header">
+                <h2 class="mb-0">{{t .Lang "portal.messages.section_compose"}}</h2>
+            </div>
+            <form method="POST" action="/messages">
+                <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
+                <input type="hidden" name="action" value="send">
+                <div class="grid-2col-gap-12-mb-12">
+                    <div class="form-group mb-0">
+                        <label for="recipient_ids">{{t .Lang "portal.messages.label_recipient"}}</label>
+                        <select id="recipient_ids" name="recipient_ids" required>
+                            <option value="">{{t .Lang "common.select_recipient"}}</option>
+                            {{$resources := index .Data "Resources"}}
+                            {{if $resources}}
+                            {{range $resources}}
+                            <option value="{{.ID}}">{{.Name}} ({{.Type}})</option>
+                            {{end}}
+                            {{end}}
+                        </select>
+                    </div>
+                    <div class="form-group mb-0">
+                        <label for="subject">{{t .Lang "common.label.subject"}}</label>
+                        <input type="text" id="subject" name="subject" placeholder="{{t .Lang "portal.messages.placeholder_subject"}}" required>
+                    </div>
+                </div>
+                <div class="form-group mb-12">
+                    <label for="content">{{t .Lang "common.label.content"}}</label>
+                    <textarea id="content" name="content" rows="10" placeholder="{{t .Lang "portal.messages.placeholder_content"}}" class="w-full-resize-v" required></textarea>
+                </div>
+                <div class="flex-gap-12-ai-end">
+                    <div class="form-group mb-0-minw-140">
+                        <label for="intent">{{t .Lang "portal.messages.label_intent"}}</label>
+                        <select id="intent" name="intent">
+                            <option value="info">{{t .Lang "intent.info"}}</option>
+                            <option value="question">{{t .Lang "intent.question"}}</option>
+                            <option value="action">{{t .Lang "intent.action"}}</option>
+                            <option value="alert">{{t .Lang "intent.alert"}}</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary">{{t .Lang "common.send"}}</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Filter -->
+        <div class="card mb-24-p-16-24">
+            <form method="GET" action="/messages" class="flex-gap-12-ai-end-wrap">
+                <div class="form-group mb-0-minw-140">
+                    <label for="filter_status">{{t .Lang "common.label.status"}}</label>
+                    <select id="filter_status" name="status">
+                        <option value="">{{t .Lang "common.all"}}</option>
+                        {{$filterStatus := ""}}
+                        {{if .Data}}{{$filterStatus = index .Data "FilterStatus"}}{{end}}
+                        <option value="pending" {{if eq $filterStatus "pending"}}selected{{end}}>{{t .Lang "portal.messages.filter_status_pending"}}</option>
+                        <option value="delivered" {{if eq $filterStatus "delivered"}}selected{{end}}>{{t .Lang "portal.messages.filter_status_delivered"}}</option>
+                        <option value="read" {{if eq $filterStatus "read"}}selected{{end}}>{{t .Lang "portal.messages.filter_status_read"}}</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn h-40">{{t .Lang "common.filter"}}</button>
+            </form>
+        </div>
+
+        <!-- Inbox -->
+        <div class="card">
+            <div class="card-header">
+                <h2 class="mb-0">{{t .Lang "portal.messages.section_inbox"}} {{if .Data}}<span class="meta-text">({{index .Data "UnreadCount"}} {{t .Lang "portal.dashboard.unread"}}, {{index .Data "Total"}} {{t .Lang "portal.activity_feed.summary_total"}})</span>{{end}}</h2>
+            </div>
+
+            {{$messages := index .Data "Messages"}}
+            {{if $messages}}
+            <table>
+                <thead>
+                    <tr>
+                        <th>{{t .Lang "portal.messages.col.from"}}</th>
+                        <th>{{t .Lang "portal.messages.col.subject"}}</th>
+                        <th>{{t .Lang "portal.messages.col.intent"}}</th>
+                        <th>{{t .Lang "portal.messages.col.status"}}</th>
+                        <th>{{t .Lang "portal.messages.col.received"}}</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{range $messages}}
+                    <tr{{if ne .Status "read"}} class="fw-500"{{end}}>
+                        <td class="fs-14">{{if .SenderName}}{{.SenderName}}{{else}}{{.SenderID}}{{end}}</td>
+                        <td><a href="/messages/{{.ID}}">{{.Subject}}</a></td>
+                        <td>
+                            {{if eq .Intent "alert"}}
+                                <span class="badge badge-inactive">{{t $.Lang "intent.alert"}}</span>
+                            {{else if eq .Intent "action"}}
+                                <span class="badge badge-info">{{t $.Lang "intent.action"}}</span>
+                            {{else if eq .Intent "question"}}
+                                <span class="badge badge-pending">{{t $.Lang "intent.question"}}</span>
+                            {{else}}
+                                <span class="badge badge-active">{{t $.Lang "intent.info"}}</span>
+                            {{end}}
+                        </td>
+                        <td>
+                            {{if eq .Status "read"}}
+                                <span class="text-muted fs-13">{{t $.Lang "status.read"}}</span>
+                            {{else if eq .Status "delivered"}}
+                                <span class="badge badge-pending">{{t $.Lang "status.new"}}</span>
+                            {{else}}
+                                <span class="badge badge-pending">{{.Status}}</span>
+                            {{end}}
+                        </td>
+                        <td class="fs-13">{{fmtDateTime .CreatedAt $.Timezone}}</td>
+                        <td><a href="/messages/{{.ID}}" class="btn btn-sm">{{t $.Lang "common.view"}}</a></td>
+                    </tr>
+                    {{end}}
+                </tbody>
+            </table>
+
+            {{$total := index .Data "Total"}}
+            {{$limit := index .Data "Limit"}}
+            {{$offset := index .Data "Offset"}}
+            {{if gt $total $limit}}
+            <div class="card-footer">
+                <span>{{t .Lang "common.showing_range" $offset (len $messages) $total}}</span>
+                <div class="flex-gap-8">
+                    {{if gt $offset 0}}
+                    <a href="/messages?offset=0" class="btn btn-sm">{{t .Lang "common.first"}}</a>
+                    {{end}}
+                    {{if gt $total (add $offset $limit)}}
+                    <a href="/messages?offset={{add $offset $limit}}" class="btn btn-sm">{{t .Lang "common.next"}}</a>
+                    {{end}}
+                </div>
+            </div>
+            {{end}}
+
+            {{else}}
+            <div class="empty-state">
+                <p>{{t .Lang "portal.messages.no_messages"}}</p>
+            </div>
+            {{end}}
+        </div>
+        {{end}}
+        {{end}}
+    </div>
+</div>
+{{end}}

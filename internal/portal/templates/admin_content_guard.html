@@ -1,0 +1,324 @@
+{{template "base" .}}
+{{define "content"}}
+{{template "nav" .}}
+
+<div class="main-content">
+    <div class="container">
+        <div class="page-header">
+            <h1>{{t .Lang "admin.content_guard.title"}}</h1>
+        </div>
+
+        {{if .Error}}
+        <div class="alert alert-error">{{.Error}}</div>
+        {{end}}
+
+        {{if .Success}}
+        <div class="alert alert-success">{{.Success}}</div>
+        {{end}}
+
+        {{if .Data}}
+        {{$cgStats := index .Data "CGStats"}}
+        {{if $cgStats}}
+        <div class="stats-grid mb-24">
+            <div class="stat-card">
+                <div class="stat-value">{{$cgStats.TotalScanned}}</div>
+                <div class="stat-label">{{t .Lang "admin.dashboard.cg_total_scanned"}}</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value text-success">{{$cgStats.Clean}}</div>
+                <div class="stat-label">{{t .Lang "admin.dashboard.cg_clean"}}</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value c-info">{{$cgStats.Low}}</div>
+                <div class="stat-label">{{t .Lang "admin.dashboard.cg_low"}}</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value text-warning">{{$cgStats.Medium}}</div>
+                <div class="stat-label">{{t .Lang "admin.dashboard.cg_medium"}}</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value text-error">{{$cgStats.High}}</div>
+                <div class="stat-label">{{t .Lang "admin.dashboard.cg_high"}}</div>
+            </div>
+        </div>
+        {{end}}
+        {{end}}
+
+        <!-- System-wide Alerts -->
+        {{if .Data}}
+        {{$alerts := index .Data "Alerts"}}
+        {{$alertTotal := index .Data "AlertTotal"}}
+        <div class="card mb-24">
+            <div class="card-header">
+                <h2 class="mb-0">{{t .Lang "admin.content_guard.alerts_title"}}</h2>
+                <span class="text-secondary fs-14">{{t .Lang "common.total" $alertTotal}}</span>
+            </div>
+            {{if $alerts}}
+            <div class="ofx-auto">
+            <table class="fs-13">
+                <thead>
+                    <tr>
+                        <th>{{t .Lang "admin.content_guard.col_score"}}</th>
+                        <th>{{t .Lang "admin.content_guard.alerts_col_type"}}</th>
+                        <th>{{t .Lang "admin.content_guard.alerts_col_title"}}</th>
+                        <th>{{t .Lang "admin.content_guard.alerts_col_created"}}</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{range $alerts}}
+                    <tr>
+                        <td>
+                            {{if ge .HarmScore 70}}
+                                <span class="badge badge-inactive fs-14">{{.HarmScore}}</span>
+                            {{else if ge .HarmScore 40}}
+                                <span class="badge badge-pending fs-14">{{.HarmScore}}</span>
+                            {{else}}
+                                <span class="badge badge-info fs-14">{{.HarmScore}}</span>
+                            {{end}}
+                        </td>
+                        <td><span class="badge badge-info">{{.EntityType}}</span></td>
+                        <td class="truncate-300">{{.Title}}</td>
+                        <td class="ws-nowrap">{{fmtDateTime .CreatedAt $.Timezone}}</td>
+                        <td class="ws-nowrap">
+                            <form method="POST" action="/admin/content-guard" class="d-inline">
+                                <input type="hidden" name="csrf_token" value="{{$.CSRFToken}}">
+                                <input type="hidden" name="action" value="dismiss">
+                                <input type="hidden" name="entity_type" value="{{.EntityType}}">
+                                <input type="hidden" name="entity_id" value="{{.EntityID}}">
+                                <button type="submit" class="btn btn-sm">{{t $.Lang "admin.content_guard.alerts_dismiss"}}</button>
+                            </form>
+                            {{if .UserID}}
+                            <form method="POST" action="/admin/content-guard" class="d-inline">
+                                <input type="hidden" name="csrf_token" value="{{$.CSRFToken}}">
+                                <input type="hidden" name="action" value="suspend_creator">
+                                <input type="hidden" name="user_id" value="{{.UserID}}">
+                                <button type="submit" class="btn btn-sm btn-warning" data-confirm="{{t $.Lang "portal.admin_users.confirm_suspend"}}">{{t $.Lang "portal.admin_users.action_suspend"}}</button>
+                            </form>
+                            {{end}}
+                        </td>
+                    </tr>
+                    {{end}}
+                </tbody>
+            </table>
+            </div>
+            {{else}}
+            <div class="empty-state">
+                <p>{{t .Lang "admin.content_guard.alerts_empty"}}</p>
+            </div>
+            {{end}}
+        </div>
+        {{end}}
+
+        <div class="card mb-24">
+            <div class="card-header">
+                <h2 class="mb-0">{{t .Lang "admin.content_guard.test_title"}}</h2>
+            </div>
+            <p class="text-muted mb-16-fs-14">
+                {{t .Lang "admin.content_guard.test_description"}}
+            </p>
+
+            <form method="POST" action="/admin/content-guard">
+                <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
+                <div class="mb-16">
+                    <textarea name="payload" rows="5" class="textarea-code" placeholder="{{t .Lang "admin.content_guard.test_placeholder"}}">{{if .Data}}{{index .Data "Payload"}}{{end}}</textarea>
+                </div>
+                <button type="submit" class="btn btn-primary">{{t .Lang "admin.content_guard.test_submit"}}</button>
+            </form>
+        </div>
+
+        {{if .Data}}
+        {{$results := index .Data "Results"}}
+        {{if $results}}
+        {{$threshold := index .Data "Threshold"}}
+        <div class="card">
+            <div class="card-header">
+                <h2 class="mb-0">{{t .Lang "admin.content_guard.results_title"}}</h2>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>{{t .Lang "admin.content_guard.col_score"}}</th>
+                        <th>{{t .Lang "admin.content_guard.col_signals"}}</th>
+                        <th>{{t .Lang "admin.content_guard.col_reaction"}}</th>
+                        <th>{{t .Lang "admin.content_guard.col_text"}}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{range $results}}
+                    <tr>
+                        <td>
+                            {{if ge .Score 70}}
+                                <span class="badge badge-inactive fs-14">{{.Score}}</span>
+                            {{else if ge .Score 40}}
+                                <span class="badge badge-pending fs-14">{{.Score}}</span>
+                            {{else if ge .Score 1}}
+                                <span class="badge badge-info fs-14">{{.Score}}</span>
+                            {{else}}
+                                <span class="badge badge-active fs-14">0</span>
+                            {{end}}
+                        </td>
+                        <td>
+                            {{if .Signals}}
+                                {{range .Signals}}
+                                <span class="badge badge-info mr-4">{{.}}</span>
+                                {{end}}
+                            {{else}}
+                                <span class="text-muted">--</span>
+                            {{end}}
+                        </td>
+                        <td>
+                            {{if eq .Score 0}}
+                                <span class="text-muted">{{t $.Lang "admin.content_guard.reaction_clean"}}</span>
+                            {{else if ge .Score $threshold}}
+                                <span class="badge badge-inactive fs-13">{{t $.Lang "admin.content_guard.reaction_llm_review"}}</span>
+                            {{else}}
+                                <span class="badge badge-active fs-13">{{t $.Lang "admin.content_guard.reaction_recorded"}}</span>
+                            {{end}}
+                        </td>
+                        <td class="ff-mono-fs-13-truncate-400">{{.Text}}</td>
+                    </tr>
+                    {{end}}
+                </tbody>
+            </table>
+        </div>
+        {{end}}
+        {{end}}
+
+        <!-- Scoring Patterns -->
+        {{if .Data}}
+        {{$patterns := index .Data "Patterns"}}
+        {{if $patterns}}
+        <div class="card mb-24">
+            <div class="card-header">
+                <h2 class="mb-0">{{t .Lang "admin.content_guard.section_patterns"}}</h2>
+            </div>
+            <p class="text-muted mb-16-fs-14">
+                {{t .Lang "admin.content_guard.patterns_description"}}
+            </p>
+
+            <form method="POST" action="/admin/content-guard">
+                <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
+                <input type="hidden" name="action" value="update_patterns">
+                <table class="fs-13">
+                    <thead>
+                        <tr>
+                            <th>{{t .Lang "admin.content_guard.col_enabled"}}</th>
+                            <th>{{t .Lang "admin.content_guard.col_name"}}</th>
+                            <th>{{t .Lang "admin.content_guard.col_category"}}</th>
+                            <th>{{t .Lang "admin.content_guard.col_pattern"}}</th>
+                            <th>{{t .Lang "admin.content_guard.col_weight"}}</th>
+                            <th>{{t .Lang "admin.content_guard.col_builtin"}}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {{range $i, $p := $patterns}}
+                        <tr>
+                            <td>
+                                {{if $p.Builtin}}
+                                <input type="checkbox" name="pattern_enabled_{{$p.Name}}" {{if $p.Enabled}}checked{{end}}>
+                                {{else}}
+                                <input type="checkbox" name="custom_delete_{{$i}}" title="{{t $.Lang "admin.content_guard.delete_tooltip"}}">
+                                {{end}}
+                            </td>
+                            <td class="ff-mono">
+                                {{if $p.Builtin}}
+                                {{$p.Name}}
+                                {{else}}
+                                <input type="hidden" name="custom_orig_name_{{$i}}" value="{{$p.Name}}">
+                                <input type="text" name="custom_edit_name_{{$i}}" value="{{$p.Name}}" class="input-mono-120">
+                                {{end}}
+                            </td>
+                            <td>
+                                {{if $p.Builtin}}
+                                <span class="badge badge-info">{{$p.Category}}</span>
+                                {{else}}
+                                <select name="custom_edit_category_{{$i}}" class="p-3-6-fs-13">
+                                    <option value="custom" {{if eq $p.Category "custom"}}selected{{end}}>custom</option>
+                                    <option value="injection" {{if eq $p.Category "injection"}}selected{{end}}>injection</option>
+                                    <option value="prompt_leak" {{if eq $p.Category "prompt_leak"}}selected{{end}}>prompt_leak</option>
+                                    <option value="jailbreak" {{if eq $p.Category "jailbreak"}}selected{{end}}>jailbreak</option>
+                                    <option value="social_engineering" {{if eq $p.Category "social_engineering"}}selected{{end}}>social_engineering</option>
+                                    <option value="data_exfiltration" {{if eq $p.Category "data_exfiltration"}}selected{{end}}>data_exfiltration</option>
+                                    <option value="privilege_escalation" {{if eq $p.Category "privilege_escalation"}}selected{{end}}>privilege_escalation</option>
+                                    <option value="harmful_content" {{if eq $p.Category "harmful_content"}}selected{{end}}>harmful_content</option>
+                                </select>
+                                {{end}}
+                            </td>
+                            <td class="ff-mono-fs-12-truncate-260">
+                                {{if $p.Builtin}}
+                                <span title="{{$p.Pattern}}">{{$p.Pattern}}</span>
+                                {{else}}
+                                <input type="text" name="custom_edit_pattern_{{$i}}" value="{{$p.Pattern}}" class="input-xs-mono">
+                                {{end}}
+                            </td>
+                            <td>
+                                {{if $p.Builtin}}
+                                <input type="number" name="pattern_weight_{{$p.Name}}" value="{{$p.Weight}}" min="1" max="25" class="input-xs-60">
+                                {{else}}
+                                <input type="number" name="custom_edit_weight_{{$i}}" value="{{$p.Weight}}" min="1" max="25" class="input-xs-60">
+                                {{end}}
+                            </td>
+                            <td>
+                                {{if $p.Builtin}}
+                                <span class="badge badge-active">builtin</span>
+                                {{else}}
+                                <span class="badge badge-pending">custom</span>
+                                {{end}}
+                            </td>
+                        </tr>
+                        {{end}}
+                    </tbody>
+                </table>
+
+                <div class="bordered-section">
+                    <h3 class="m-0-0-12-fs-14">{{t .Lang "admin.content_guard.add_pattern"}}</h3>
+                    <div class="grid-1-1-2-80-gap-8">
+                        <div>
+                            <label class="fs-12">{{t .Lang "admin.content_guard.col_name"}}</label>
+                            <input type="text" name="custom_name" placeholder="my_pattern" class="input-sm">
+                        </div>
+                        <div>
+                            <label class="fs-12">{{t .Lang "admin.content_guard.col_category"}}</label>
+                            <select name="custom_category" class="input-sm">
+                                <option value="custom">custom</option>
+                                <option value="injection">injection</option>
+                                <option value="prompt_leak">prompt_leak</option>
+                                <option value="jailbreak">jailbreak</option>
+                                <option value="social_engineering">social_engineering</option>
+                                <option value="data_exfiltration">data_exfiltration</option>
+                                <option value="privilege_escalation">privilege_escalation</option>
+                                <option value="harmful_content">harmful_content</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="fs-12">Regex</label>
+                            <input type="text" name="custom_pattern" placeholder="(?i)pattern\s+here" class="input-sm-mono">
+                        </div>
+                        <div>
+                            <label class="fs-12">{{t .Lang "admin.content_guard.col_weight"}}</label>
+                            <input type="number" name="custom_weight" value="5" min="1" max="25" class="input-sm">
+                        </div>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary mt-16">{{t .Lang "admin.content_guard.save_patterns"}}</button>
+            </form>
+        </div>
+        {{end}}
+        {{end}}
+
+        <div class="card mt-24-p-20">
+            <p class="fs-14-m-0-12">
+                {{t .Lang "admin.content_guard.info_scoring"}}
+            </p>
+            <ul class="fs-14-m-0-pl-20">
+                <li><strong>0</strong> -- {{t .Lang "admin.content_guard.band_clean"}}</li>
+                <li><strong>1-39</strong> -- {{t .Lang "admin.content_guard.band_low"}}</li>
+                <li><strong>40-69</strong> -- {{t .Lang "admin.content_guard.band_medium"}}</li>
+                <li><strong>70-100</strong> -- {{t .Lang "admin.content_guard.band_high"}}</li>
+            </ul>
+        </div>
+    </div>
+</div>
+{{end}}

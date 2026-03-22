@@ -1,0 +1,65 @@
+{{template "base" .}}
+{{define "content"}}
+{{template "nav" .}}
+
+<div class="main-content">
+    <div class="container">
+        <div class="page-header">
+            <h1>{{t .Lang "portal.admin_translations.title"}}</h1>
+        </div>
+
+        {{if .Error}}
+        <div class="alert alert-error">{{.Error}}</div>
+        {{end}}
+
+        {{if .Data}}
+        {{$td := .Data}}
+
+        <div class="card">
+            <div class="card-header">
+                <h2 class="mb-0">{{t .Lang "portal.admin_translations.section_overview"}}</h2>
+            </div>
+            <p class="text-muted mb-16-fs-14">
+                {{t .Lang "portal.admin_translations.base_key_count" $td.BaseKeyCount}}
+            </p>
+            <div class="ofx-auto">
+            <table>
+                <thead>
+                    <tr>
+                        <th>{{t .Lang "portal.admin_translations.col.code"}}</th>
+                        <th>{{t .Lang "portal.admin_translations.col.name"}}</th>
+                        <th class="ta-end">{{t .Lang "portal.admin_translations.col.translated"}}</th>
+                        <th class="ta-end">{{t .Lang "portal.admin_translations.col.coverage"}}</th>
+                        <th class="ta-end">{{t .Lang "portal.admin_translations.col.missing"}}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{range $td.Languages}}
+                    <tr>
+                        <td><strong>{{.Language.Code}}</strong></td>
+                        <td>{{.Language.NativeName}} ({{.Language.Name}})</td>
+                        <td class="ta-end">{{.KeyCount}}</td>
+                        <td class="ta-end">
+                            {{if eq .Language.Code "en"}}
+                                <span class="text-muted">{{t $.Lang "portal.admin_translations.baseline"}}</span>
+                            {{else}}
+                                {{printf "%.1f%%" .Coverage}}
+                            {{end}}
+                        </td>
+                        <td class="ta-end">
+                            {{if eq .Missing 0}}
+                                <span class="c-success">0</span>
+                            {{else}}
+                                <span class="c-error">{{.Missing}}</span>
+                            {{end}}
+                        </td>
+                    </tr>
+                    {{end}}
+                </tbody>
+            </table>
+            </div>
+        </div>
+        {{end}}
+    </div>
+</div>
+{{end}}

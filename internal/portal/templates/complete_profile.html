@@ -1,0 +1,147 @@
+{{template "base" .}}
+{{define "content"}}
+<div class="main-content center-page">
+    <div class="center-card card maxw-480">
+        <div class="ta-center-mb-24">
+            <h1>{{t .Lang "portal.complete_profile.title"}}</h1>
+            <p class="text-secondary mb-0">{{t .Lang "portal.complete_profile.subtitle"}}</p>
+        </div>
+
+        {{if .Error}}
+        <div class="alert alert-error">{{.Error}}</div>
+        {{end}}
+
+        <form method="POST" action="/complete-profile">
+            <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
+            <input type="hidden" name="account_type" value="{{if .Data}}{{index .Data "AccountType"}}{{end}}">
+
+            <p class="text-secondary fs-13-mb-16">{{t .Lang "portal.register.address_notice"}}</p>
+
+            <div class="form-group">
+                <label for="street">{{t .Lang "common.label.street"}} <span class="req">*</span></label>
+                <input type="text" id="street" name="street" required autofocus placeholder="{{t .Lang "common.placeholder.street"}}" {{if .Data}}value="{{index .Data "Street"}}"{{end}}>
+            </div>
+            <div class="form-group">
+                <label for="street2">{{t .Lang "common.label.street2"}}</label>
+                <input type="text" id="street2" name="street2" placeholder="{{t .Lang "common.placeholder.street2"}}" {{if .Data}}value="{{index .Data "Street2"}}"{{end}}>
+            </div>
+            <div class="flex-gap-12">
+                <div class="form-group flex-1">
+                    <label for="postal_code">{{t .Lang "common.label.postal_code"}} <span class="req">*</span></label>
+                    <input type="text" id="postal_code" name="postal_code" required placeholder="{{t .Lang "common.placeholder.postal_code"}}" {{if .Data}}value="{{index .Data "PostalCode"}}"{{end}}>
+                </div>
+                <div class="form-group flex-1">
+                    <label for="city">{{t .Lang "common.label.city"}} <span class="req">*</span></label>
+                    <input type="text" id="city" name="city" required placeholder="{{t .Lang "common.placeholder.city"}}" {{if .Data}}value="{{index .Data "City"}}"{{end}}>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="state">{{t .Lang "common.label.state"}}</label>
+                <input type="text" id="state" name="state" placeholder="{{t .Lang "common.placeholder.state"}}" {{if .Data}}value="{{index .Data "State"}}"{{end}}>
+            </div>
+            <div class="form-group">
+                <label for="country">{{t .Lang "common.label.country"}} <span class="req">*</span></label>
+                <select id="country" name="country" required>
+                    <option value="">{{t .Lang "common.placeholder.select_country"}}</option>
+                    <option value="AT" {{if .Data}}{{if eq (index .Data "Country") "AT"}}selected{{end}}{{end}}>Austria</option>
+                    <option value="BE" {{if .Data}}{{if eq (index .Data "Country") "BE"}}selected{{end}}{{end}}>Belgium</option>
+                    <option value="BG" {{if .Data}}{{if eq (index .Data "Country") "BG"}}selected{{end}}{{end}}>Bulgaria</option>
+                    <option value="HR" {{if .Data}}{{if eq (index .Data "Country") "HR"}}selected{{end}}{{end}}>Croatia</option>
+                    <option value="CY" {{if .Data}}{{if eq (index .Data "Country") "CY"}}selected{{end}}{{end}}>Cyprus</option>
+                    <option value="CZ" {{if .Data}}{{if eq (index .Data "Country") "CZ"}}selected{{end}}{{end}}>Czech Republic</option>
+                    <option value="DK" {{if .Data}}{{if eq (index .Data "Country") "DK"}}selected{{end}}{{end}}>Denmark</option>
+                    <option value="EE" {{if .Data}}{{if eq (index .Data "Country") "EE"}}selected{{end}}{{end}}>Estonia</option>
+                    <option value="FI" {{if .Data}}{{if eq (index .Data "Country") "FI"}}selected{{end}}{{end}}>Finland</option>
+                    <option value="FR" {{if .Data}}{{if eq (index .Data "Country") "FR"}}selected{{end}}{{end}}>France</option>
+                    <option value="DE" {{if .Data}}{{if eq (index .Data "Country") "DE"}}selected{{end}}{{end}}>Germany</option>
+                    <option value="GR" {{if .Data}}{{if eq (index .Data "Country") "GR"}}selected{{end}}{{end}}>Greece</option>
+                    <option value="HU" {{if .Data}}{{if eq (index .Data "Country") "HU"}}selected{{end}}{{end}}>Hungary</option>
+                    <option value="IE" {{if .Data}}{{if eq (index .Data "Country") "IE"}}selected{{end}}{{end}}>Ireland</option>
+                    <option value="IT" {{if .Data}}{{if eq (index .Data "Country") "IT"}}selected{{end}}{{end}}>Italy</option>
+                    <option value="LV" {{if .Data}}{{if eq (index .Data "Country") "LV"}}selected{{end}}{{end}}>Latvia</option>
+                    <option value="LT" {{if .Data}}{{if eq (index .Data "Country") "LT"}}selected{{end}}{{end}}>Lithuania</option>
+                    <option value="LU" {{if .Data}}{{if eq (index .Data "Country") "LU"}}selected{{end}}{{end}}>Luxembourg</option>
+                    <option value="MT" {{if .Data}}{{if eq (index .Data "Country") "MT"}}selected{{end}}{{end}}>Malta</option>
+                    <option value="NL" {{if .Data}}{{if eq (index .Data "Country") "NL"}}selected{{end}}{{end}}>Netherlands</option>
+                    <option value="PL" {{if .Data}}{{if eq (index .Data "Country") "PL"}}selected{{end}}{{end}}>Poland</option>
+                    <option value="PT" {{if .Data}}{{if eq (index .Data "Country") "PT"}}selected{{end}}{{end}}>Portugal</option>
+                    <option value="RO" {{if .Data}}{{if eq (index .Data "Country") "RO"}}selected{{end}}{{end}}>Romania</option>
+                    <option value="SK" {{if .Data}}{{if eq (index .Data "Country") "SK"}}selected{{end}}{{end}}>Slovakia</option>
+                    <option value="SI" {{if .Data}}{{if eq (index .Data "Country") "SI"}}selected{{end}}{{end}}>Slovenia</option>
+                    <option value="ES" {{if .Data}}{{if eq (index .Data "Country") "ES"}}selected{{end}}{{end}}>Spain</option>
+                    <option value="SE" {{if .Data}}{{if eq (index .Data "Country") "SE"}}selected{{end}}{{end}}>Sweden</option>
+                    <option value="CH" {{if .Data}}{{if eq (index .Data "Country") "CH"}}selected{{end}}{{end}}>Switzerland</option>
+                    <option value="GB" {{if .Data}}{{if eq (index .Data "Country") "GB"}}selected{{end}}{{end}}>United Kingdom</option>
+                    <option value="US" {{if .Data}}{{if eq (index .Data "Country") "US"}}selected{{end}}{{end}}>United States</option>
+                    <option value="OTHER" {{if .Data}}{{if eq (index .Data "Country") "OTHER"}}selected{{end}}{{end}}>Other</option>
+                </select>
+            </div>
+
+            <div id="business_group" class="d-none">
+                <div class="flex-gap-12">
+                    <div class="form-group flex-1">
+                        <label for="company_registration">{{t .Lang "common.label.company_registration"}}</label>
+                        <input type="text" id="company_registration" name="company_registration" placeholder="{{t .Lang "common.placeholder.company_registration"}}" {{if .Data}}value="{{index .Data "CompanyRegistration"}}"{{end}}>
+                    </div>
+                    <div class="form-group flex-1">
+                        <label for="vat_number">{{t .Lang "common.label.vat_number"}}</label>
+                        <input type="text" id="vat_number" name="vat_number" placeholder="{{t .Lang "common.placeholder.vat_number"}}" {{if .Data}}value="{{index .Data "VATNumber"}}"{{end}}>
+                    </div>
+                </div>
+            </div>
+
+            <div class="my-16">
+                <div class="form-check mb-8">
+                    <label class="flex-ai-start-gap-8-fs-13-cur">
+                        <input type="checkbox" name="accept_terms" class="mt-2" required>
+                        <span>{{tHTML .Lang "portal.register.accept_terms"}}</span>
+                    </label>
+                </div>
+                <div class="form-check mb-8">
+                    <label class="flex-ai-start-gap-8-fs-13-cur">
+                        <input type="checkbox" name="accept_privacy" class="mt-2" required>
+                        <span>{{tHTML .Lang "portal.register.accept_privacy"}}</span>
+                    </label>
+                </div>
+                <div class="form-check" id="dpa_check" class="mb-8-d-none">
+                    <label class="flex-ai-start-gap-8-fs-13-cur">
+                        <input type="checkbox" name="accept_dpa" id="accept_dpa" class="mt-2">
+                        <span>{{tHTML .Lang "portal.register.accept_dpa"}}</span>
+                    </label>
+                </div>
+                <div class="form-check">
+                    <label class="flex-ai-start-gap-8-fs-13-cur">
+                        <input type="checkbox" name="age_declaration" class="mt-2" required>
+                        <span>{{tHTML .Lang "portal.register.age_declaration"}}</span>
+                    </label>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-block">{{t .Lang "portal.complete_profile.submit"}}</button>
+        </form>
+    </div>
+</div>
+
+<style nonce="{{.Nonce}}">
+    .req { color: var(--error); font-weight: 400; }
+</style>
+
+<script nonce="{{.Nonce}}">
+function toggleBusiness() {
+    var at = document.querySelector('input[name="account_type"]');
+    var isBusiness = at && at.value === 'business';
+    var grp = document.getElementById('business_group');
+    var dpa = document.getElementById('dpa_check');
+    var dpaInput = document.getElementById('accept_dpa');
+    if (grp) grp.classList.toggle('d-none', !isBusiness);
+    if (dpa) dpa.classList.toggle('d-none', !isBusiness);
+    if (isBusiness) {
+        dpaInput.setAttribute('required', '');
+    } else {
+        dpaInput.removeAttribute('required');
+        dpaInput.checked = false;
+    }
+}
+document.addEventListener('DOMContentLoaded', toggleBusiness);
+</script>
+{{end}}
