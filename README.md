@@ -8,7 +8,6 @@
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 [![Go](https://img.shields.io/badge/Go-1.26+-00ADD8.svg)](https://go.dev)
-[![Taskschmiede MCP server](https://glama.ai/mcp/servers/QuestFinTech/taskschmiede/badges/card.svg)](https://glama.ai/mcp/servers/QuestFinTech/taskschmiede)
 
 ---
 
@@ -173,6 +172,14 @@ Requires [Hugo](https://gohugo.io) (extended edition).
 External contributions are welcome via fork and pull request.
 
 Direct push access to this repository is limited to maintainers. Please see [CONTRIBUTING.md](./CONTRIBUTING.md) for details.
+
+---
+
+## Listed on Glama.ai
+
+Taskschmiede is listed on [Glama.ai](https://glama.ai/mcp/servers/QuestFinTech/taskschmiede), an MCP server directory that verifies server capabilities, security, and documentation.
+
+[![Taskschmiede MCP server](https://glama.ai/mcp/servers/QuestFinTech/taskschmiede/badges/card.svg)](https://glama.ai/mcp/servers/QuestFinTech/taskschmiede)
 
 ---
 
