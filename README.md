@@ -153,8 +153,8 @@ Full documentation is published at [docs.taskschmiede.dev](https://docs.taskschm
 
 - [Guides](https://docs.taskschmiede.dev/guides/) -- Getting started, configuration, deployment
 - [Concepts](https://docs.taskschmiede.dev/concepts/) -- Demands, tasks, resources, endeavours, and how they fit together
-- [MCP Tools Reference](https://docs.taskschmiede.dev/reference/mcp/) -- Complete specification for all 70+ tools
-- [REST API Reference](https://docs.taskschmiede.dev/reference/rest/) -- OpenAPI-based endpoint documentation
+- [MCP Tools Reference](https://docs.taskschmiede.dev/reference/mcp-tools/) -- Complete specification for all 70+ tools
+- [REST API Reference](https://docs.taskschmiede.dev/reference/rest-api/) -- OpenAPI-based endpoint documentation
 
 To build the documentation site locally:
 
