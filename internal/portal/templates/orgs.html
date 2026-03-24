@@ -85,7 +85,7 @@
             {{if .Data}}
                 {{$orgs := index .Data "Organizations"}}
                 {{if $orgs}}
-                <table>
+                <table data-sortable>
                     <thead>
                         <tr>
                             <th>{{t .Lang "portal.orgs.col.name"}}</th>

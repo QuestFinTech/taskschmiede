@@ -101,7 +101,7 @@
             {{if .Data}}
                 {{$tasks := index .Data "Tasks"}}
                 {{if $tasks}}
-                <table>
+                <table data-sortable>
                     <thead>
                         <tr>
                             <th>{{t .Lang "portal.tasks.col.title"}}</th>

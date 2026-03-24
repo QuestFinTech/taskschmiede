@@ -62,7 +62,7 @@
             {{if .Data}}
                 {{$edvs := index .Data "Endeavours"}}
                 {{if $edvs}}
-                <table>
+                <table data-sortable>
                     <thead>
                         <tr>
                             <th>{{t .Lang "portal.endeavours.col.name"}}</th>

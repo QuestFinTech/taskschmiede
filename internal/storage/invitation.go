@@ -719,10 +719,25 @@ func (db *DB) VerifyAndCreateUser(email, code string) (*User, string, error) {
 		}
 	}
 
-	// When KYC is not required, create the auto-org immediately.
+	// When KYC is not required, create Person record and auto-org immediately.
 	// When KYC is required, identity recording and org creation are
 	// deferred to the complete-profile step (phase 2 of registration).
 	requireKYC, _ := db.GetPolicy("registration.require_kyc")
+	if requireKYC == "false" && firstName.Valid && firstName.String != "" {
+		at := "private"
+		if accountType.Valid && accountType.String != "" {
+			at = accountType.String
+		}
+		cn := ""
+		if companyName.Valid {
+			cn = companyName.String
+		}
+		co := ""
+		if countryCol.Valid {
+			co = countryCol.String
+		}
+		_, _ = db.CreatePerson(userID, firstName.String, lastName.String, at, cn, co)
+	}
 	if requireKYC == "false" && name != "" {
 		orgName := name
 		if accountType.Valid && accountType.String == "business" && companyName.Valid && companyName.String != "" {

@@ -105,8 +105,9 @@ func TestDemandCRUD(t *testing.T) {
 
 	// Create a second demand and cancel it
 	rec = env.doRequest("POST", "/api/v1/demands", map[string]interface{}{
-		"type":  "bug",
-		"title": "Bug to cancel",
+		"type":         "bug",
+		"title":        "Bug to cancel",
+		"endeavour_id": edvID,
 	})
 	data = env.parseData(rec)
 	dmd2ID := data["id"].(string)

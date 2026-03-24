@@ -25,13 +25,13 @@
         {{$demand := index .Data "Demand"}}
         {{if $demand}}
 
-        <div class="flex-gap-8-mb-16">
-            <a href="/reports/demand/{{$demand.ID}}" class="btn btn-sm">{{t .Lang "portal.reports.view"}}</a>
-            <a href="/reports/demand/{{$demand.ID}}?format=download" class="btn btn-sm">{{t .Lang "portal.reports.download"}}</a>
+        <div class="flex-gap-8-mb-16" style="align-items:center">
+            <a href="/reports/demand/{{$demand.ID}}" class="btn">{{t .Lang "portal.reports.view"}}</a>
+            <a href="/reports/demand/{{$demand.ID}}?format=download" class="btn">{{t .Lang "portal.reports.download"}}</a>
             <form method="POST" action="/reports/demand/{{$demand.ID}}" class="d-inline">
                 <input type="hidden" name="csrf_token" value="{{$.CSRFToken}}">
                 <input type="hidden" name="action" value="email">
-                <button type="submit" class="btn btn-sm">{{t .Lang "portal.reports.email"}}</button>
+                <button type="submit" class="btn">{{t .Lang "portal.reports.email"}}</button>
             </form>
         </div>
 
@@ -58,7 +58,7 @@
                     <span class="text-secondary">ID</span>
                     <span class="ff-mono-fs-13">{{$demand.ID}}</span>
                     <span class="text-secondary">{{t .Lang "common.label.type"}}</span>
-                    <span><span class="badge badge-pending">{{$demand.Type}}</span></span>
+                    <span><span class="badge badge-pending">{{t .Lang (printf "demand_type.%s" $demand.Type)}}</span></span>
                     <span class="text-secondary">{{t .Lang "portal.demand_detail.label_priority"}}</span>
                     <span>
                         {{if eq $demand.Priority "critical"}}
@@ -106,6 +106,24 @@
                     <input type="hidden" name="csrf_token" value="{{$.CSRFToken}}">
                     <input type="hidden" name="action" value="update">
                     <div class="form-group">
+                        <label for="edit_title">{{t .Lang "common.label.title"}}</label>
+                        <input type="text" id="edit_title" name="title" value="{{$demand.Title}}">
+                    </div>
+                    <div class="form-group">
+                        <label for="edit_description">{{t .Lang "portal.demand_detail.label_description"}}</label>
+                        <textarea id="edit_description" name="description" rows="4">{{$demand.Description}}</textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit_type">{{t .Lang "common.label.type"}}</label>
+                        <select id="edit_type" name="type">
+                            <option value="feature" {{if eq $demand.Type "feature"}}selected{{end}}>{{t .Lang "demand_type.feature"}}</option>
+                            <option value="bug" {{if eq $demand.Type "bug"}}selected{{end}}>{{t .Lang "demand_type.bug"}}</option>
+                            <option value="enhancement" {{if eq $demand.Type "enhancement"}}selected{{end}}>{{t .Lang "demand_type.enhancement"}}</option>
+                            <option value="requirement" {{if eq $demand.Type "requirement"}}selected{{end}}>{{t .Lang "demand_type.requirement"}}</option>
+                            <option value="task" {{if eq $demand.Type "task"}}selected{{end}}>{{t .Lang "demand_type.task"}}</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
                         <label for="edit_status">{{t .Lang "common.label.status"}}</label>
                         <select id="edit_status" name="status">
                             <option value="draft" {{if eq $demand.Status "draft"}}selected{{end}}>{{t .Lang "status.draft"}}</option>
@@ -148,7 +166,7 @@
                             <label for="cancel_reason">{{t .Lang "portal.demand_detail.label_cancel_reason"}}</label>
                             <textarea id="cancel_reason" name="reason" rows="2" required placeholder="{{t .Lang "portal.demand_detail.placeholder_cancel_reason"}}"></textarea>
                         </div>
-                        <button type="submit" class="btn btn-danger btn-sm">{{t .Lang "portal.demand_detail.action_cancel"}}</button>
+                        <button type="submit" class="btn btn-danger">{{t .Lang "portal.demand_detail.action_cancel"}}</button>
                     </form>
                 </div>
                 {{else}}
@@ -165,7 +183,7 @@
             </div>
             {{if $linkedTasks}}
             <div class="ofx-auto">
-            <table>
+            <table data-sortable>
                 <thead>
                     <tr>
                         <th>{{t .Lang "portal.demand_detail.col.title"}}</th>

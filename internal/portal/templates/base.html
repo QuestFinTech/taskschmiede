@@ -2234,15 +2234,72 @@
                 sel.form.submit();
             }
         });
-        /* data-toggle on clickable elements: toggle d-none on target */
+        /* data-toggle on clickable elements: toggle d-none on target and swap hint text */
         document.addEventListener('click', function(e) {
             var el = e.target.closest('[data-toggle]');
             if (el) {
                 var target = document.getElementById(el.getAttribute('data-toggle'));
                 if (target) {
                     target.classList.toggle('d-none');
+                    var hint = el.querySelector('.toggle-hint');
+                    if (hint && hint.dataset.collapsed && hint.dataset.expanded) {
+                        hint.textContent = target.classList.contains('d-none') ? hint.dataset.collapsed : hint.dataset.expanded;
+                    }
                 }
             }
+        });
+    })();
+
+    /* Sortable tables: click column headers to sort asc/desc.
+       Add data-sortable to any <table> to enable. */
+    (function() {
+        document.querySelectorAll('table[data-sortable]').forEach(function(table) {
+            var headers = table.querySelectorAll('thead th');
+            headers.forEach(function(th, colIdx) {
+                th.style.cursor = 'pointer';
+                th.style.userSelect = 'none';
+                th.setAttribute('title', 'Click to sort');
+                th.addEventListener('click', function() {
+                    var tbody = table.querySelector('tbody');
+                    if (!tbody) return;
+                    var rows = Array.from(tbody.querySelectorAll('tr'));
+                    var asc = th.dataset.sortDir !== 'asc';
+                    // Reset all headers
+                    headers.forEach(function(h) {
+                        h.dataset.sortDir = '';
+                        var ind = h.querySelector('.sort-ind');
+                        if (ind) ind.textContent = '';
+                    });
+                    th.dataset.sortDir = asc ? 'asc' : 'desc';
+                    // Add or update indicator
+                    var ind = th.querySelector('.sort-ind');
+                    if (!ind) {
+                        ind = document.createElement('span');
+                        ind.className = 'sort-ind';
+                        ind.style.marginLeft = '4px';
+                        ind.style.fontSize = '10px';
+                        th.appendChild(ind);
+                    }
+                    ind.textContent = asc ? ' \u25B2' : ' \u25BC';
+                    rows.sort(function(a, b) {
+                        var aCell = a.children[colIdx];
+                        var bCell = b.children[colIdx];
+                        if (!aCell || !bCell) return 0;
+                        var aVal = (aCell.dataset.sortValue || aCell.textContent).trim();
+                        var bVal = (bCell.dataset.sortValue || bCell.textContent).trim();
+                        // Try numeric comparison
+                        var aNum = parseFloat(aVal);
+                        var bNum = parseFloat(bVal);
+                        if (!isNaN(aNum) && !isNaN(bNum)) {
+                            return asc ? aNum - bNum : bNum - aNum;
+                        }
+                        // String comparison
+                        var cmp = aVal.localeCompare(bVal, undefined, {sensitivity: 'base'});
+                        return asc ? cmp : -cmp;
+                    });
+                    rows.forEach(function(row) { tbody.appendChild(row); });
+                });
+            });
         });
     })();
     </script>

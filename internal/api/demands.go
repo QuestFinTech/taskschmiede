@@ -37,14 +37,12 @@ func (a *API) CreateDemand(ctx context.Context, typ, title, description, priorit
 		return nil, apiErr
 	}
 	// RBAC: require write access to target endeavour
-	if endeavourID != "" {
-		scope, apiErr := a.resolveScope(ctx)
-		if apiErr != nil {
-			return nil, apiErr
-		}
-		if apiErr := checkEndeavourWrite(scope, endeavourID); apiErr != nil {
-			return nil, apiErr
-		}
+	scope, apiErr := a.resolveScope(ctx)
+	if apiErr != nil {
+		return nil, apiErr
+	}
+	if apiErr := checkEndeavourWrite(scope, endeavourID); apiErr != nil {
+		return nil, apiErr
 	}
 	metadata = scoreAndAnnotate(metadata, title, description)
 	metadata = a.applyOrgAlertTerms(metadata, endeavourID, title, description)

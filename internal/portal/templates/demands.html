@@ -16,13 +16,13 @@
         <div class="alert alert-success">{{.Success}}</div>
         {{end}}
 
-        <!-- Create Demand (collapsible) -->
+        <!-- Create Demand (collapsible, expanded by default) -->
         <div class="card mb-24">
             <div class="card-header cur-pointer" data-toggle="createDemandBody">
                 <h2 class="mb-0">{{t .Lang "portal.demands.create_demand"}}</h2>
-                <span class="text-muted fs-13">{{t .Lang "portal.demands.click_to_expand"}}</span>
+                <span class="toggle-hint text-muted fs-13" data-collapsed="{{t .Lang "portal.demands.click_to_expand"}}" data-expanded="{{t .Lang "portal.demands.click_to_collapse"}}">{{t .Lang "portal.demands.click_to_collapse"}}</span>
             </div>
-            <div id="createDemandBody" class="d-none">
+            <div id="createDemandBody">
                 <form method="POST" action="/demands">
                     <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
                     <input type="hidden" name="action" value="create">
@@ -34,10 +34,11 @@
                         <div class="form-group mb-0">
                             <label for="type">{{t .Lang "common.label.type"}}</label>
                             <select id="type" name="type">
-                                <option value="feature">feature</option>
-                                <option value="bug">bug</option>
-                                <option value="enhancement">enhancement</option>
-                                <option value="task">task</option>
+                                <option value="feature">{{t .Lang "demand_type.feature"}}</option>
+                                <option value="bug">{{t .Lang "demand_type.bug"}}</option>
+                                <option value="enhancement">{{t .Lang "demand_type.enhancement"}}</option>
+                                <option value="requirement">{{t .Lang "demand_type.requirement"}}</option>
+                                <option value="task">{{t .Lang "demand_type.task"}}</option>
                             </select>
                         </div>
                         <div class="form-group mb-0">
@@ -50,8 +51,8 @@
                             </select>
                         </div>
                         <div class="form-group mb-0">
-                            <label for="endeavour_id">{{t .Lang "portal.demands.label_endeavour"}} <span class="label-hint">({{t .Lang "common.optional"}})</span></label>
-                            <select id="endeavour_id" name="endeavour_id">
+                            <label for="endeavour_id">{{t .Lang "portal.demands.label_endeavour"}} <span class="req">*</span></label>
+                            <select id="endeavour_id" name="endeavour_id" required>
                                 <option value="">{{t .Lang "common.none_selected"}}</option>
                                 {{if .Data}}
                                     {{$edvs := index .Data "Endeavours"}}
@@ -100,10 +101,11 @@
                         <option value="">{{t .Lang "common.all"}}</option>
                         {{$filterType := ""}}
                         {{if .Data}}{{$filterType = index .Data "FilterType"}}{{end}}
-                        <option value="feature" {{if eq $filterType "feature"}}selected{{end}}>feature</option>
-                        <option value="bug" {{if eq $filterType "bug"}}selected{{end}}>bug</option>
-                        <option value="enhancement" {{if eq $filterType "enhancement"}}selected{{end}}>enhancement</option>
-                        <option value="task" {{if eq $filterType "task"}}selected{{end}}>task</option>
+                        <option value="feature" {{if eq $filterType "feature"}}selected{{end}}>{{t .Lang "demand_type.feature"}}</option>
+                        <option value="bug" {{if eq $filterType "bug"}}selected{{end}}>{{t .Lang "demand_type.bug"}}</option>
+                        <option value="enhancement" {{if eq $filterType "enhancement"}}selected{{end}}>{{t .Lang "demand_type.enhancement"}}</option>
+                        <option value="requirement" {{if eq $filterType "requirement"}}selected{{end}}>{{t .Lang "demand_type.requirement"}}</option>
+                        <option value="task" {{if eq $filterType "task"}}selected{{end}}>{{t .Lang "demand_type.task"}}</option>
                     </select>
                 </div>
                 <div class="form-group mb-0-minw-120">
@@ -132,7 +134,7 @@
                 {{$demands := index .Data "Demands"}}
                 {{if $demands}}
                 <div class="ofx-auto">
-                <table>
+                <table data-sortable>
                     <thead>
                         <tr>
                             <th>{{t .Lang "portal.demands.col.title"}}</th>
@@ -149,7 +151,7 @@
                         {{range $demands}}
                         <tr>
                             <td><a href="/demands/{{.ID}}"><strong>{{.Title}}</strong></a></td>
-                            <td><span class="badge badge-pending">{{.Type}}</span></td>
+                            <td><span class="badge badge-pending">{{t $.Lang (printf "demand_type.%s" .Type)}}</span></td>
                             <td>
                                 {{if eq .Status "draft"}}
                                     <span class="badge bg-muted">{{t $.Lang "status.draft"}}</span>

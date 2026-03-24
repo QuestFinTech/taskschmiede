@@ -3627,16 +3627,26 @@ func (s *Server) handleDemandDetail(w http.ResponseWriter, r *http.Request) {
 		switch action {
 		case "update":
 			fields := map[string]interface{}{}
-			if st := r.FormValue("status"); st != "" {
+			// Fetch current state to detect changes and avoid no-op transitions
+			current, _ := s.rest.GetDemand(token, demandID)
+			if v := r.FormValue("title"); v != "" && (current == nil || v != current.Title) {
+				fields["title"] = v
+			}
+			if v := r.FormValue("description"); current == nil || v != current.Description {
+				fields["description"] = v
+			}
+			if v := r.FormValue("type"); v != "" && (current == nil || v != current.Type) {
+				fields["type"] = v
+			}
+			if st := r.FormValue("status"); st != "" && (current == nil || st != current.Status) {
 				fields["status"] = st
 			}
-			if pr := r.FormValue("priority"); pr != "" {
+			if pr := r.FormValue("priority"); pr != "" && (current == nil || pr != current.Priority) {
 				fields["priority"] = pr
 			}
-			if v := r.FormValue("owner_id"); v != "" {
-				fields["owner_id"] = v
-			} else {
-				fields["owner_id"] = ""
+			newOwner := r.FormValue("owner_id")
+			if current == nil || newOwner != current.OwnerID {
+				fields["owner_id"] = newOwner
 			}
 			if len(fields) > 0 {
 				if _, err := s.rest.UpdateDemand(token, demandID, fields); err != nil {

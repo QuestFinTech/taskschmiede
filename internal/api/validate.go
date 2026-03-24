@@ -103,6 +103,9 @@ func validateDemandCreate(dtype, title, description, priority, endeavourID strin
 	if err := security.ValidateStringField(priority, "priority", security.MaxNameLen); err != nil {
 		return validationErr(err)
 	}
+	if endeavourID == "" {
+		return errInvalidInput("endeavour_id is required")
+	}
 	if err := security.ValidateID(endeavourID, "endeavour_id"); err != nil {
 		return validationErr(err)
 	}

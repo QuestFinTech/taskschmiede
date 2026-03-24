@@ -141,7 +141,7 @@
 
             {{$messages := index .Data "Messages"}}
             {{if $messages}}
-            <table>
+            <table data-sortable>
                 <thead>
                     <tr>
                         <th>{{t .Lang "portal.messages.col.from"}}</th>
