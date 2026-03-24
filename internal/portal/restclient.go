@@ -1482,9 +1482,26 @@ func (c *RESTClient) ListResources(token string, orgID string, limit, offset int
 // --- User Endeavour Access ---
 
 func (c *RESTClient) AddUserToEndeavour(token, userID, endeavourID, role string) error {
-	body := map[string]string{"endeavour_id": endeavourID, "role": role}
-	_, err := c.do("POST", "/api/v1/users/"+userID+"/endeavours", token, body)
+	body := map[string]string{"user_id": userID, "role": role}
+	_, err := c.do("POST", "/api/v1/endeavours/"+endeavourID+"/members", token, body)
 	return err
+}
+
+// RemoveEndeavourMember removes a user from an endeavour.
+func (c *RESTClient) RemoveEndeavourMember(token, endeavourID, userID string) error {
+	_, err := c.do("DELETE", "/api/v1/endeavours/"+endeavourID+"/members/"+userID, token, nil)
+	return err
+}
+
+// ListEndeavourMembers returns the members of an endeavour.
+func (c *RESTClient) ListEndeavourMembers(token, endeavourID string) ([]map[string]interface{}, error) {
+	var result struct {
+		Members []map[string]interface{} `json:"members"`
+	}
+	if err := c.unmarshal("GET", "/api/v1/endeavours/"+endeavourID+"/members", token, nil, &result); err != nil {
+		return nil, err
+	}
+	return result.Members, nil
 }
 
 // --- Admin: Setup ---

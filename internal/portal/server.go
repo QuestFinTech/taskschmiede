@@ -2739,6 +2739,30 @@ func (s *Server) handleEndeavourDetail(w http.ResponseWriter, r *http.Request) {
 					data.Success = s.msg(r, user, "success.agent_access_granted")
 				}
 			}
+		case "revoke_access":
+			revokeUserID := r.FormValue("revoke_user_id")
+			if revokeUserID == "" {
+				data.Error = s.msg(r, user, "errors.select_agent")
+			} else {
+				// Prevent revoking owners -- check membership first
+				members, _ := s.rest.ListEndeavourMembers(token, edvID)
+				isOwner := false
+				for _, m := range members {
+					if uid, _ := m["user_id"].(string); uid == revokeUserID {
+						if role, _ := m["role"].(string); role == "owner" {
+							isOwner = true
+						}
+						break
+					}
+				}
+				if isOwner {
+					data.Error = s.msg(r, user, "errors.cannot_revoke_owner")
+				} else if err := s.rest.RemoveEndeavourMember(token, edvID, revokeUserID); err != nil {
+					data.Error = s.msg(r, user, "errors.failed_revoke_access", err.Error())
+				} else {
+					data.Success = s.msg(r, user, "success.agent_access_revoked")
+				}
+			}
 		case "archive":
 			reason := r.FormValue("reason")
 			if reason == "" {
@@ -2769,10 +2793,6 @@ func (s *Server) handleEndeavourDetail(w http.ResponseWriter, r *http.Request) {
 	// Load tasks in this endeavour
 	tasks, _, _ := s.rest.ListTasks(token, edvID, "", "", "", "", 20, 0)
 	dataMap["Tasks"] = tasks
-
-	// Load agents for access grant dropdown
-	agents, _, _ := s.rest.ListMyAgents(token, 20, 0)
-	dataMap["Agents"] = agents
 
 	data.Data = dataMap
 	s.render(w, r, "endeavour_detail.html", data)

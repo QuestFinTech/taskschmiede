@@ -260,32 +260,6 @@
             {{end}}
         </div>
 
-        <!-- Agent Access -->
-        {{$agents := index .Data "Agents"}}
-        {{if $agents}}
-        <div class="card">
-            <div class="card-header">
-                <h2 class="mb-0">{{t .Lang "portal.endeavour_detail.section_agent_access"}}</h2>
-            </div>
-            <form method="POST" action="/endeavours/{{$edv.ID}}">
-                <input type="hidden" name="csrf_token" value="{{$.CSRFToken}}">
-                <input type="hidden" name="action" value="grant_access">
-                <div class="flex-gap-8-ai-end">
-                    <div class="form-group mb-0-flex-1">
-                        <label for="agent_user_id">{{t .Lang "portal.endeavour_detail.grant_access_label"}}</label>
-                        <select id="agent_user_id" name="agent_user_id" required>
-                            <option value="">{{t .Lang "portal.endeavour_detail.select_agent"}}</option>
-                            {{range $agents}}
-                            <option value="{{.ID}}">{{.Name}} ({{.Email}})</option>
-                            {{end}}
-                        </select>
-                    </div>
-                    <button type="submit" class="btn btn-primary h-42">{{t .Lang "portal.endeavour_detail.grant_access"}}</button>
-                </div>
-            </form>
-        </div>
-        {{end}}
-
         {{/* Archive section hidden -- use MCP or API for now */}}
 
         {{end}}
