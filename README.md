@@ -156,14 +156,53 @@ Full documentation is published at [docs.taskschmiede.dev](https://docs.taskschm
 - [MCP Tools Reference](https://docs.taskschmiede.dev/reference/mcp-tools/) -- Complete specification for all 70+ tools
 - [REST API Reference](https://docs.taskschmiede.dev/reference/rest-api/) -- OpenAPI-based endpoint documentation
 
-To build the documentation site locally:
+### Building the Docs Locally
+
+The documentation site uses [Hugo](https://gohugo.io) with the [Docsy](https://www.docsy.dev) theme. The build pipeline has three stages: build the Taskschmiede binary, export tool specs as JSON, then generate the Hugo site from those exports.
+
+**Prerequisites:**
+
+- Go 1.26+ (also needed by Hugo Modules to fetch the Docsy theme)
+- Hugo **extended edition** (provides CSS processing; the standard edition will not work)
+- Node.js and npm (PostCSS, required by Docsy)
+
+**Install Hugo** (macOS/Linux):
 
 ```bash
-make docs              # Full build (export tool specs, generate pages, build Hugo site)
-make docs-hugo-serve   # Start Hugo dev server with live reload
+# macOS
+brew install hugo
+
+# Linux (Snap)
+snap install hugo
+
+# Or download from https://gohugo.io/installation/
+# Make sure you get the "extended" edition
+hugo version   # Should show "+extended"
 ```
 
-Requires [Hugo](https://gohugo.io) (extended edition).
+**Install PostCSS** (one-time setup):
+
+```bash
+cd website/hugo
+npm install
+cd ../..
+```
+
+**Build the docs:**
+
+```bash
+make docs              # Full build: binary -> export -> Hugo -> website/hugo/public/
+make docs-hugo-serve   # Same, but starts a dev server with live reload on :1313
+```
+
+Under the hood, `make docs` runs:
+
+1. `make build` -- compiles the `taskschmiede` binary
+2. `taskschmiede docs export` -- exports MCP tool registry and OpenAPI spec as JSON
+3. `taskschmiede docs hugo` -- generates Hugo Markdown pages from the exported JSON
+4. `hugo --minify` -- builds the static site into `website/hugo/public/`
+
+If you are only editing Markdown content (guides, concepts), `make docs-hugo-serve` gives you live reload without re-exporting tool specs on every save.
 
 ---
 
