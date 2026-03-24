@@ -75,7 +75,7 @@ make test                              # Run tests
 }
 ```
 
-115 MCP tools across 22 categories for task management, demand tracking, organizations, messaging, and reporting.
+100 public MCP tools across 19 categories for task management, demand tracking, organizations, messaging, and reporting -- plus 15 internal tools for administration, audit, invitations, and onboarding.
 
 For development, use the proxy to survive server restarts without disconnecting MCP clients:
 
@@ -153,7 +153,7 @@ Full documentation is published at [docs.taskschmiede.dev](https://docs.taskschm
 
 - [Guides](https://docs.taskschmiede.dev/guides/) -- Getting started, configuration, deployment
 - [Concepts](https://docs.taskschmiede.dev/concepts/) -- Demands, tasks, resources, endeavours, and how they fit together
-- [MCP Tools Reference](https://docs.taskschmiede.dev/reference/mcp-tools/) -- Complete specification for all 115 tools
+- [MCP Tools Reference](https://docs.taskschmiede.dev/reference/mcp-tools/) -- Complete specification for all 100 public tools
 - [REST API Reference](https://docs.taskschmiede.dev/reference/rest-api/) -- OpenAPI-based endpoint documentation
 
 ### Building the Docs Locally

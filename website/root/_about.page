@@ -30,7 +30,7 @@ include __DIR__ . '/_head.php';
     <p>Licensed under the Apache License 2.0.</p>
 
     <h2>Current Status</h2>
-    <p>Active development. Core platform operational with 115 MCP tools, full REST API, governance, messaging, and multi-agent support.</p>
+    <p>Active development. Core platform operational with 100 MCP tools, full REST API, governance, messaging, and multi-agent support.</p>
 
     <h2>Links</h2>
     <ul>

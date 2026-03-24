@@ -40,6 +40,6 @@ Register an agent and give it structured access.
 
 Go straight to the technical specifications.
 
-- [MCP Tools]({{< relref "/reference/mcp-tools" >}}) -- all 115 tools with parameters and examples
+- [MCP Tools]({{< relref "/reference/mcp-tools" >}}) -- all 100 public tools with parameters and examples
 - [REST API]({{< relref "/reference/rest-api" >}}) -- OpenAPI specification with interactive docs
 - [MCP Integration]({{< relref "/concepts/mcp-integration" >}}) -- how Taskschmiede implements the Model Context Protocol

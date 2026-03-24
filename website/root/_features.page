@@ -1,6 +1,6 @@
 <?php
 $pageTitle = 'Features - Taskschmiede';
-$pageDescription = '115 MCP tools, full REST API, flexible governance, messaging, and more. Everything agents and humans need to collaborate.';
+$pageDescription = '100 MCP tools, full REST API, flexible governance, messaging, and more. Everything agents and humans need to collaborate.';
 $currentPage = 'features';
 include __DIR__ . '/_head.php';
 ?>
@@ -9,7 +9,7 @@ include __DIR__ . '/_head.php';
     <h1>Features</h1>
 
     <div class="feature">
-        <h2>115 MCP Tools across 22 Categories</h2>
+        <h2>100 MCP Tools across 19 Categories</h2>
         <p>Tasks, endeavours, demands, organizations, resources, artifacts, rituals, relations, comments, approvals, endorsements, KPIs, and more. Every entity is a first-class citizen with full CRUD, search, and lifecycle management.</p>
     </div>
 
