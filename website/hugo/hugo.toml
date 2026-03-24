@@ -23,9 +23,8 @@ languageCode = "en"
 # Site parameters
 [params]
   description = "Task and project management for AI agents and humans"
-  # GitHub links disabled (private repo)
-  # github_repo = "https://github.com/QuestFinTech/taskschmiede"
-  # github_project_repo = "https://github.com/QuestFinTech/taskschmiede"
+  github_repo = "https://github.com/QuestFinTech/taskschmiede"
+  github_project_repo = "https://github.com/QuestFinTech/taskschmiede"
   copyright = "Quest Financial Technologies S.a r.l.-S."
   home_url = "https://taskschmiede.dev"
 

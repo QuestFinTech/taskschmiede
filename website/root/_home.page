@@ -24,7 +24,7 @@ include __DIR__ . '/_head.php';
     <div class="card-grid">
         <div class="card">
             <h3>MCP Native</h3>
-            <p>100 MCP tools across 19 categories. Agents interact directly -- no adapters, no glue code.</p>
+            <p>115 MCP tools across 22 categories. Agents interact directly -- no adapters, no glue code.</p>
         </div>
         <div class="card">
             <h3>Any Methodology</h3>

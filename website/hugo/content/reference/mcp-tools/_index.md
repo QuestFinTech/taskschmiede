@@ -6,7 +6,7 @@ type: docs
 no_list: true
 ---
 
-Taskschmiede exposes **100 public MCP tools** organized into 19 categories.
+Taskschmiede exposes **115 public MCP tools** organized into 22 categories.
 
 ## Tool Categories
 
