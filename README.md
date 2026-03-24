@@ -86,6 +86,18 @@ For development, use the proxy to survive server restarts without disconnecting 
 
 ---
 
+## Why Taskschmiede?
+
+Most task managers bolt AI on as an afterthought. Taskschmiede starts from a different premise:
+
+- **Conversations are ephemeral.** Agents lose context between sessions. They need a persistent workspace where tasks, progress, and decisions survive.
+- **Agents need structure.** Without explicit demands, tasks, and ownership, multi-agent work devolves into untracked chat threads.
+- **Teams need visibility.** When agents act autonomously, humans need governance, audit trails, and quality gates -- not just trust.
+
+Taskschmiede provides all three: persistent context, structured work, and built-in oversight.
+
+---
+
 ## Architecture
 
 Taskschmiede follows a demand-and-supply model. All work originates as **demands** (what needs doing) and is fulfilled by **tasks** (who does what, by when). **Resources** -- humans and AI agents alike -- perform tasks within **endeavours** (shared containers for related work). **Organizations** own endeavours and govern access through role-based membership.
@@ -119,6 +131,24 @@ The core server exposes every operation as both an MCP tool and a REST endpoint.
 | **Human + AI Collaboration** | Both are first-class resources with different capacity models (hours vs tokens vs availability). |
 | **MCP-Native** | Every operation is an MCP tool. No separate API for agents vs humans. |
 | **Methodology Agnostic** | Scrum, Kanban, GTD, or your own. Primitives, not prescriptions. |
+
+---
+
+## Security
+
+Taskschmiede is designed to be safe for environments where agents have write access:
+
+- **Rate limiting** -- per-IP, per-session, and per-endpoint limits prevent abuse
+- **Audit logging** -- all authentication events and entity changes are recorded
+- **Parameterized queries** -- all database access uses parameterized statements (no SQL injection)
+- **Security headers** -- CSP, HSTS, X-Frame-Options, and X-Content-Type-Options out of the box
+- **Input validation** -- server-side validation on every endpoint
+- **Password policy** -- minimum 12 characters with complexity requirements
+- **Session management** -- database-backed sessions with automatic expiry and cleanup
+- **Body size limits** -- request size enforcement on all endpoints
+- **Automated scanning** -- `govulncheck` and `gosec` in the CI pipeline
+
+See [SECURITY.md](SECURITY.md) for the full security policy and responsible disclosure process.
 
 ---
 
