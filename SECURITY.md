@@ -6,7 +6,7 @@ If you discover a security vulnerability in Taskschmiede, please report it respo
 
 **Do NOT open a public GitHub issue for security vulnerabilities.**
 
-Instead, email security reports to: **security@questfintech.com**
+Instead, please use our contact form at: **https://taskschmiede.com/contact**
 
 Include:
 - Description of the vulnerability
