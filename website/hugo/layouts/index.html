@@ -1,8 +1,15 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta http-equiv="refresh" content="0; url=/guides/">
 <link rel="canonical" href="/guides/">
+<script>
+var q = window.location.search;
+if (q && q.indexOf('from=saas') !== -1) {
+  try { sessionStorage.setItem('ts_from', 'saas'); } catch(e) {}
+}
+window.location.replace('/guides/' + (q || ''));
+</script>
+<noscript><meta http-equiv="refresh" content="0; url=/guides/"></noscript>
 </head>
 <body>
 <p>Redirecting to <a href="/guides/">Guides</a>...</p>

@@ -1518,9 +1518,9 @@ type SetupCreateResult struct {
 }
 
 // SetupCreate creates the master admin account during initial setup.
-func (c *RESTClient) SetupCreate(email, name, password string) (*SetupCreateResult, error) {
+func (c *RESTClient) SetupCreate(email, name, password, accountType, companyName string) (*SetupCreateResult, error) {
 	var result SetupCreateResult
-	body := map[string]string{"email": email, "name": name, "password": password}
+	body := map[string]string{"email": email, "name": name, "password": password, "account_type": accountType, "company_name": companyName}
 	if err := c.unmarshal("POST", "/api/v1/admin/setup", "", body, &result); err != nil {
 		return nil, err
 	}

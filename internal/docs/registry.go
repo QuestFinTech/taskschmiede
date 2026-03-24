@@ -225,11 +225,9 @@ func (r *Registry) BaseURL() string {
 // ToJSON exports the registry as JSON (full schema with parameters, examples, etc.).
 func (r *Registry) ToJSON() ([]byte, error) {
 	export := struct {
-		Version string     `json:"version"`
 		BaseURL string     `json:"base_url"`
 		Tools   []*ToolDoc `json:"tools"`
 	}{
-		Version: r.version,
 		BaseURL: r.baseURL,
 		Tools:   r.All(),
 	}
@@ -293,11 +291,9 @@ func (r *Registry) ToToolsJSON() ([]byte, error) {
 		}
 	}
 	export := struct {
-		Version string        `json:"version"`
 		BaseURL string        `json:"base_url"`
 		Tools   []ToolSummary `json:"tools"`
 	}{
-		Version: r.version,
 		BaseURL: r.baseURL,
 		Tools:   summaries,
 	}

@@ -1,3 +1,17 @@
 {{/* Custom body-end additions */}}
 <style>.td-sidebar__search.d-flex { display: none !important; }</style>
 <script src="/js/search.js?v=3"></script>
+<script>
+(function() {
+  var p = new URLSearchParams(window.location.search);
+  if (p.get('from') === 'saas') {
+    try { sessionStorage.setItem('ts_from', 'saas'); } catch(e) {}
+  }
+  var from;
+  try { from = sessionStorage.getItem('ts_from'); } catch(e) {}
+  if (from === 'saas') {
+    var b = document.querySelector('.navbar-brand');
+    if (b) b.href = 'https://taskschmiede.com';
+  }
+})();
+</script>

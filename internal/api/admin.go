@@ -29,20 +29,6 @@ import (
 	"github.com/QuestFinTech/taskschmiede/internal/storage"
 )
 
-// handleCapacity returns seat availability for the default tier.
-// Public endpoint -- no authentication required.
-// Used by the SaaS website to display remaining Explorer seats.
-func (a *API) handleCapacity(w http.ResponseWriter, r *http.Request) {
-	maxUsers := a.policyInt("instance.max_active_users", 200)
-	activeUsers := a.db.CountActiveUsers()
-
-	writeData(w, http.StatusOK, map[string]interface{}{
-		"active_users":     activeUsers,
-		"max_active_users": maxUsers,
-		"at_capacity":      maxUsers > 0 && activeUsers >= maxUsers,
-	})
-}
-
 // handleSignupInterest records a signup interest from the SaaS website.
 // Public endpoint -- no authentication required.
 func (a *API) handleSignupInterest(w http.ResponseWriter, r *http.Request) {
@@ -185,6 +171,26 @@ func (a *API) handleSetupConfigure(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Auto-create organization for the master admin.
+	// Business: org named after company. Private: org named after user.
+	if adminID := a.db.GetMasterAdminUserID(); adminID != "" {
+		if adminUser, err := a.db.GetUser(adminID); err == nil {
+			accountType, _ := a.db.GetPolicy("setup.account_type")
+			var identity *storage.RegistrationIdentity
+			if accountType == "business" {
+				companyName, _ := a.db.GetPolicy("setup.company_name")
+				identity = &storage.RegistrationIdentity{
+					AccountType: "business",
+					CompanyName: companyName,
+				}
+			}
+			a.autoCreatePersonalOrg(adminUser, identity)
+		}
+	}
+	// Clean up temporary setup policies.
+	_ = a.db.DeletePolicy("setup.account_type")
+	_ = a.db.DeletePolicy("setup.company_name")
+
 	writeData(w, http.StatusOK, map[string]interface{}{
 		"status":           "configured",
 		"timezone":         body.Timezone,
@@ -202,9 +208,11 @@ func (a *API) handleSetupCreate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var body struct {
-		Email    string `json:"email"`
-		Name     string `json:"name"`
-		Password string `json:"password"`
+		Email       string `json:"email"`
+		Name        string `json:"name"`
+		Password    string `json:"password"`
+		AccountType string `json:"account_type"`
+		CompanyName string `json:"company_name"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
 		writeError(w, http.StatusBadRequest, "invalid_input", "Invalid JSON body")
@@ -219,6 +227,15 @@ func (a *API) handleSetupCreate(w http.ResponseWriter, r *http.Request) {
 	if err := auth.ValidatePassword(body.Password); err != nil {
 		writeError(w, http.StatusBadRequest, "invalid_input", err.Error())
 		return
+	}
+
+	// Store account type and company name for org creation during setup configure.
+	if body.AccountType == "" {
+		body.AccountType = "private"
+	}
+	_ = a.db.SetPolicy("setup.account_type", body.AccountType)
+	if body.CompanyName != "" {
+		_ = a.db.SetPolicy("setup.company_name", body.CompanyName)
 	}
 
 	pending, err := a.db.CreatePendingAdmin(body.Email, body.Name, body.Password, 15*time.Minute)

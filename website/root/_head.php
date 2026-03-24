@@ -12,8 +12,13 @@
     <link rel="apple-touch-icon" href="/apple-touch-icon.png">
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon.png">
 <?php
-$docsUrl = 'https://docs.taskschmiede.dev';
-$saasUrl = 'https://taskschmiede.com';
+$host = $_SERVER['HTTP_HOST'] ?? '';
+$docsUrl = str_contains($host, '.home.arpa')
+    ? 'https://docs.taskschmiede.dev.home.arpa'
+    : 'https://docs.taskschmiede.dev';
+$saasUrl = str_contains($host, '.home.arpa')
+    ? 'https://taskschmiede.com.home.arpa'
+    : 'https://taskschmiede.com';
 ?>
 </head>
 <body class="page-<?= htmlspecialchars($currentPage ?? 'home') ?>">
@@ -27,6 +32,7 @@ $saasUrl = 'https://taskschmiede.com';
                 <li><a href="<?= $docsUrl ?>/guides/">Documentation</a></li>
                 <li><a href="<?= $saasUrl ?>/contact">Contact</a></li>
                 <li><a href="/about"<?= ($currentPage ?? '') === 'about' ? ' class="active"' : '' ?>>About</a></li>
+                <li><a href="https://github.com/QuestFinTech/taskschmiede">GitHub</a></li>
             </ul>
         </div>
     </nav>

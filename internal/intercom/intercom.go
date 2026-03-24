@@ -213,6 +213,7 @@ func (ic *Intercom) sendOne(pd *storage.PendingDelivery) error {
 	}
 
 	contentIsHTML := containsHTML(pd.Content)
+	contentIsMD := !contentIsHTML && email.ContainsMarkdown(pd.Content)
 
 	// Footer lines shared by both versions.
 	contextLine := ""
@@ -244,7 +245,7 @@ func (ic *Intercom) sendOne(pd *storage.PendingDelivery) error {
 	text.WriteString("Sent via Taskschmiede Intercom\n")
 	msg.Body = text.String()
 
-	// HTML part (only when content contains HTML).
+	// HTML part: from existing HTML content or converted from Markdown.
 	if contentIsHTML {
 		var html strings.Builder
 		html.WriteString("<!DOCTYPE html>\n<html><body>\n")
@@ -257,6 +258,8 @@ func (ic *Intercom) sendOne(pd *storage.PendingDelivery) error {
 		fmt.Fprintf(&html, "<p style=\"color:#888;font-size:12px\">Reply to this email to respond to %s.<br>Sent via Taskschmiede Intercom</p>\n", senderName)
 		html.WriteString("</body></html>\n")
 		msg.HTMLBody = html.String()
+	} else if contentIsMD {
+		msg.HTMLBody = email.MarkdownToHTML(subject, pd.Content)
 	}
 
 	if err := ic.smtpClient.Send(msg); err != nil {
@@ -351,6 +354,7 @@ func (ic *Intercom) sendCopyOne(pd *storage.PendingDelivery, recipientEmail stri
 	}
 
 	contentIsHTML := containsHTML(pd.Content)
+	contentIsMD := !contentIsHTML && email.ContainsMarkdown(pd.Content)
 
 	// Plain text
 	var text strings.Builder
@@ -380,6 +384,8 @@ func (ic *Intercom) sendCopyOne(pd *storage.PendingDelivery, recipientEmail stri
 		html.WriteString("<p style=\"color:#888;font-size:12px\">This is an automatic copy of an internal Taskschmiede message.</p>\n")
 		html.WriteString("</body></html>\n")
 		msg.HTMLBody = html.String()
+	} else if contentIsMD {
+		msg.HTMLBody = email.MarkdownToHTML(subject, pd.Content)
 	}
 
 	if err := ic.smtpClient.Send(msg); err != nil {

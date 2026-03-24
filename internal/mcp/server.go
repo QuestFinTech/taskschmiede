@@ -652,17 +652,13 @@ func (s *Server) authMiddleware(next http.Handler) http.Handler {
 }
 
 // handleHealth returns a health check response.
+// Version is intentionally omitted to avoid information disclosure.
 func (s *Server) handleHealth(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	ver := s.version
-	if ver == "" {
-		ver = "0.0.0-dev"
-	}
-	_ = json.NewEncoder(w).Encode(map[string]interface{}{
+	_ = json.NewEncoder(w).Encode(map[string]string{
 		"status":  "healthy",
 		"service": "taskschmiede-mcp",
-		"version": ver,
 	})
 }
 

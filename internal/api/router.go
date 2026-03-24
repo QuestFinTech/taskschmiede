@@ -226,9 +226,6 @@ func (a *API) Handler() http.Handler {
 	// Instance info (public -- non-sensitive deployment settings)
 	mux.HandleFunc("GET /api/v1/instance/info", a.handleInstanceInfo)
 
-	// Seat capacity (public -- used by SaaS website for availability display)
-	mux.HandleFunc("GET /api/v1/capacity", a.handleCapacity)
-
 	// Signup interest (public -- used by SaaS website /join page)
 	mux.HandleFunc("POST /api/v1/signup-interest", a.handleSignupInterest)
 

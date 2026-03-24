@@ -898,6 +898,15 @@ func (db *DB) SetPolicy(key, value string) error {
 	return nil
 }
 
+// DeletePolicy removes a policy key.
+func (db *DB) DeletePolicy(key string) error {
+	_, err := db.Exec(`DELETE FROM policy WHERE key = ?`, key)
+	if err != nil {
+		return fmt.Errorf("delete policy %q: %w", key, err)
+	}
+	return nil
+}
+
 // Close closes the database connection.
 func (db *DB) Close() error {
 	return db.DB.Close()

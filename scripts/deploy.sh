@@ -24,9 +24,9 @@ usage() {
     echo "The package is created by 'make package-saas' or 'make package-community'."
     echo ""
     echo "Environments:"
-    echo "  staging     Staging server"
-    echo "  intranet    Intranet (community edition)"
-    echo "  production  Production server"
+    echo "  staging     Staging (taurus)"
+    echo "  intranet    Intranet production (max, community edition)"
+    echo "  production  Production (IONOS)"
     exit 1
 }
 
@@ -36,23 +36,21 @@ die() {
 }
 
 # Resolve target to SSH host, label, and remote working directory.
-# SSH hosts are read from environment variables (DEPLOY_HOST_STAGING,
-# DEPLOY_HOST_INTRANET, DEPLOY_HOST_PRODUCTION) or SSH config aliases.
 resolve_target() {
     case "$1" in
         staging)
-            SSH_HOST="${DEPLOY_HOST_STAGING:-staging}"
-            TARGET_LABEL="Staging"
+            SSH_HOST="taskschmiede-staging"
+            TARGET_LABEL="Staging (taurus)"
             REMOTE_DIR="/tmp"
             ;;
         intranet)
-            SSH_HOST="${DEPLOY_HOST_INTRANET:-intranet}"
-            TARGET_LABEL="Intranet (community edition)"
+            SSH_HOST="taskschmiede.home.arpa"
+            TARGET_LABEL="Intranet (max, community edition)"
             REMOTE_DIR="/tmp"
             ;;
         production)
-            SSH_HOST="${DEPLOY_HOST_PRODUCTION:-production}"
-            TARGET_LABEL="Production"
+            SSH_HOST="ionos-taskschmiede"
+            TARGET_LABEL="Production (IONOS)"
             REMOTE_DIR="staging"    # ~/staging/ (deploy user's home)
             ;;
         *)

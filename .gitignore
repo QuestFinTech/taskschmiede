@@ -50,10 +50,15 @@ profile.cov
 go.work
 go.work.sum
 
-# env file
+# env files (contain credentials -- never commit)
 .env
-.env.bak
+.env.*
+!.env.example
+!.env.example.community-edition
 .testmail
+
+# production credentials
+cowork/PROD_ACCOUNTS.md
 
 # config file (may contain passwords from env expansion)
 config.yaml

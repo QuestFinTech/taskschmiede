@@ -37,12 +37,12 @@ SYSTEMD_DIR="/etc/systemd/system"
 # Core binaries (community edition). Must be present in every package.
 CORE_BINARIES=(taskschmiede taskschmiede-proxy taskschmiede-portal)
 
-# Optional binaries. Installed if present in package.
-OPTIONAL_BINARIES=()
+# Optional binaries (SaaS edition). Installed if present in package.
+OPTIONAL_BINARIES=(taskschmiede-notify taskschmiede-support)
 
-# All possible systemd services.
+# All possible systemd services (includes support-proxy which reuses the proxy binary).
 # Services whose binaries are absent from the package are skipped automatically.
-ALL_SERVICES=(taskschmiede taskschmiede-proxy taskschmiede-portal)
+ALL_SERVICES=(taskschmiede taskschmiede-proxy taskschmiede-portal taskschmiede-notify taskschmiede-support taskschmiede-support-proxy)
 
 # How many previous versions to keep
 KEEP_VERSIONS=3
@@ -91,14 +91,30 @@ fi
 ALL_BINARIES=("${CORE_BINARIES[@]}" "${FOUND_OPTIONAL[@]}")
 
 # Derive active services from installed binaries.
+# taskschmiede-support-proxy uses the proxy binary but is only relevant
+# when the support agent is present.
 SERVICES=()
 for svc in "${ALL_SERVICES[@]}"; do
-    for bin in "${ALL_BINARIES[@]}"; do
-        if [ "$bin" = "$svc" ]; then
-            SERVICES+=("$svc")
-            break
-        fi
-    done
+    case "$svc" in
+        taskschmiede-support-proxy)
+            # Only if support agent is in the package
+            for opt in "${FOUND_OPTIONAL[@]}"; do
+                if [ "$opt" = "taskschmiede-support" ]; then
+                    SERVICES+=("$svc")
+                    break
+                fi
+            done
+            ;;
+        *)
+            # Include if the matching binary exists
+            for bin in "${ALL_BINARIES[@]}"; do
+                if [ "$bin" = "$svc" ]; then
+                    SERVICES+=("$svc")
+                    break
+                fi
+            done
+            ;;
+    esac
 done
 echo "  Active services: ${SERVICES[*]}"
 
@@ -288,7 +304,7 @@ if ! sudo -u taskschmiede test -f "$CONFIG_DIR/.env"; then
 fi
 
 # Always update examples for reference
-for example in config.yaml.example; do
+for example in config.yaml.example support-agent.yaml.example support-proxy.yaml.example; do
     if [ -f "$SCRIPT_DIR/$example" ]; then
         sudo -u taskschmiede cp "$SCRIPT_DIR/$example" "$CONFIG_DIR/$example"
     fi
@@ -351,6 +367,12 @@ for svc in "${SERVICES[@]}"; do
             check_health "MCP Proxy (:9001):" "http://localhost:9001/proxy/health" '"status"' ;;
         taskschmiede-portal)
             check_health_http "Portal (:9090):" "http://localhost:9090/" ;;
+        taskschmiede-notify)
+            check_health "Notify (:9004):" "http://localhost:9004/notify/health" '"status"' ;;
+        taskschmiede-support)
+            check_health "Support Agent (:9002):" "http://localhost:9002/mcp/health" '"status"' ;;
+        taskschmiede-support-proxy)
+            check_health "Support Proxy (:9003):" "http://localhost:9003/proxy/health" '"status"' ;;
     esac
 done
 

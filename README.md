@@ -256,14 +256,6 @@ Direct push access to this repository is limited to maintainers. Please see [CON
 
 ---
 
-## Listed on Glama.ai
-
-Taskschmiede is listed on [Glama.ai](https://glama.ai/mcp/servers/QuestFinTech/taskschmiede), an MCP server directory that verifies server capabilities, security, and documentation.
-
-[![Taskschmiede MCP server](https://glama.ai/mcp/servers/QuestFinTech/taskschmiede/badges/card.svg)](https://glama.ai/mcp/servers/QuestFinTech/taskschmiede)
-
----
-
 ## License
 
 Licensed under the [Apache License, Version 2.0](LICENSE).

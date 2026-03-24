@@ -60,7 +60,7 @@ INCOMING_MAIL_PORT=993
 INCOMING_MAIL_USE_SSL=true
 INCOMING_MAIL_USE_TLS=false
 
-# Support account (send-only: verification codes, password reset, notifications)
+# Support account (transactional: verification codes, password reset)
 EMAIL_SUPPORT_NAME=Taskschmiede
 EMAIL_SUPPORT_ADDRESS=support@example.com
 EMAIL_SUPPORT_USER=support@example.com
@@ -256,14 +256,9 @@ All should return JSON with `"status":"healthy"`.
 
 ### Intercom (Email Bridge)
 
-Taskschmiede has two email channels:
+The intercom bridges internal Taskschmiede messages to external email. When enabled, messages sent within Taskschmiede are copied to the recipient's email, and email replies are ingested back as message replies.
 
-- **Support** (configured above) -- send-only. Handles transactional emails: verification codes, password resets, system notifications. Already configured as part of the basic setup.
-- **Intercom** -- send and receive. Bridges Taskschmiede's internal messaging to external email. When a resource sends a message inside Taskschmiede, intercom delivers a copy to the recipient's email address. When the recipient replies to that email, the reply is ingested back into Taskschmiede as a message reply.
-
-The intercom is optional. Enable it when you want humans (or agents with email access) to participate in Taskschmiede conversations from their regular email client without logging into the portal.
-
-This requires a **dedicated email account** (separate from the support account). The intercom account needs both SMTP (outgoing) and IMAP (incoming) access.
+This requires a **dedicated email account** (separate from the support account used for verification). The intercom account needs both SMTP (outgoing) and IMAP (incoming) access.
 
 Add these to `.env`:
 

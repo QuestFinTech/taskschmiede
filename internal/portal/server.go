@@ -1189,7 +1189,7 @@ func (s *Server) handleRegister(w http.ResponseWriter, r *http.Request) {
 		if setupMode {
 			// During setup, use the admin setup endpoint which creates the
 			// pending admin account and sends the verification email.
-			result, setupErr := s.rest.SetupCreate(emailAddr, name, password)
+			result, setupErr := s.rest.SetupCreate(emailAddr, name, password, accountType, companyName)
 			if setupErr != nil {
 				renderPage(PageData{Title: "Create Account", Error: setupErr.Error(), Data: formData})
 				return
@@ -3295,7 +3295,7 @@ func (s *Server) handleAbout(w http.ResponseWriter, r *http.Request) {
 	if !s.secure {
 		scheme = "http"
 	}
-	reqHost := r.Host
+	reqHost := r.Host // e.g., "portal.taskschmiede.com.home.arpa" or "localhost:9090"
 	apiBase := s.rest.BaseURL()
 
 	// Health probes always hit internal (localhost) endpoints,
@@ -3328,6 +3328,9 @@ func (s *Server) handleAbout(w http.ResponseWriter, r *http.Request) {
 
 	// Resolve docs URL based on host
 	docsURL := "https://docs.taskschmiede.dev/guides/"
+	if strings.Contains(reqHost, ".home.arpa") {
+		docsURL = "https://docs.taskschmiede.dev.home.arpa/guides/"
+	}
 
 	// Language list
 	var langNames []string
