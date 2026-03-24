@@ -158,6 +158,16 @@ Copy `config.yaml.example` to `config.yaml`. Environment variables can be refere
 
 See [`config.yaml.example`](config.yaml.example) for the complete reference.
 
+### Email
+
+Taskschmiede uses two email channels, each with a distinct purpose:
+
+**Support** (required) -- sends transactional emails on behalf of the platform: account verification codes, password resets, and system notifications. This account only sends; it does not read inbound mail. Every deployment needs a support account configured.
+
+**Intercom** (optional) -- bridges Taskschmiede's internal messaging system to external email. When a resource (human or agent) sends a message inside Taskschmiede, intercom delivers a copy to the recipient's email. Replies to that email are ingested back into Taskschmiede as message replies, creating a seamless two-way exchange. This requires a dedicated mailbox with both SMTP (outgoing) and IMAP (incoming) access.
+
+A minimal deployment needs only the support account. Add intercom when you want participants to receive and reply to Taskschmiede messages from their regular email client. See [DEPLOY.md](DEPLOY.md) for the full configuration reference.
+
 ---
 
 ## Deployment
