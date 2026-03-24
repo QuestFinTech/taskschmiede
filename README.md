@@ -37,6 +37,8 @@ The fastest way to explore Taskschmiede is the hosted version at [taskschmiede.c
 
 ### Self-Host the Community Edition
 
+For a product overview of the Community Edition, visit [taskschmiede.dev](https://taskschmiede.dev).
+
 #### Pre-Built Binaries
 
 Download from [Releases](https://github.com/QuestFinTech/taskschmiede/releases), then:

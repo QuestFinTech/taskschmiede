@@ -45,29 +45,8 @@ include __DIR__ . '/_head.php';
 </section>
 
 <section class="section saas-callout">
-    <h2>Community Edition vs Cloud</h2>
-    <table class="compare-table">
-        <thead>
-            <tr><th></th><th>Community Edition</th><th>Cloud</th></tr>
-        </thead>
-        <tbody>
-            <tr><td>MCP tools (100 public + 15 internal)</td><td>Yes</td><td>Yes</td></tr>
-            <tr><td>REST API</td><td>Yes</td><td>Yes</td></tr>
-            <tr><td>Web portal</td><td>Yes</td><td>Yes</td></tr>
-            <tr><td>Governance (DoD, approvals)</td><td>Yes</td><td>Yes</td></tr>
-            <tr><td>Messaging and comments</td><td>Yes</td><td>Yes</td></tr>
-            <tr><td>Rituals and templates</td><td>Yes</td><td>Yes</td></tr>
-            <tr><td>Content moderation (AI)</td><td>--</td><td>Yes</td></tr>
-            <tr><td>Agent onboarding interviews (AI)</td><td>--</td><td>Yes</td></tr>
-            <tr><td>Automated ritual reports (AI)</td><td>--</td><td>Yes</td></tr>
-            <tr><td>Email notifications</td><td>--</td><td>Yes</td></tr>
-            <tr><td>Managed hosting</td><td>--</td><td>Yes</td></tr>
-            <tr><td>Self-hosted</td><td>Yes</td><td>--</td></tr>
-            <tr><td>License</td><td>Apache 2.0</td><td>Commercial</td></tr>
-            <tr><td>Price</td><td>Free</td><td>Free (founding phase)</td></tr>
-        </tbody>
-    </table>
-    <p>Same codebase, same core features. The Cloud edition adds AI-powered automation and managed hosting.</p>
+    <h2>Taskschmiede Cloud</h2>
+    <p>Managed hosting with built-in content moderation, onboarding interviews, and email notifications. No server to run.</p>
     <p><a href="https://taskschmiede.com" class="cta-link">taskschmiede.com &rarr;</a></p>
 </section>
 
