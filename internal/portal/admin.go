@@ -587,7 +587,7 @@ func (s *Server) unlinkTeamEndeavourAndOrg(token, teamID string) {
 // resolveOrgRoles returns the team roles defined for an org (from org metadata).
 // Falls back to default roles if none are defined.
 func (s *Server) resolveOrgRoles(token, orgID string) []string {
-	defaults := []string{"Architect", "Developer", "System Administrator", "Lead", "Observer"}
+	defaults := []string{"Analyst", "Architect", "Developer", "Lead", "Observer", "Requestor", "System Administrator"}
 	if orgID == "" {
 		return defaults
 	}
@@ -687,18 +687,25 @@ func (s *Server) handleTeams(w http.ResponseWriter, r *http.Request) {
 				if err != nil {
 					data.Error = s.msg(r, user, "admin.teams.errors.failed_create", err.Error())
 				} else {
+					linkOK := true
 					// Link team to endeavour and its org if selected.
 					if edvID != "" && team != nil {
 						if _, linkErr := s.rest.CreateRelation(token, "belongs_to", "resource", team.ID, "endeavour", edvID, nil); linkErr != nil {
 							data.Error = s.msg(r, user, "admin.teams.errors.failed_update", linkErr.Error())
+							linkOK = false
 						} else {
 							s.linkTeamToEndeavourOrg(token, team.ID, edvID)
 						}
 					} else if !admin && userOrgID != "" && team != nil {
 						// Non-admin: auto-link team to user's org.
-						_, _ = s.rest.CreateRelation(token, "has_member", "organization", userOrgID, "resource", team.ID, map[string]interface{}{"role": "team"})
+						if _, linkErr := s.rest.CreateRelation(token, "has_member", "organization", userOrgID, "resource", team.ID, map[string]interface{}{"role": "team"}); linkErr != nil {
+							data.Error = s.msg(r, user, "admin.teams.errors.failed_update", linkErr.Error())
+							linkOK = false
+						}
 					}
-					data.Success = s.msg(r, user, "admin.teams.success.created")
+					if linkOK {
+						data.Success = s.msg(r, user, "admin.teams.success.created")
+					}
 				}
 			}
 		}

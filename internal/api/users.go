@@ -114,7 +114,22 @@ func (a *API) UpdateUser(ctx context.Context, id string, fields storage.UpdateUs
 	if err != nil {
 		return nil, errInternal("Failed to get updated user")
 	}
+
+	// Sync name to linked resource so recipient lists stay current.
+	if fields.Name != nil && user.ResourceID != nil && *user.ResourceID != "" {
+		_, _ = a.resSvc.Update(ctx, *user.ResourceID, storage.UpdateResourceFields{Name: fields.Name})
+	}
+
 	return userToMap(user), nil
+}
+
+// syncResourceName updates the linked resource name when a user name changes.
+func (a *API) syncResourceName(ctx context.Context, userID, newName string) {
+	u, err := a.db.GetUser(userID)
+	if err != nil || u.ResourceID == nil || *u.ResourceID == "" {
+		return
+	}
+	_, _ = a.resSvc.Update(ctx, *u.ResourceID, storage.UpdateResourceFields{Name: &newName})
 }
 
 // AddUserToEndeavour grants a user access to an endeavour with the given role.

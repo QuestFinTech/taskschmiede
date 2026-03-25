@@ -145,6 +145,15 @@ func executeRitualLLM(ctx context.Context, db *storage.DB, client llmclient.Clie
 		contextSummary += "\n" + trendData
 	}
 
+	// Use endeavour language if set, fall back to ritual language, then "en".
+	reportLang := ritual.Lang
+	if edv.Lang != "" {
+		reportLang = edv.Lang
+	}
+	if reportLang == "" {
+		reportLang = "en"
+	}
+
 	systemPrompt := fmt.Sprintf(
 		"You are Taskschmied, the governance agent for Taskschmiede.\n"+
 			"Execute the following ritual and produce a structured report.\n"+
@@ -158,7 +167,7 @@ func executeRitualLLM(ctx context.Context, db *storage.DB, client llmclient.Clie
 			"  Current State. Do not invent task names, IDs, or entity data.\n"+
 			"- Only include trend comparisons or historical data if a Trend Data section\n"+
 			"  is present in the Current State. Do not fabricate prior cycle statistics.",
-		ritual.Lang,
+		reportLang,
 	)
 	userPrompt := fmt.Sprintf("## Ritual: %s\n\n%s\n\n## Current State\n\n%s",
 		ritual.Name, ritual.Prompt, contextSummary)

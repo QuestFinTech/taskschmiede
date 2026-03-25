@@ -69,6 +69,9 @@
                             <th>{{t .Lang "portal.endeavours.col.description"}}</th>
                             <th>{{t .Lang "portal.endeavours.col.status"}}</th>
                             <th>{{t .Lang "portal.endeavours.col.goals"}}</th>
+                            <th>{{t .Lang "portal.nav.demands"}}</th>
+                            <th>{{t .Lang "portal.nav.tasks"}}</th>
+                            <th>{{t .Lang "portal.nav.rituals"}}</th>
                             <th>{{t .Lang "portal.endeavours.col.created"}}</th>
                         </tr>
                     </thead>
@@ -89,6 +92,9 @@
                                 {{end}}
                             </td>
                             <td>{{len .Goals}}</td>
+                            <td>{{.DemandCount}}</td>
+                            <td>{{.TaskCount}}</td>
+                            <td>{{.RitualCount}}</td>
                             <td class="fs-13">{{fmtDateTime .CreatedAt $.Timezone}}</td>
                         </tr>
                         {{end}}

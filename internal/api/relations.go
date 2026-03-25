@@ -30,9 +30,12 @@ func (a *API) CreateRelation(ctx context.Context, relationshipType, sourceEntity
 	if apiErr := validateRelationCreate(relationshipType, sourceEntityType, sourceEntityID, targetEntityType, targetEntityID, metadata); apiErr != nil {
 		return nil, apiErr
 	}
-	// RBAC: admin only for creating relations
+	// RBAC: master admin, or any org owner/admin.
 	if apiErr := a.CheckAdmin(ctx); apiErr != nil {
-		return nil, apiErr
+		scope, scopeErr := a.resolveScope(ctx)
+		if scopeErr != nil || !isAnyOrgAdmin(scope) {
+			return nil, apiErr
+		}
 	}
 	rel, err := a.relSvc.Create(ctx, relationshipType, sourceEntityType, sourceEntityID, targetEntityType, targetEntityID, metadata, createdBy)
 	if err != nil {
@@ -57,9 +60,12 @@ func (a *API) ListRelations(ctx context.Context, opts storage.ListRelationsOpts)
 
 // DeleteRelation removes a relation by ID.
 func (a *API) DeleteRelation(ctx context.Context, id string) (map[string]interface{}, *APIError) {
-	// RBAC: admin only for deleting relations
+	// RBAC: master admin, or any org owner/admin.
 	if apiErr := a.CheckAdmin(ctx); apiErr != nil {
-		return nil, apiErr
+		scope, scopeErr := a.resolveScope(ctx)
+		if scopeErr != nil || !isAnyOrgAdmin(scope) {
+			return nil, apiErr
+		}
 	}
 	if err := a.relSvc.Delete(ctx, id); err != nil {
 		return nil, errNotFound("relation", "Relation not found")
@@ -106,6 +112,7 @@ func (a *API) handleRelationList(w http.ResponseWriter, r *http.Request) {
 		TargetEntityID:   queryString(r, "target_entity_id"),
 		RelationshipType: queryString(r, "relationship_type"),
 		EndeavourIDs:     a.resolveEndeavourIDs(r),
+		OrganizationIDs:  a.resolveOrganizationIDs(r),
 		Limit:            queryInt(r, "limit", 50),
 		Offset:           queryInt(r, "offset", 0),
 	}

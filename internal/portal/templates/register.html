@@ -30,14 +30,6 @@
         <form method="POST" action="/register{{if .Data}}{{if index .Data "SetupMode"}}?setup=1{{end}}{{end}}" id="reg-form">
             <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
 
-            <div class="form-group">
-                <label for="account_type">{{t .Lang "portal.register.account_type"}}</label>
-                <select id="account_type" name="account_type">
-                    <option value="private" {{if .Data}}{{if eq (index .Data "AccountType") "private"}}selected{{end}}{{end}}>{{t .Lang "portal.register.account_private"}}</option>
-                    <option value="business" {{if .Data}}{{if eq (index .Data "AccountType") "business"}}selected{{end}}{{end}}>{{t .Lang "portal.register.account_business"}}</option>
-                </select>
-            </div>
-
             <div class="flex-gap-12">
                 <div class="form-group flex-1">
                     <label for="first_name">{{t .Lang "common.label.first_name"}} <span class="req">*</span></label>
@@ -47,6 +39,14 @@
                     <label for="last_name">{{t .Lang "common.label.last_name"}} <span class="req">*</span></label>
                     <input type="text" id="last_name" name="last_name" required placeholder="{{t .Lang "common.placeholder.last_name"}}" {{if .Data}}value="{{index .Data "LastName"}}"{{end}}>
                 </div>
+            </div>
+
+            <div class="form-group">
+                <label for="account_type">{{t .Lang "portal.register.account_type"}}</label>
+                <select id="account_type" name="account_type">
+                    <option value="private" {{if .Data}}{{if eq (index .Data "AccountType") "private"}}selected{{end}}{{end}}>{{t .Lang "portal.register.account_private"}}</option>
+                    <option value="business" {{if .Data}}{{if eq (index .Data "AccountType") "business"}}selected{{end}}{{end}}>{{t .Lang "portal.register.account_business"}}</option>
+                </select>
             </div>
 
             <div class="form-group">

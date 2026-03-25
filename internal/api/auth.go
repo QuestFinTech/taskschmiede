@@ -1110,6 +1110,11 @@ func (a *API) handleAuthProfileUpdate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Sync name to linked resource so recipient lists stay current.
+	if body.Name != nil {
+		a.syncResourceName(r.Context(), authUser.UserID, *body.Name)
+	}
+
 	if a.auditSvc != nil {
 		a.auditSvc.Log(&security.AuditEntry{
 			Action:    "profile_updated",

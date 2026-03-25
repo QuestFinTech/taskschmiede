@@ -212,6 +212,56 @@
             </div>
         </div>
 
+        <!-- Demands in this endeavour -->
+        <div class="card">
+            <div class="card-header">
+                <h2 class="mb-0">{{t .Lang "portal.endeavour_detail.section_demands"}}</h2>
+                <a href="/demands?endeavour_id={{$edv.ID}}" class="btn btn-sm">{{t .Lang "common.view_all"}}</a>
+            </div>
+
+            {{$demands := index .Data "Demands"}}
+            {{if $demands}}
+            <table data-sortable>
+                <thead>
+                    <tr>
+                        <th>{{t .Lang "portal.endeavour_detail.col.title"}}</th>
+                        <th>{{t .Lang "common.label.type"}}</th>
+                        <th>{{t .Lang "portal.endeavour_detail.col.status"}}</th>
+                        <th>{{t .Lang "portal.demands.label_priority"}}</th>
+                        <th>{{t .Lang "portal.endeavour_detail.col.created"}}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{range $demands}}
+                    <tr>
+                        <td><a href="/demands/{{.ID}}">{{.Title}}</a></td>
+                        <td class="fs-13">{{.Type}}</td>
+                        <td>
+                            {{if eq .Status "open"}}
+                                <span class="badge badge-pending">{{t $.Lang "status.open"}}</span>
+                            {{else if eq .Status "in_progress"}}
+                                <span class="badge badge-info">{{t $.Lang "status.in_progress"}}</span>
+                            {{else if eq .Status "fulfilled"}}
+                                <span class="badge badge-active">{{t $.Lang "status.fulfilled"}}</span>
+                            {{else if eq .Status "canceled"}}
+                                <span class="badge badge-inactive">{{t $.Lang "status.canceled"}}</span>
+                            {{else}}
+                                <span class="badge badge-pending">{{.Status}}</span>
+                            {{end}}
+                        </td>
+                        <td class="fs-13">{{.Priority}}</td>
+                        <td class="fs-13">{{fmtDateTime .CreatedAt $.Timezone}}</td>
+                    </tr>
+                    {{end}}
+                </tbody>
+            </table>
+            {{else}}
+            <div class="empty-state p-24">
+                <p class="text-muted">{{t .Lang "portal.endeavour_detail.no_demands"}}</p>
+            </div>
+            {{end}}
+        </div>
+
         <!-- Tasks in this endeavour -->
         <div class="card">
             <div class="card-header">

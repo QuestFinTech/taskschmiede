@@ -210,6 +210,7 @@ func (a *API) handleMyAgentUpdate(w http.ResponseWriter, r *http.Request) {
 		if body.Name != nil {
 			if _, err := a.db.UpdateUser(agentID, storage.UpdateUserFields{Name: body.Name}); err == nil {
 				updated = append(updated, "name")
+				a.syncResourceName(r.Context(), agentID, *body.Name)
 			}
 		}
 		writeData(w, http.StatusOK, map[string]interface{}{
@@ -240,6 +241,7 @@ func (a *API) handleMyAgentUpdate(w http.ResponseWriter, r *http.Request) {
 			if body.Name != nil {
 				if _, err := a.db.UpdateUser(agentID, storage.UpdateUserFields{Name: body.Name}); err == nil {
 					updated = append(updated, "name")
+					a.syncResourceName(r.Context(), agentID, *body.Name)
 				}
 			}
 			writeData(w, http.StatusOK, map[string]interface{}{
@@ -261,6 +263,11 @@ func (a *API) handleMyAgentUpdate(w http.ResponseWriter, r *http.Request) {
 		a.logger.Error("Failed to update agent", "agent_id", agentID, "error", err)
 		writeError(w, http.StatusInternalServerError, "internal_error", "Failed to update agent")
 		return
+	}
+
+	// Sync name to linked resource so recipient/member lists stay current.
+	if body.Name != nil {
+		a.syncResourceName(r.Context(), agentID, *body.Name)
 	}
 
 	writeData(w, http.StatusOK, map[string]interface{}{

@@ -297,6 +297,9 @@ func NewServer(cfg *ServerConfig) (*Server, error) {
 			return name
 		},
 		"joinLines": func(lines []string) string { return strings.Join(lines, "\n") },
+		"roleKey": func(role string) string {
+			return "team_role." + strings.ReplaceAll(strings.ToLower(role), " ", "_")
+		},
 		"fmtLimit": func(v interface{}) string {
 			switch n := v.(type) {
 			case float64:
@@ -2629,8 +2632,23 @@ func (s *Server) handleEndeavours(w http.ResponseWriter, r *http.Request) {
 		data.Error = s.msg(r, user, "errors.failed_list_endeavours", err.Error())
 	}
 
+	// Enrich each endeavour with demand, task, and ritual counts.
+	type enrichedEdv struct {
+		*Endeavour
+		DemandCount int
+		TaskCount   int
+		RitualCount int
+	}
+	enriched := make([]enrichedEdv, 0, len(edvs))
+	for _, edv := range edvs {
+		_, dc, _ := s.rest.ListDemands(token, "", "", "", "", edv.ID, 1, 0)
+		_, tc, _ := s.rest.ListTasks(token, edv.ID, "", "", "", "", 1, 0)
+		_, rc, _ := s.rest.ListRitualsFiltered(token, "", "", "", edv.ID, "", 1, 0)
+		enriched = append(enriched, enrichedEdv{Endeavour: edv, DemandCount: dc, TaskCount: tc, RitualCount: rc})
+	}
+
 	data.Data = map[string]interface{}{
-		"Endeavours": edvs,
+		"Endeavours": enriched,
 	}
 
 	s.render(w, r, "endeavours.html", data)
@@ -2789,6 +2807,10 @@ func (s *Server) handleEndeavourDetail(w http.ResponseWriter, r *http.Request) {
 		"Endeavour":     edv,
 		"EndeavourName": edv.Name,
 	}
+
+	// Load demands in this endeavour
+	demands, _, _ := s.rest.ListDemands(token, "", "", "", "", edvID, 20, 0)
+	dataMap["Demands"] = demands
 
 	// Load tasks in this endeavour
 	tasks, _, _ := s.rest.ListTasks(token, edvID, "", "", "", "", 20, 0)
@@ -3298,6 +3320,10 @@ func (s *Server) handleAbout(w http.ResponseWriter, r *http.Request) {
 	}
 	token := getToken(r)
 	user, _ := s.rest.Whoami(token)
+	if !isAdmin(user) {
+		http.NotFound(w, r)
+		return
+	}
 
 	// Check API health
 	apiHealthy := false
@@ -3576,14 +3602,19 @@ func (s *Server) handleDemands(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	if r.URL.Query().Get("updated") == "1" {
+		data.Success = s.msg(r, user, "success.demand_updated")
+	}
+
 	search := r.URL.Query().Get("search")
 	filterStatus := r.URL.Query().Get("status")
 	dtype := r.URL.Query().Get("type")
 	priority := r.URL.Query().Get("priority")
+	endeavourID := r.URL.Query().Get("endeavour_id")
 	offset := queryIntParam(r, "offset", 0)
 	limit := 50
 
-	demands, total, err := s.rest.ListDemands(token, search, filterStatus, dtype, priority, "", limit, offset)
+	demands, total, err := s.rest.ListDemands(token, search, filterStatus, dtype, priority, endeavourID, limit, offset)
 	if err != nil && data.Error == "" {
 		data.Error = s.msg(r, user, "errors.failed_load_demands", err.Error())
 	}
@@ -3596,10 +3627,11 @@ func (s *Server) handleDemands(w http.ResponseWriter, r *http.Request) {
 		"Demands":      demands,
 		"Total":        total,
 		"Endeavours":   edvs,
-		"Search":       search,
-		"FilterStatus": filterStatus,
-		"Type":         dtype,
-		"Priority":     priority,
+		"FilterSearch":   search,
+		"FilterStatus":  filterStatus,
+		"FilterType":    dtype,
+		"FilterPriority": priority,
+		"EndeavourID":  endeavourID,
 		"Offset":       offset,
 		"Limit":        limit,
 		"NextOffset":   nextOffset,
@@ -3657,7 +3689,8 @@ func (s *Server) handleDemandDetail(w http.ResponseWriter, r *http.Request) {
 						data.Error = s.msg(r, user, "errors.failed_update_demand", err.Error())
 					}
 				} else {
-					data.Success = s.msg(r, user, "success.demand_updated")
+					http.Redirect(w, r, "/demands?updated=1", http.StatusSeeOther)
+					return
 				}
 			}
 		case "cancel":
@@ -3674,7 +3707,8 @@ func (s *Server) handleDemandDetail(w http.ResponseWriter, r *http.Request) {
 						data.Error = s.msg(r, user, "errors.failed_update_demand", err.Error())
 					}
 				} else {
-					data.Success = s.msg(r, user, "success.demand_updated")
+					http.Redirect(w, r, "/demands?updated=1", http.StatusSeeOther)
+					return
 				}
 			}
 		}

@@ -11,6 +11,17 @@
                     {{if .User}}{{if le (index .User "login_count") 1.0}}{{t .Lang "portal.dashboard.welcome" (index .User "name")}}{{else}}{{t .Lang "portal.dashboard.welcome_back" (index .User "name")}}{{end}}{{end}}
                 </p>
             </div>
+            <div class="flex-gap-8-ai-center">
+                <label for="auto-refresh" class="fs-13 text-muted mb-0">{{t .Lang "portal.dashboard.auto_refresh"}}</label>
+                <select id="auto-refresh" class="form-select-sm">
+                    <option value="0">{{t .Lang "portal.dashboard.auto_refresh_never"}}</option>
+                    <option value="60">60s</option>
+                    <option value="300">5min</option>
+                    <option value="600">10min</option>
+                    <option value="1800">30min</option>
+                    <option value="3600">60min</option>
+                </select>
+            </div>
         </div>
 
         {{if .Error}}
@@ -409,4 +420,31 @@
         </div>
     </div>
 </div>
+<script nonce="{{.Nonce}}">
+(function() {
+    var sel = document.getElementById('auto-refresh');
+    if (!sel) return;
+    var key = 'dashboard-auto-refresh';
+    var timer = null;
+
+    function startTimer(sec) {
+        if (timer) clearTimeout(timer);
+        if (sec > 0) {
+            timer = setTimeout(function() { location.reload(); }, sec * 1000);
+        }
+    }
+
+    var saved = localStorage.getItem(key);
+    if (saved) {
+        sel.value = saved;
+        startTimer(parseInt(saved, 10));
+    }
+
+    sel.addEventListener('change', function() {
+        var v = sel.value;
+        localStorage.setItem(key, v);
+        startTimer(parseInt(v, 10));
+    });
+})();
+</script>
 {{end}}

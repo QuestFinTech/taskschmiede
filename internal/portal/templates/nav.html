@@ -49,7 +49,7 @@
         <div class="nav-right">
             <div class="nav-links">
                 {{if .ShowSupport}}<a href="#" id="supportToggleBtn">{{t .Lang "portal.nav.support"}}</a>{{end}}
-                {{if .ShowAbout}}<a href="/about"{{if eq .CurrentPage "about"}} class="active"{{end}}>{{t .Lang "portal.nav.about"}}</a>{{end}}
+                {{if and .ShowAbout .IsAdmin}}<a href="/about"{{if eq .CurrentPage "about"}} class="active"{{end}}>{{t .Lang "portal.nav.about"}}</a>{{end}}
             </div>
             <div class="nav-user">
                 <button type="button" class="nav-user-btn{{if or (eq .CurrentPage "profile") (eq .CurrentPage "activity") (eq .CurrentPage "alerts") (eq .CurrentPage "usage")}} active{{end}}" id="userMenuBtn">

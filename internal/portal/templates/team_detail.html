@@ -59,15 +59,15 @@
                     <input type="hidden" name="csrf_token" value="{{$.CSRFToken}}">
                     <input type="hidden" name="action" value="toggle_status">
                     {{if eq $team.Status "active"}}
-                    <button type="submit" class="btn btn-sm btn-danger">{{t .Lang "portal.team_detail.action_deactivate"}}</button>
+                    <button type="submit" class="btn btn-danger">{{t .Lang "portal.team_detail.action_deactivate"}}</button>
                     {{else}}
-                    <button type="submit" class="btn btn-sm btn-primary">{{t .Lang "portal.team_detail.action_activate"}}</button>
+                    <button type="submit" class="btn btn-primary">{{t .Lang "portal.team_detail.action_activate"}}</button>
                     {{end}}
                 </form>
                 <form method="POST" action="/teams/{{$team.ID}}" class="d-inline" data-confirm="{{t .Lang "portal.team_detail.confirm_delete"}}">
                     <input type="hidden" name="csrf_token" value="{{$.CSRFToken}}">
                     <input type="hidden" name="action" value="delete">
-                    <button type="submit" class="btn btn-sm btn-danger">{{t .Lang "portal.team_detail.action_delete"}}</button>
+                    <button type="submit" class="btn btn-danger">{{t .Lang "portal.team_detail.action_delete"}}</button>
                 </form>
                 <form method="POST" action="/teams/{{$team.ID}}" class="inline-flex-gap-8-ai-center">
                     <input type="hidden" name="csrf_token" value="{{$.CSRFToken}}">
@@ -81,13 +81,13 @@
                             {{end}}
                         {{end}}
                     </select>
-                    <button type="submit" class="btn btn-sm">{{t .Lang "portal.team_detail.action_link"}}</button>
+                    <button type="submit" class="btn">{{t .Lang "portal.team_detail.action_link"}}</button>
                 </form>
                 {{if $edv}}
                 <form method="POST" action="/teams/{{$team.ID}}" class="d-inline">
                     <input type="hidden" name="csrf_token" value="{{$.CSRFToken}}">
                     <input type="hidden" name="action" value="unlink_endeavour">
-                    <button type="submit" class="btn btn-sm">{{t .Lang "portal.team_detail.action_unlink"}}</button>
+                    <button type="submit" class="btn">{{t .Lang "portal.team_detail.action_unlink"}}</button>
                 </form>
                 {{end}}
             </div>
@@ -117,14 +117,14 @@
                     <tr>
                         <td><strong>{{.ResourceName}}</strong></td>
                         <td>{{.ResourceType}}</td>
-                        <td>{{.Role}}</td>
+                        <td>{{t $.Lang (roleKey .Role)}}</td>
                         {{if $canManage}}
                         <td class="ta-right">
                             <form method="POST" action="/teams/{{$team.ID}}" class="d-inline">
                                 <input type="hidden" name="csrf_token" value="{{$.CSRFToken}}">
                                 <input type="hidden" name="action" value="remove_member">
                                 <input type="hidden" name="relation_id" value="{{.RelationID}}">
-                                <button type="submit" class="btn btn-sm btn-danger">{{t $.Lang "common.remove"}}</button>
+                                <button type="submit" class="btn btn-danger">{{t $.Lang "common.remove"}}</button>
                             </form>
                         </td>
                         {{end}}
@@ -164,7 +164,7 @@
                                 {{$roles := index $.Data "Roles"}}
                                 {{if $roles}}
                                     {{range $roles}}
-                                    <option value="{{.}}">{{.}}</option>
+                                    <option value="{{.}}">{{t $.Lang (roleKey .)}}</option>
                                     {{end}}
                                 {{end}}
                             </select>

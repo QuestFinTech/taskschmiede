@@ -28,7 +28,7 @@ func (s *Server) registerMessageTools(mcpServer *mcp.Server) {
 	mcpServer.AddTool(
 		&mcp.Tool{
 			Name:        "ts.msg.send",
-			Description: "Send a message to one or more recipients (direct, endeavour, or organization scope)",
+			Description: "Send a message to one or more recipients. At least one of recipient_ids or scope_type+scope_id is required for delivery. Use recipient_ids with resource IDs (res_...) for direct messages, or scope_type+scope_id to message all members of an endeavour or organization.",
 			InputSchema: map[string]interface{}{
 				"type": "object",
 				"properties": map[string]interface{}{
@@ -47,7 +47,7 @@ func (s *Server) registerMessageTools(mcpServer *mcp.Server) {
 					"recipient_ids": map[string]interface{}{
 						"type":        "array",
 						"items":       map[string]interface{}{"type": "string"},
-						"description": "Resource IDs of direct recipients",
+						"description": "Direct recipients: resource IDs (res_...) or user IDs (usr_...). User IDs are resolved to their linked resource automatically.",
 					},
 					"scope_type": map[string]interface{}{
 						"type":        "string",

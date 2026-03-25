@@ -19,6 +19,7 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"strings"
 
 	"github.com/QuestFinTech/taskschmiede/internal/storage"
 )
@@ -91,11 +92,35 @@ func (s *MessageService) Send(ctx context.Context, senderID, subject, content, i
 		}
 	}
 
+	// Resolve recipient IDs: accept both res_ (resource) and usr_ (user) prefixes.
+	// User IDs are resolved to their linked resource ID.
+	resolvedRecipients := make([]string, 0, len(recipientIDs))
+	for _, rid := range recipientIDs {
+		switch {
+		case strings.HasPrefix(rid, "res_"):
+			if _, err := s.mainDB.GetResource(rid); err != nil {
+				return nil, fmt.Errorf("recipient resource not found: %s", rid)
+			}
+			resolvedRecipients = append(resolvedRecipients, rid)
+		case strings.HasPrefix(rid, "usr_"):
+			user, err := s.mainDB.GetUser(rid)
+			if err != nil {
+				return nil, fmt.Errorf("recipient user not found: %s", rid)
+			}
+			if user.ResourceID == nil || *user.ResourceID == "" {
+				return nil, fmt.Errorf("recipient user %s has no linked resource", rid)
+			}
+			resolvedRecipients = append(resolvedRecipients, *user.ResourceID)
+		default:
+			return nil, fmt.Errorf("invalid recipient ID %q: must be a resource (res_...) or user (usr_...) ID", rid)
+		}
+	}
+
 	// Expand scope to individual recipients.
 	// Explicit recipients are kept as-is (allows self-sends for confirmations).
 	// Sender is only excluded from scope expansion (group delivery).
 	allRecipients := make(map[string]bool)
-	for _, rid := range recipientIDs {
+	for _, rid := range resolvedRecipients {
 		allRecipients[rid] = true
 	}
 
@@ -112,7 +137,7 @@ func (s *MessageService) Send(ctx context.Context, senderID, subject, content, i
 	}
 
 	if len(allRecipients) == 0 {
-		return nil, fmt.Errorf("no recipients after scope expansion (sender excluded)")
+		return nil, fmt.Errorf("no recipients: provide recipient_ids (res_...) for direct messages, or scope_type and scope_id for group delivery")
 	}
 
 	// Create message

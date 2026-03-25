@@ -120,6 +120,20 @@
                         <option value="critical" {{if eq $filterPriority "critical"}}selected{{end}}>{{t .Lang "priority.critical"}}</option>
                     </select>
                 </div>
+                <div class="form-group mb-0-minw-140">
+                    <label for="filter_endeavour">{{t .Lang "portal.demands.filter_endeavour"}}</label>
+                    <select id="filter_endeavour" name="endeavour_id">
+                        <option value="">{{t .Lang "common.all"}}</option>
+                        {{$filterEdv := ""}}
+                        {{if .Data}}{{$filterEdv = index .Data "EndeavourID"}}{{end}}
+                        {{$edvList := index .Data "Endeavours"}}
+                        {{if $edvList}}
+                        {{range $edvList}}
+                        <option value="{{.ID}}" {{if eq $filterEdv .ID}}selected{{end}}>{{.Name}}</option>
+                        {{end}}
+                        {{end}}
+                    </select>
+                </div>
                 <button type="submit" class="btn h-42">{{t .Lang "common.filter"}}</button>
             </form>
         </div>
@@ -193,16 +207,17 @@
                 {{$status := index .Data "FilterStatus"}}
                 {{$dtype := index .Data "FilterType"}}
                 {{$priority := index .Data "FilterPriority"}}
+                {{$edvID := index .Data "EndeavourID"}}
                 <div class="flex-jc-between-mt-12-fs-12">
                     <span class="text-muted">
                         {{t .Lang "common.showing_of" (len $demands) (index .Data "Total")}}
                     </span>
                     <div class="flex-gap-8">
                         {{if index .Data "HasPrev"}}
-                        <a href="/demands?offset=0&search={{$search}}&status={{$status}}&type={{$dtype}}&priority={{$priority}}" class="btn btn-sm">{{t .Lang "common.first"}}</a>
+                        <a href="/demands?offset=0&search={{$search}}&status={{$status}}&type={{$dtype}}&priority={{$priority}}&endeavour_id={{$edvID}}" class="btn btn-sm">{{t .Lang "common.first"}}</a>
                         {{end}}
                         {{if index .Data "HasNext"}}
-                        <a href="/demands?offset={{index .Data "NextOffset"}}&search={{$search}}&status={{$status}}&type={{$dtype}}&priority={{$priority}}" class="btn btn-sm">{{t .Lang "common.next"}}</a>
+                        <a href="/demands?offset={{index .Data "NextOffset"}}&search={{$search}}&status={{$status}}&type={{$dtype}}&priority={{$priority}}&endeavour_id={{$edvID}}" class="btn btn-sm">{{t .Lang "common.next"}}</a>
                         {{end}}
                     </div>
                 </div>

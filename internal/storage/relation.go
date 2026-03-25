@@ -90,6 +90,7 @@ type ListRelationsOpts struct {
 	TargetEntityID   string
 	RelationshipType string
 	EndeavourIDs     []string // RBAC: nil = no restriction; empty = no access
+	OrganizationIDs  []string // RBAC: org-scoped visibility (combined with EndeavourIDs via OR)
 	Limit            int
 	Offset           int
 }
@@ -213,6 +214,8 @@ func (db *DB) ListRelations(opts ListRelationsOpts) ([]*EntityRelation, int, err
 		conditions = append(conditions, "relationship_type = ?")
 		params = append(params, opts.RelationshipType)
 	}
+	// RBAC scope: combine endeavour and organization visibility via OR.
+	var scopeParts []string
 	if len(opts.EndeavourIDs) > 0 {
 		placeholders := make([]string, len(opts.EndeavourIDs))
 		for i := range opts.EndeavourIDs {
@@ -223,21 +226,40 @@ func (db *DB) ListRelations(opts ListRelationsOpts) ([]*EntityRelation, int, err
 		// 1. Direct endeavour reference (source or target IS an endeavour)
 		// 2. Entity belongs_to an accessible endeavour
 		// 3. Organization that participates_in an accessible endeavour
-		scopeSQL := `(
-			(source_entity_type = 'endeavour' AND source_entity_id IN (` + inClause + `))
-			OR (target_entity_type = 'endeavour' AND target_entity_id IN (` + inClause + `))
-			OR source_entity_id IN (SELECT er2.source_entity_id FROM entity_relation er2 WHERE er2.relationship_type = 'belongs_to' AND er2.target_entity_type = 'endeavour' AND er2.target_entity_id IN (` + inClause + `))
-			OR target_entity_id IN (SELECT er3.source_entity_id FROM entity_relation er3 WHERE er3.relationship_type = 'belongs_to' AND er3.target_entity_type = 'endeavour' AND er3.target_entity_id IN (` + inClause + `))
-			OR source_entity_id IN (SELECT er4.source_entity_id FROM entity_relation er4 WHERE er4.relationship_type = 'participates_in' AND er4.target_entity_type = 'endeavour' AND er4.target_entity_id IN (` + inClause + `))
-			OR target_entity_id IN (SELECT er5.source_entity_id FROM entity_relation er5 WHERE er5.relationship_type = 'participates_in' AND er5.target_entity_type = 'endeavour' AND er5.target_entity_id IN (` + inClause + `))
-		)`
-		conditions = append(conditions, scopeSQL)
-		// 6 copies of the endeavour IDs for 6 IN clauses
+		scopeParts = append(scopeParts,
+			`(source_entity_type = 'endeavour' AND source_entity_id IN (`+inClause+`))`,
+			`(target_entity_type = 'endeavour' AND target_entity_id IN (`+inClause+`))`,
+			`source_entity_id IN (SELECT er2.source_entity_id FROM entity_relation er2 WHERE er2.relationship_type = 'belongs_to' AND er2.target_entity_type = 'endeavour' AND er2.target_entity_id IN (`+inClause+`))`,
+			`target_entity_id IN (SELECT er3.source_entity_id FROM entity_relation er3 WHERE er3.relationship_type = 'belongs_to' AND er3.target_entity_type = 'endeavour' AND er3.target_entity_id IN (`+inClause+`))`,
+			`source_entity_id IN (SELECT er4.source_entity_id FROM entity_relation er4 WHERE er4.relationship_type = 'participates_in' AND er4.target_entity_type = 'endeavour' AND er4.target_entity_id IN (`+inClause+`))`,
+			`target_entity_id IN (SELECT er5.source_entity_id FROM entity_relation er5 WHERE er5.relationship_type = 'participates_in' AND er5.target_entity_type = 'endeavour' AND er5.target_entity_id IN (`+inClause+`))`,
+		)
 		for i := 0; i < 6; i++ {
 			for _, id := range opts.EndeavourIDs {
 				params = append(params, id)
 			}
 		}
+	}
+	if len(opts.OrganizationIDs) > 0 {
+		placeholders := make([]string, len(opts.OrganizationIDs))
+		for i := range opts.OrganizationIDs {
+			placeholders[i] = "?"
+		}
+		inClause := strings.Join(placeholders, ", ")
+		// Include relations involving resources that are members of the user's orgs.
+		scopeParts = append(scopeParts,
+			`(source_entity_type = 'organization' AND source_entity_id IN (`+inClause+`))`,
+			`source_entity_id IN (SELECT er6.target_entity_id FROM entity_relation er6 WHERE er6.relationship_type = 'has_member' AND er6.source_entity_type = 'organization' AND er6.source_entity_id IN (`+inClause+`))`,
+			`target_entity_id IN (SELECT er7.target_entity_id FROM entity_relation er7 WHERE er7.relationship_type = 'has_member' AND er7.source_entity_type = 'organization' AND er7.source_entity_id IN (`+inClause+`))`,
+		)
+		for i := 0; i < 3; i++ {
+			for _, id := range opts.OrganizationIDs {
+				params = append(params, id)
+			}
+		}
+	}
+	if len(scopeParts) > 0 {
+		conditions = append(conditions, "("+strings.Join(scopeParts, " OR ")+")")
 	}
 
 	if len(conditions) > 0 {

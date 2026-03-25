@@ -86,6 +86,28 @@ func (a *API) resolveEndeavourIDs(r *http.Request) []string {
 	return a.ResolveEndeavourIDs(r.Context(), adminMode)
 }
 
+// resolveOrganizationIDs returns the list of organization IDs the context user
+// belongs to. Returns nil for master admins (no restriction).
+func (a *API) resolveOrganizationIDs(r *http.Request) []string {
+	adminMode := r.URL.Query().Get("admin") == "true"
+	user := auth.GetAuthUser(r.Context())
+	if user == nil {
+		return []string{}
+	}
+	scope, err := a.authSvc.ResolveUserScope(r.Context(), user.UserID)
+	if err != nil {
+		return []string{}
+	}
+	if adminMode && scope.IsMasterAdmin {
+		return nil
+	}
+	ids := make([]string, 0, len(scope.Organizations))
+	for id := range scope.Organizations {
+		ids = append(ids, id)
+	}
+	return ids
+}
+
 // ResolveAssigneeMe resolves the "me" shorthand to the user's resource_id.
 func (a *API) ResolveAssigneeMe(ctx context.Context, assigneeID string) string {
 	if assigneeID != "me" {

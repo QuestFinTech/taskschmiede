@@ -104,12 +104,12 @@ func TestRelationCRUD(t *testing.T) {
 		t.Fatalf("delete second: expected 200, got %d: %s", rec.Code, rec.Body.String())
 	}
 
-	// With scoped access (no admin=true), org relations are invisible once the org
-	// no longer participates in any accessible endeavour.
+	// With scoped access (no admin=true), org owner can still see the auto-created
+	// owner relation via org-scoped visibility, even without endeavour link.
 	rec = env.doRequest("GET", "/api/v1/relations?source_entity_type=organization&source_entity_id="+orgID, nil)
 	_, meta = env.parseList(rec)
-	if int(meta["total"].(float64)) != 0 {
-		t.Errorf("list after manual deletes (scoped): total = %v, want 0", meta["total"])
+	if int(meta["total"].(float64)) != 1 {
+		t.Errorf("list after manual deletes (scoped): total = %v, want 1 (auto-owner via org scope)", meta["total"])
 	}
 
 	// With admin=true, the auto-created owner relation is still visible.
